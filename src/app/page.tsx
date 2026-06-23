@@ -373,12 +373,6 @@ export default function HomePage() {
                   <div style={{ fontSize: 11, color: "var(--gray-500)" }}>500+ sold this week</div>
                 </div>
               </div>
-              <div className="animate-float delay-300" style={{ position: "absolute", bottom: -16, left: -16, background: "var(--yellow)", borderRadius: "var(--radius)", padding: "10px 14px", boxShadow: "var(--shadow-lg)", display: "flex", alignItems: "center", gap: 8 }}>
-                <Zap size={16} color="var(--black)" fill="var(--black)" />
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "var(--black)" }}>COD Available</div>
-                  <div style={{ fontSize: 10, color: "rgba(0,0,0,0.6)" }}>Pay on delivery</div>
-                </div>
               </div>
             </div>
           </div>

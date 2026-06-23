@@ -148,11 +148,6 @@ export default function ProductCard({ product }: { product: Product }) {
               <span className="price-original">Rs. {product.originalPrice.toLocaleString()}</span>
             )}
           </div>
-          {/* COD Badge */}
-          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
-            <Zap size={13} color="var(--yellow-dark)" fill="var(--yellow)" />
-            <span style={{ fontSize: 12, color: "var(--gray-500)", fontWeight: 500 }}>COD Available</span>
-          </div>
         </div>
       </div>
     </Link>
