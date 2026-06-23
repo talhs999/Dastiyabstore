@@ -35,7 +35,7 @@ const footerLinks = {
 
 const trustFeatures = [
   { icon: <Truck size={28} />, title: "Free Delivery", sub: "On orders Rs.2000+" },
-  { icon: <RotateCcw size={28} />, title: "Easy Returns", sub: "7-day return policy" },
+  { icon: <RotateCcw size={28} />, title: "Easy Returns", sub: "5-day return policy" },
   { icon: <Shield size={28} />, title: "100% Secure", sub: "Trusted & verified" },
   { icon: <Headphones size={28} />, title: "24/7 Support", sub: "Always here to help" },
 ];

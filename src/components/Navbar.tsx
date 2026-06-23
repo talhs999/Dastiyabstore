@@ -66,7 +66,7 @@ export default function Navbar() {
       <div className="announcement-bar">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 32 }}>
           <div className="animate-marquee" style={{ display: "flex", gap: 64, whiteSpace: "nowrap" }}>
-            {["Free Delivery on orders above Rs. 2000", "Cash on Delivery Available Nationwide", "Easy Returns within 7 Days", "100% Authentic Products", "Free Delivery on orders above Rs. 2000", "Cash on Delivery Available Nationwide", "Easy Returns within 7 Days", "100% Authentic Products"].map((t, i) => (
+            {["Free Delivery on orders above Rs. 2000", "Cash on Delivery Available Nationwide", "Easy Returns within 5 Days", "100% Authentic Products", "Free Delivery on orders above Rs. 2000", "Cash on Delivery Available Nationwide", "Easy Returns within 5 Days", "100% Authentic Products"].map((t, i) => (
               <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <Truck size={14} />
                 {t}

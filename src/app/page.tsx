@@ -484,7 +484,7 @@ export default function HomePage() {
             {[
               { icon: <Truck size={24} />, title: "Fast Nationwide Delivery", desc: "Delivery across all of Pakistan within 48-72 hours. Free on orders above Rs. 2000." },
               { icon: <Shield size={24} />, title: "100% Authentic Products", desc: "All products are tested and verified. Quality guaranteed or your money back." },
-              { icon: <RotateCcw size={24} />, title: "Hassle-Free Returns", desc: "Not satisfied? Return within 7 days — no questions asked. Easy pickup." },
+              { icon: <RotateCcw size={24} />, title: "Hassle-Free Returns", desc: "Not satisfied? Return within 5 days — no questions asked. Easy pickup." },
               { icon: <Headphones size={24} />, title: "24/7 Customer Support", desc: "Our support team is always ready via WhatsApp, phone, or email." },
             ].map((f, i) => (
               <div key={i} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 28, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)", transition: "all 0.3s ease" }}
