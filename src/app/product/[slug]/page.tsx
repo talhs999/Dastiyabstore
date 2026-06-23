@@ -1,7 +1,7 @@
 "use client";
 import { use, useState } from "react";
 import { notFound, useRouter } from "next/navigation";
-import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, MessageCircle, Facebook, Link as LinkIcon } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { products, getProductBySlug } from "@/data/products";
 import { useCart } from "@/store/cartStore";
@@ -15,6 +15,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
   const [activeImg, setActiveImg] = useState(0);
+  const [showShare, setShowShare] = useState(false);
   const { addToCart } = useCart();
   const { showToast } = useToast();
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : null;
@@ -137,9 +138,24 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             <button onClick={handleWishlist} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px" }}>
               <Heart size={18} />
             </button>
-            <button onClick={handleShare} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px" }}>
-              <Share2 size={18} />
-            </button>
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setShowShare(!showShare)} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px", height: "100%" }}>
+                <Share2 size={18} />
+              </button>
+              {showShare && (
+                <div className="animate-fade-up" style={{ position: "absolute", bottom: "100%", right: 0, marginBottom: 8, background: "white", padding: 8, borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-xl)", display: "flex", flexDirection: "column", gap: 4, minWidth: 150, zIndex: 10, border: "1px solid var(--gray-200)" }}>
+                  <button onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + window.location.href)}`, '_blank')} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                    <MessageCircle size={16} color="#25D366" /> WhatsApp
+                  </button>
+                  <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                    <Facebook size={16} color="#1877F2" /> Facebook
+                  </button>
+                  <button onClick={() => { handleShare(); setShowShare(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                    <LinkIcon size={16} color="var(--gray-500)" /> Copy Link
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Delivery info */}
