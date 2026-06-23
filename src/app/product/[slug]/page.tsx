@@ -1,6 +1,6 @@
 "use client";
 import { use, useState } from "react";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { products, getProductBySlug } from "@/data/products";
@@ -21,9 +21,25 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
   const images = product.images || [product.image];
 
+  const router = useRouter();
+
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
     showToast(`${qty}x ${product.name} added to cart!`);
+  };
+
+  const handleBuyNow = () => {
+    handleAdd();
+    router.push("/checkout");
+  };
+
+  const handleWishlist = () => {
+    showToast(`${product.name} added to wishlist!`);
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    showToast("Link copied to clipboard!");
   };
 
   return (
@@ -115,13 +131,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             <button onClick={handleAdd} className="btn-red" style={{ flex: 1, justifyContent: "center", minWidth: 160 }}>
               <ShoppingCart size={18} /> Add to Cart
             </button>
-            <button className="btn-yellow" style={{ flex: 1, justifyContent: "center", minWidth: 160 }}>
-              <Zap size={18} /> Buy Now (COD)
+            <button onClick={handleBuyNow} className="btn-yellow" style={{ flex: 1, justifyContent: "center", minWidth: 160 }}>
+              <Zap size={18} /> Buy Now
             </button>
-            <button className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px" }}>
+            <button onClick={handleWishlist} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px" }}>
               <Heart size={18} />
             </button>
-            <button className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px" }}>
+            <button onClick={handleShare} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px" }}>
               <Share2 size={18} />
             </button>
           </div>
