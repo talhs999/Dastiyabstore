@@ -1,0 +1,115 @@
+"use client";
+import { useState } from "react";
+import { Phone, Mail, MapPin, Clock, MessageCircle, Send, CheckCircle } from "lucide-react";
+
+export default function ContactPage() {
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
+  };
+
+  return (
+    <div>
+      {/* Header */}
+      <section style={{ background: "linear-gradient(135deg, #fff5f5 0%, #fff9e6 100%)", padding: "64px 24px 48px", textAlign: "center" }}>
+        <span className="badge badge-red" style={{ marginBottom: 16 }}>Contact Us</span>
+        <h1 style={{ fontSize: "clamp(28px, 4vw, 48px)", fontWeight: 900, color: "var(--gray-900)", marginBottom: 12 }}>
+          We're Here to <span style={{ color: "var(--red)" }}>Help</span>
+        </h1>
+        <p style={{ color: "var(--gray-500)", fontSize: 16, maxWidth: 500, margin: "0 auto" }}>
+          Got a question or need support? Our team is ready to assist you via WhatsApp, phone, or email.
+        </p>
+      </section>
+
+      <section style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 48 }}>
+
+          {/* Info Cards */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {[
+              { icon: <Phone size={24} />, title: "Phone / WhatsApp", lines: ["0300-1234567", "Mon–Sat: 9 AM – 9 PM"] },
+              { icon: <Mail size={24} />, title: "Email", lines: ["support@dastiyabstore.com", "Reply within 24 hours"] },
+              { icon: <MapPin size={24} />, title: "Address", lines: ["Lahore, Punjab", "Pakistan"] },
+              { icon: <Clock size={24} />, title: "Business Hours", lines: ["Monday – Saturday", "9:00 AM – 9:00 PM PKT"] },
+            ].map((c, i) => (
+              <div key={i} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 20, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)", display: "flex", gap: 16, alignItems: "flex-start", transition: "all 0.3s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--red)"; (e.currentTarget as HTMLElement).style.transform = "translateX(4px)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--gray-200)"; (e.currentTarget as HTMLElement).style.transform = ""; }}
+              >
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "#fff0f0", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--red)", flexShrink: 0 }}>{c.icon}</div>
+                <div>
+                  <div style={{ fontWeight: 700, color: "var(--gray-900)", marginBottom: 4 }}>{c.title}</div>
+                  {c.lines.map((l, j) => <div key={j} style={{ fontSize: 14, color: "var(--gray-600)" }}>{l}</div>)}
+                </div>
+              </div>
+            ))}
+
+            {/* WhatsApp CTA */}
+            <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer" style={{
+              display: "flex", alignItems: "center", gap: 12,
+              background: "#25d366", color: "white", padding: "16px 24px",
+              borderRadius: "var(--radius-full)", textDecoration: "none",
+              fontWeight: 700, fontSize: 15, transition: "all 0.25s", justifyContent: "center",
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#1da851"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#25d366"; (e.currentTarget as HTMLElement).style.transform = ""; }}
+            >
+              <MessageCircle size={20} /> Chat on WhatsApp
+            </a>
+          </div>
+
+          {/* Contact Form */}
+          <div style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 32, boxShadow: "var(--shadow-lg)", border: "1px solid var(--gray-200)" }}>
+            {submitted ? (
+              <div className="animate-scale-in" style={{ textAlign: "center", padding: "40px 0" }}>
+                <CheckCircle size={56} color="var(--red)" style={{ margin: "0 auto 16px" }} />
+                <h3 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Message Sent!</h3>
+                <p style={{ color: "var(--gray-500)" }}>We'll get back to you within 24 hours.</p>
+              </div>
+            ) : (
+              <>
+                <h2 style={{ fontWeight: 800, fontSize: 22, marginBottom: 24 }}>Send a Message</h2>
+                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    <div>
+                      <label className="label">Your Name</label>
+                      <input className="input" placeholder="Muhammad Ali" required />
+                    </div>
+                    <div>
+                      <label className="label">Phone / WhatsApp</label>
+                      <input className="input" placeholder="0300-1234567" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label">Email Address</label>
+                    <input className="input" type="email" placeholder="you@email.com" required />
+                  </div>
+                  <div>
+                    <label className="label">Subject</label>
+                    <select className="input">
+                      <option>General Inquiry</option>
+                      <option>Order Issue</option>
+                      <option>Return Request</option>
+                      <option>Product Question</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Message</label>
+                    <textarea className="input" rows={5} placeholder="Tell us how we can help you..." required style={{ resize: "vertical" }} />
+                  </div>
+                  <button type="submit" className="btn-red" style={{ justifyContent: "center", padding: "14px" }}>
+                    <Send size={16} /> Send Message
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+      <style>{`@media(max-width:768px){div[style*="grid-template-columns: 1fr 1.5fr"]{grid-template-columns:1fr!important}div[style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}}`}</style>
+    </div>
+  );
+}
