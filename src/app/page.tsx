@@ -5,7 +5,7 @@ import Image from "next/image";
 import {
   ArrowRight, ChevronRight, Truck, RotateCcw, Shield, Headphones,
   Star, Zap, Package, Wind, Laptop, Monitor, Home, ShoppingCart,
-  TrendingUp, Award, Heart, Menu
+  TrendingUp, Award, Heart, Menu, Fan, Smartphone, Cpu, LayoutGrid, Music
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
@@ -37,13 +37,13 @@ const heroSlides = [
 
 const sidebarCategories = [
   { name: "Neckband Earphones", iconEl: <Headphones size={20} />, iconSm: <Headphones size={16} />, href: "/shop/neckband", count: 12, badge: null, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&q=80", desc: "Wireless neckband earphones with super bass & mic", products: ["DastiyabSound X1", "Bass Pro X2", "Sport Flex"] },
-  { name: "AirPods / TWS Earbuds", iconEl: <Headphones size={20} />, iconSm: <Headphones size={16} />, href: "/shop/airpods", count: 10, badge: null, image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=300&q=80", desc: "True wireless earbuds with ANC & long battery life", products: ["DastiyabBuds Pro", "DastiyabBuds Lite", "AirMax"] },
+  { name: "AirPods / TWS Earbuds", iconEl: <Music size={20} />, iconSm: <Music size={16} />, href: "/shop/airpods", count: 10, badge: null, image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=300&q=80", desc: "True wireless earbuds with ANC & long battery life", products: ["DastiyabBuds Pro", "DastiyabBuds Lite", "AirMax"] },
   { name: "Neck Fan", iconEl: <Wind size={20} />, iconSm: <Wind size={16} />, href: "/shop/neck-fan", count: 8, badge: "Hot", image: "https://images.unsplash.com/photo-1625765503151-c1a10cc57b44?w=300&q=80", desc: "Bladeless wearable neck fans for summer cooling", products: ["NeckCool Pro", "360° AirWrap", "SlimFan Mini"] },
-  { name: "Portable Fan", iconEl: <Wind size={20} />, iconSm: <Wind size={16} />, href: "/shop/portable-fan", count: 6, badge: null, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80", desc: "USB & rechargeable portable desk fans", products: ["USB Desk Fan", "Handheld Mini Fan", "Tower Fan"] },
+  { name: "Portable Fan", iconEl: <Fan size={20} />, iconSm: <Fan size={16} />, href: "/shop/portable-fan", count: 6, badge: null, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80", desc: "USB & rechargeable portable desk fans", products: ["USB Desk Fan", "Handheld Mini Fan", "Tower Fan"] },
   { name: "Laptop Stand", iconEl: <Laptop size={20} />, iconSm: <Laptop size={16} />, href: "/shop/laptop-stand", count: 7, badge: null, image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&q=80", desc: "Adjustable aluminum stands for all laptop sizes", products: ["Aluminum Pro Stand", "Foldable Lite", "XL Stand"] },
-  { name: "Mobile Accessories", iconEl: <Monitor size={20} />, iconSm: <Monitor size={16} />, href: "/shop/mobile-accessories", count: 3, badge: null, image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=300&q=80", desc: "Cables, cases, chargers and more", products: ["Type-C Cable", "Fast Charger", "Phone Stand"] },
-  { name: "Home Gadgets", iconEl: <Home size={20} />, iconSm: <Home size={16} />, href: "/shop/home-gadgets", count: 2, badge: null, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80", desc: "Smart home gadgets for everyday life", products: ["Smart Plug", "LED Strip"] },
-  { name: "All Products", iconEl: <Package size={20} />, iconSm: <Package size={16} />, href: "/shop", count: 48, badge: null, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&q=80", desc: "Browse the full DastiyabStore catalog", products: [] },
+  { name: "Mobile Accessories", iconEl: <Smartphone size={20} />, iconSm: <Smartphone size={16} />, href: "/shop/mobile-accessories", count: 3, badge: null, image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=300&q=80", desc: "Cables, cases, chargers and more", products: ["Type-C Cable", "Fast Charger", "Phone Stand"] },
+  { name: "Home Gadgets", iconEl: <Cpu size={20} />, iconSm: <Cpu size={16} />, href: "/shop/home-gadgets", count: 2, badge: null, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80", desc: "Smart home gadgets for everyday life", products: ["Smart Plug", "LED Strip"] },
+  { name: "All Products", iconEl: <LayoutGrid size={20} />, iconSm: <LayoutGrid size={16} />, href: "/shop", count: 48, badge: null, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&q=80", desc: "Browse the full DastiyabStore catalog", products: [] },
 ];
 
 const stats = [
@@ -59,8 +59,8 @@ function CategorySidebar() {
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const activeCat = sidebarCategories.find(c => c.name === hoveredCat);
 
-  // Position below announcement bar + main navbar + sub-nav ≈ 110px
-  const TOP = 110;
+  // Position at the very top of the page
+  const TOP = 0;
 
   return (
     <>
@@ -76,15 +76,17 @@ function CategorySidebar() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            justifyContent: "center",
             background: "white",
-            borderRadius: "0 12px 12px 0",
+            borderRadius: "0",
             boxShadow: "4px 0 16px rgba(0,0,0,0.10)",
             paddingTop: 6,
             paddingBottom: 6,
             gap: 2,
             width: 46,
-            border: "1px solid var(--gray-200)",
-            borderLeft: "none",
+            borderRight: "1px solid var(--gray-200)",
+            height: "100vh",
+            overflowY: "auto",
           }}
         >
           {sidebarCategories.map(cat => (
@@ -111,31 +113,36 @@ function CategorySidebar() {
 
       {/* ── EXPANDED PANEL — overlays page from top ── */}
       {expanded && (
-        <div
-          onMouseLeave={() => { setExpanded(false); setHoveredCat(null); }}
-          className="animate-fade-right"
-          style={{
-            position: "fixed",
-            left: 0,
-            top: TOP,
-            zIndex: 501,
-            display: "flex",
-            gap: 4,
-            alignItems: "flex-start",
-          }}
-        >
-          {/* ── MAIN LIST PANEL ── */}
-          <div style={{
-            width: 260,
-            background: "white",
-            borderRadius: "0 14px 14px 0",
-            boxShadow: "8px 4px 32px rgba(0,0,0,0.18)",
-            overflow: "hidden",
-            border: "1px solid var(--gray-200)",
-            borderLeft: "none",
-            maxHeight: `calc(100vh - ${TOP + 20}px)`,
-            overflowY: "auto",
-          }}>
+        <>
+          <div 
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 500 }}
+            onClick={() => { setExpanded(false); setHoveredCat(null); }}
+          />
+          <div
+            onMouseLeave={() => { setExpanded(false); setHoveredCat(null); }}
+            className="animate-fade-right"
+            style={{
+              position: "fixed",
+              left: 0,
+              top: 0,
+              zIndex: 501,
+              display: "flex",
+              gap: 4,
+              alignItems: "flex-start",
+              height: "100vh",
+            }}
+          >
+            {/* ── MAIN LIST PANEL ── */}
+            <div style={{
+              width: 260,
+              background: "white",
+              borderRadius: "0",
+              boxShadow: "8px 4px 32px rgba(0,0,0,0.18)",
+              overflow: "hidden",
+              borderRight: "1px solid var(--gray-200)",
+              height: "100vh",
+              overflowY: "auto",
+            }}>
             {/* Header */}
             <div style={{
               background: "linear-gradient(135deg, var(--red) 0%, #c62333 100%)",
@@ -150,7 +157,7 @@ function CategorySidebar() {
             </div>
 
             {/* Category rows */}
-            <div onMouseEnter={() => {}} style={{ paddingTop: 4, paddingBottom: 4 }}>
+            <div onMouseEnter={() => { }} style={{ paddingTop: 4, paddingBottom: 4 }}>
               {sidebarCategories.map(cat => (
                 <Link
                   key={cat.name}
@@ -254,6 +261,7 @@ function CategorySidebar() {
             </div>
           )}
         </div>
+        </>
       )}
     </>
   );
@@ -485,7 +493,7 @@ export default function HomePage() {
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-md)"; }}
               >
                 <div className="stars" style={{ marginBottom: 12 }}>
-                  {[1,2,3,4,5].map(s => <Star key={s} size={16} fill="var(--yellow)" color="var(--yellow)" />)}
+                  {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} fill="var(--yellow)" color="var(--yellow)" />)}
                 </div>
                 <p style={{ color: "var(--gray-700)", fontSize: 14, lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>"{r.text}"</p>
                 <div style={{ borderTop: "1px solid var(--gray-100)", paddingTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
