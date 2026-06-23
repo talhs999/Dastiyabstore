@@ -204,10 +204,10 @@ export default function Footer() {
                 <span style={{ fontSize: 11, fontWeight: 800, color: "var(--gray-800)" }}>COD</span>
               </div>
               <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center" }}>
-                <img src="https://easypaisa.com.pk/wp-content/uploads/2023/07/easypaisa-logo.png" alt="Easypaisa" style={{ height: 16, objectFit: "contain" }} />
+                <img src="/easypaisa.png" alt="Easypaisa" style={{ height: 16, objectFit: "contain" }} />
               </div>
               <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center" }}>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Jazz_Cash_logo.png" alt="JazzCash" style={{ height: 16, objectFit: "contain" }} />
+                <img src="/jazzcash.png" alt="JazzCash" style={{ height: 16, objectFit: "contain" }} />
               </div>
               <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center" }}>
                 <CreditCard size={16} color="var(--gray-600)" />
