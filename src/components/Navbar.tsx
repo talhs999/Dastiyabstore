@@ -8,7 +8,9 @@ import {
   ShoppingBag, Clock
 } from "lucide-react";
 import { useCart } from "@/store/cartStore";
+import { useWishlist } from "@/store/wishlistStore";
 import { useRouter } from "next/navigation";
+import { products } from "@/data/products";
 
 const categories = [
   { name: "Neckband Earphones", icon: <Headphones size={16} />, href: "/shop/neckband" },
@@ -29,8 +31,11 @@ export default function Navbar() {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const { items, totalItems, totalPrice, removeFromCart } = useCart();
+  const { items: wishlistItems } = useWishlist();
   const searchRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  const searchResults = searchQuery.trim() ? products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5) : [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +146,41 @@ export default function Navbar() {
                   Search
                 </button>
               </form>
+              
+              {/* Live Search Suggestions */}
+              {searchQuery.trim() && searchResults.length > 0 && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, right: 0, marginTop: 8,
+                  background: "white", borderRadius: "var(--radius-lg)",
+                  boxShadow: "var(--shadow-xl)", border: "1px solid var(--gray-200)",
+                  zIndex: 200, overflow: "hidden",
+                }}>
+                  {searchResults.map(p => (
+                    <Link key={p.id} href={`/product/${p.id}`} onClick={() => setSearchQuery("")} style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                      textDecoration: "none", borderBottom: "1px solid var(--gray-100)",
+                      transition: "background 0.2s"
+                    }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--gray-50)"}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                    >
+                      <img src={p.image} alt={p.name} style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6 }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)" }}>{p.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--gray-500)" }}>{p.category}</div>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--red)" }}>Rs. {p.price.toLocaleString()}</div>
+                    </Link>
+                  ))}
+                  <button onClick={handleSearch} style={{
+                    width: "100%", padding: 12, background: "var(--gray-50)",
+                    border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+                    color: "var(--red)", textAlign: "center"
+                  }}>
+                    View all results
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Right Icons */}
@@ -159,6 +199,16 @@ export default function Navbar() {
               <Link href="/account/wishlist" className="icon-btn tooltip-wrap" style={{ textDecoration: "none", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", color: "var(--gray-700)", transition: "all var(--transition)" }}>
                 <Heart size={22} />
                 <span className="tooltip">Wishlist</span>
+                {wishlistItems.length > 0 && (
+                  <span style={{
+                    position: "absolute", top: 0, right: 0,
+                    background: "var(--red)", color: "white",
+                    width: 18, height: 18, borderRadius: "50%",
+                    fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {wishlistItems.length}
+                  </span>
+                )}
               </Link>
 
               {/* Account */}

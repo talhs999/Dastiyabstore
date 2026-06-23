@@ -11,6 +11,7 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", city: "", notes: "" });
   const [placed, setPlaced] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { items, totalPrice, clearCart } = useCart();
   const shipping = totalPrice >= 2000 ? 0 : 200;
@@ -59,6 +60,7 @@ export default function CheckoutPage() {
 
       if (itemsError) throw itemsError;
 
+      setOrderId(order.id);
       setPlaced(true);
       clearCart();
     } catch (err) {
@@ -81,7 +83,13 @@ export default function CheckoutPage() {
             Thank you for your order! Our team will call you shortly to confirm delivery. You will receive your order within 2–3 business days.
           </p>
           <div style={{ background: "var(--gray-50)", borderRadius: "var(--radius)", padding: 20, margin: "24px 0", border: "1px solid var(--gray-200)" }}>
-            <p style={{ fontSize: 14, color: "var(--gray-600)" }}>Payment Method: <strong style={{ color: "var(--red)" }}>Cash on Delivery</strong></p>
+            <p style={{ fontSize: 14, color: "var(--gray-600)", marginBottom: 8 }}>
+              Order Number: <strong style={{ color: "var(--gray-900)", userSelect: "all" }}>{orderId}</strong>
+            </p>
+            <p style={{ fontSize: 14, color: "var(--gray-600)" }}>
+              Payment Method: <strong style={{ color: "var(--red)" }}>Cash on Delivery</strong>
+            </p>
+            <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 12 }}>Please save your order number to track your order status.</p>
           </div>
           <a href="/" className="btn-red" style={{ textDecoration: "none", display: "inline-flex" }}>
             Continue Shopping

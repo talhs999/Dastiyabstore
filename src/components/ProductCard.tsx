@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, Heart, Star, Eye, Zap } from "lucide-react";
 import { useCart } from "@/store/cartStore";
+import { useWishlist } from "@/store/wishlistStore";
 import { useToast } from "@/components/ui/Toast";
 
 interface Product {
@@ -22,6 +23,7 @@ interface Product {
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -70,17 +72,27 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Wishlist */}
         <button
-          onClick={e => { e.preventDefault(); showToast("Added to wishlist!", "info"); }}
+          onClick={e => {
+            e.preventDefault();
+            if (isInWishlist(product.id)) {
+              removeFromWishlist(product.id);
+              showToast("Removed from wishlist", "info");
+            } else {
+              addToWishlist(product as any);
+              showToast("Added to wishlist!", "info");
+            }
+          }}
           style={{
             position: "absolute", top: 12, right: 12, width: 36, height: 36,
             borderRadius: "50%", background: "white", border: "none", cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: "var(--shadow-sm)", zIndex: 2, transition: "all 0.2s",
+            color: isInWishlist(product.id) ? "var(--red)" : "var(--gray-400)",
           }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#fff0f0"; (e.currentTarget as HTMLElement).style.color = "var(--red)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "white"; (e.currentTarget as HTMLElement).style.color = ""; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "white"; (e.currentTarget as HTMLElement).style.color = isInWishlist(product.id) ? "var(--red)" : "var(--gray-400)"; }}
         >
-          <Heart size={16} />
+          <Heart size={16} fill={isInWishlist(product.id) ? "var(--red)" : "none"} />
         </button>
 
         {/* Image */}

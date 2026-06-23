@@ -26,7 +26,7 @@ const footerLinks = {
     { label: "Laptop Stand", href: "/shop/laptop-stand" },
   ],
   "Support": [
-    { label: "Track Your Order", href: "/account/orders" },
+    { label: "Track Your Order", href: "/track-order" },
     { label: "Return & Refund Policy", href: "/returns" },
     { label: "FAQs", href: "/faqs" },
     { label: "Terms & Conditions", href: "/terms" },
