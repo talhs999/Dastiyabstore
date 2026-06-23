@@ -6,6 +6,18 @@ import { Mail, Lock, Eye, EyeOff, ShoppingBag, ArrowRight, User, Phone } from "l
 export default function LoginPage() {
   const [show, setShow] = useState(false);
   const [tab, setTab] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email === "admin@dastiyab.com" && password === "dastiyab@123") {
+      document.cookie = "admin_session=true; path=/";
+      window.location.href = "/admin";
+    } else {
+      alert("Invalid credentials or customer login disabled.");
+    }
+  };
 
   return (
     <div style={{ minHeight: "calc(100vh - 200px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", background: "var(--gray-50)" }}>
@@ -39,19 +51,19 @@ export default function LoginPage() {
         <div className="animate-fade-up" style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 32, boxShadow: "var(--shadow-lg)", border: "1px solid var(--gray-200)" }}>
 
           {tab === "login" ? (
-            <form onSubmit={e => e.preventDefault()} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
               <div>
                 <label className="label">Email or Phone</label>
                 <div style={{ position: "relative" }}>
                   <Mail size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40 }} type="text" placeholder="email@example.com" />
+                  <input className="input" style={{ paddingLeft: 40 }} type="text" placeholder="admin@dastiyab.com" value={email} onChange={e => setEmail(e.target.value)} required />
                 </div>
               </div>
               <div>
                 <label className="label">Password</label>
                 <div style={{ position: "relative" }}>
                   <Lock size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40, paddingRight: 44 }} type={show ? "text" : "password"} placeholder="Enter your password" />
+                  <input className="input" style={{ paddingLeft: 40, paddingRight: 44 }} type={show ? "text" : "password"} placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
                   <button type="button" onClick={() => setShow(!show)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)" }}>
                     {show ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>

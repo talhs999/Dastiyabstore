@@ -45,7 +45,10 @@ export default function AdminOrders() {
         <h1 style={{ fontSize: 28, fontWeight: 900, color: "var(--gray-900)", display: "flex", alignItems: "center", gap: 12 }}>
           <Package size={28} color="var(--red)" /> Admin Dashboard
         </h1>
-        <Link href="/" style={{ color: "var(--gray-600)", textDecoration: "none" }}>Back to Store</Link>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <Link href="/" style={{ color: "var(--gray-600)", textDecoration: "none" }}>Back to Store</Link>
+          <button onClick={() => { document.cookie = "admin_session=; path=/; max-age=0"; window.location.href = "/login"; }} style={{ background: "var(--red)", color: "white", border: "none", padding: "8px 16px", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>Logout</button>
+        </div>
       </div>
 
       <div style={{ background: "white", borderRadius: "var(--radius-lg)", border: "1px solid var(--gray-200)", boxShadow: "var(--shadow-sm)", overflow: "hidden" }}>
