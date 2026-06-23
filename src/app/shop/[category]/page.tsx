@@ -1,5 +1,6 @@
 "use client";
-import { useState, use } from "react";
+import { useState, use, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Grid, List, SlidersHorizontal, ChevronDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ShopSidebar from "@/components/ShopSidebar";
@@ -26,11 +27,46 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
   const [sort, setSort] = useState("Newest First");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const searchParams = useSearchParams();
   const categoryName = categoryMap[categorySlug] || categorySlug.replace("-", " ");
   
-  const categoryProducts = products.filter(
-    (p) => p.category === categoryMap[categorySlug] || p.category.toLowerCase() === categoryName.toLowerCase()
-  );
+  const filteredProducts = useMemo(() => {
+    const q = searchParams.get("q")?.toLowerCase();
+    const min = searchParams.get("min") ? Number(searchParams.get("min")) : 0;
+    const max = searchParams.get("max") ? Number(searchParams.get("max")) : 15000;
+    const rating = searchParams.get("rating") ? Number(searchParams.get("rating")) : 0;
+    const tags = searchParams.get("tags") ? searchParams.get("tags")!.split(",") : [];
+
+    let filtered = products.filter(p => {
+      // Must match category
+      if (p.category !== categoryMap[categorySlug] && p.category.toLowerCase() !== categoryName.toLowerCase()) return false;
+
+      // Search query
+      if (q && !p.name.toLowerCase().includes(q) && !p.description.toLowerCase().includes(q)) return false;
+      // Price range
+      if (p.price < min || p.price > max) return false;
+      // Rating
+      if (rating > 0 && p.rating < rating) return false;
+      // Tags
+      if (tags.length > 0) {
+        let tagMatch = true;
+        if (tags.includes("In Stock") && !p.inStock) tagMatch = false;
+        if (tags.includes("On Sale") && !p.originalPrice) tagMatch = false;
+        if (tags.includes("New Arrivals") && !p.isNew) tagMatch = false;
+        if (tags.includes("Best Seller") && !p.isBestSeller) tagMatch = false;
+        if (!tagMatch) return false;
+      }
+      return true;
+    });
+
+    // Sorting
+    if (sort === "Price: Low to High") filtered.sort((a, b) => a.price - b.price);
+    else if (sort === "Price: High to Low") filtered.sort((a, b) => b.price - a.price);
+    else if (sort === "Most Popular") filtered.sort((a, b) => b.reviews - a.reviews);
+    else if (sort === "Top Rated") filtered.sort((a, b) => b.rating - a.rating);
+
+    return filtered;
+  }, [categorySlug, categoryName, searchParams, sort]);
 
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
@@ -46,7 +82,7 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
       <div style={{ display: "flex", gap: 32 }}>
         {/* Sidebar (Desktop) */}
         <div style={{ display: "block" }} className="desktop-only">
-          <ShopSidebar />
+          <ShopSidebar currentCategory={categoryName} />
         </div>
 
         {/* Main Content */}
@@ -55,7 +91,7 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
             <div>
               <h1 style={{ fontWeight: 800, fontSize: 22, color: "var(--gray-900)", textTransform: "capitalize" }}>{categoryName}</h1>
-              <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 2 }}>{categoryProducts.length} products found</p>
+              <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 2 }}>{filteredProducts.length} products found</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               {/* Mobile Filter */}
@@ -86,9 +122,9 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
           </div>
 
           {/* Products Grid */}
-          {categoryProducts.length > 0 ? (
+          {filteredProducts.length > 0 ? (
             <div style={{ display: "grid", gridTemplateColumns: view === "grid" ? "repeat(auto-fill, minmax(240px, 1fr))" : "1fr", gap: 20 }}>
-              {categoryProducts.map(product => (
+              {filteredProducts.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

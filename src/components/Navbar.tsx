@@ -8,6 +8,7 @@ import {
   ShoppingBag, Clock
 } from "lucide-react";
 import { useCart } from "@/store/cartStore";
+import { useRouter } from "next/navigation";
 
 const categories = [
   { name: "Neckband Earphones", icon: <Headphones size={16} />, href: "/shop/neckband" },
@@ -29,6 +30,15 @@ export default function Navbar() {
   const [cartOpen, setCartOpen] = useState(false);
   const { items, totalItems, totalPrice, removeFromCart } = useCart();
   const searchRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/shop?q=${encodeURIComponent(searchQuery)}`);
+      setSearchOpen(false);
+    }
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -105,7 +115,7 @@ export default function Navbar() {
 
             {/* Search Bar */}
             <div style={{ flex: 1, maxWidth: 520, position: "relative" }} className="desktop-only">
-              <div style={{
+              <form onSubmit={handleSearch} style={{
                 display: "flex", alignItems: "center",
                 background: "var(--gray-50)", border: "2px solid var(--gray-200)",
                 borderRadius: "var(--radius-full)", overflow: "hidden",
@@ -122,7 +132,7 @@ export default function Navbar() {
                     outline: "none", color: "var(--gray-900)",
                   }}
                 />
-                <button style={{
+                <button type="submit" style={{
                   padding: "10px 18px", background: "var(--red)", border: "none",
                   cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
                   color: "white", fontSize: 14, fontWeight: 600,
@@ -130,7 +140,7 @@ export default function Navbar() {
                   <Search size={16} />
                   Search
                 </button>
-              </div>
+              </form>
             </div>
 
             {/* Right Icons */}
@@ -188,7 +198,7 @@ export default function Navbar() {
           {/* Mobile Search Bar */}
           {searchOpen && (
             <div className="animate-fade-down mobile-only" style={{ padding: "0 0 12px" }}>
-              <div style={{ display: "flex", alignItems: "center", background: "var(--gray-50)", border: "2px solid var(--red)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
+              <form onSubmit={handleSearch} style={{ display: "flex", alignItems: "center", background: "var(--gray-50)", border: "2px solid var(--red)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
                 <input
                   ref={searchRef}
                   type="text"
@@ -197,10 +207,10 @@ export default function Navbar() {
                   onChange={e => setSearchQuery(e.target.value)}
                   style={{ flex: 1, padding: "10px 16px", border: "none", background: "transparent", fontSize: 14, fontFamily: "inherit", outline: "none" }}
                 />
-                <button style={{ padding: "10px 16px", background: "var(--red)", border: "none", cursor: "pointer", color: "white" }}>
+                <button type="submit" style={{ padding: "10px 16px", background: "var(--red)", border: "none", cursor: "pointer", color: "white" }}>
                   <Search size={16} />
                 </button>
-              </div>
+              </form>
             </div>
           )}
         </div>
@@ -237,7 +247,7 @@ export default function Navbar() {
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <MapPin size={13} color="var(--red)" />
-                Lahore, Pakistan
+                Karachi, Pakistan
               </span>
             </div>
           </div>

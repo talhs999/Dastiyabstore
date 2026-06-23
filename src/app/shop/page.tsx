@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Grid, List, SlidersHorizontal, ChevronDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ShopSidebar from "@/components/ShopSidebar";
@@ -11,6 +12,44 @@ export default function ShopPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [sort, setSort] = useState("Newest First");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const searchParams = useSearchParams();
+
+  const filteredProducts = useMemo(() => {
+    const q = searchParams.get("q")?.toLowerCase();
+    const min = searchParams.get("min") ? Number(searchParams.get("min")) : 0;
+    const max = searchParams.get("max") ? Number(searchParams.get("max")) : 15000;
+    const rating = searchParams.get("rating") ? Number(searchParams.get("rating")) : 0;
+    const tags = searchParams.get("tags") ? searchParams.get("tags")!.split(",") : [];
+
+    let filtered = products.filter(p => {
+      // Search query
+      if (q && !p.name.toLowerCase().includes(q) && !p.description.toLowerCase().includes(q)) return false;
+      // Price range
+      if (p.price < min || p.price > max) return false;
+      // Rating
+      if (rating > 0 && p.rating < rating) return false;
+      // Tags
+      if (tags.length > 0) {
+        let tagMatch = true;
+        if (tags.includes("In Stock") && !p.inStock) tagMatch = false;
+        if (tags.includes("On Sale") && !p.originalPrice) tagMatch = false;
+        if (tags.includes("New Arrivals") && !p.isNew) tagMatch = false;
+        if (tags.includes("Best Seller") && !p.isBestSeller) tagMatch = false;
+        if (!tagMatch) return false;
+      }
+      return true;
+    });
+
+    // Sorting
+    if (sort === "Price: Low to High") filtered.sort((a, b) => a.price - b.price);
+    else if (sort === "Price: High to Low") filtered.sort((a, b) => b.price - a.price);
+    else if (sort === "Most Popular") filtered.sort((a, b) => b.reviews - a.reviews);
+    else if (sort === "Top Rated") filtered.sort((a, b) => b.rating - a.rating);
+    // Newest First is default, we can assume original array order or by id.
+
+    return filtered;
+  }, [searchParams, sort]);
 
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
@@ -32,8 +71,10 @@ export default function ShopPage() {
           {/* Toolbar */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
             <div>
-              <h1 style={{ fontWeight: 800, fontSize: 22, color: "var(--gray-900)" }}>All Products</h1>
-              <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 2 }}>{products.length} products found</p>
+              <h1 style={{ fontWeight: 800, fontSize: 22, color: "var(--gray-900)" }}>
+                {searchParams.get("q") ? `Search: "${searchParams.get("q")}"` : "All Products"}
+              </h1>
+              <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 2 }}>{filteredProducts.length} products found</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               {/* Mobile Filter */}
@@ -64,11 +105,19 @@ export default function ShopPage() {
           </div>
 
           {/* Products Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: view === "grid" ? "repeat(auto-fill, minmax(240px, 1fr))" : "1fr", gap: 20 }}>
-            {products.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {filteredProducts.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "64px 0" }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>No products found</h3>
+              <p style={{ color: "var(--gray-500)" }}>Try adjusting your search or filters to find what you're looking for.</p>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: view === "grid" ? "repeat(auto-fill, minmax(240px, 1fr))" : "1fr", gap: 20 }}>
+              {filteredProducts.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <style>{`

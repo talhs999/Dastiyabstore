@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ChevronDown, ChevronRight, Headphones, Wind, Laptop, Monitor, Home, Package, Star, Tag, Sliders } from "lucide-react";
 
 const categories = [
@@ -16,18 +17,63 @@ const categories = [
 
 interface Props {
   currentCategory?: string;
-  onPriceChange?: (min: number, max: number) => void;
-  onRatingChange?: (rating: number) => void;
-  onSortChange?: (sort: string) => void;
 }
 
-export default function ShopSidebar({ currentCategory, onPriceChange, onRatingChange, onSortChange }: Props) {
-  const [priceRange, setPriceRange] = useState([0, 15000]);
-  const [selectedRating, setSelectedRating] = useState(0);
-  const [openSections, setOpenSections] = useState({ categories: true, price: true, rating: true, brands: false });
+export default function ShopSidebar({ currentCategory }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const initialMin = searchParams.get("min") ? Number(searchParams.get("min")) : 0;
+  const initialMax = searchParams.get("max") ? Number(searchParams.get("max")) : 15000;
+  const initialRating = searchParams.get("rating") ? Number(searchParams.get("rating")) : 0;
+  const initialTags = searchParams.get("tags") ? searchParams.get("tags")!.split(",") : [];
+
+  const [priceRange, setPriceRange] = useState([initialMin, initialMax]);
+  const [selectedRating, setSelectedRating] = useState(initialRating);
+  const [selectedTags, setSelectedTags] = useState<string[]>(initialTags);
+  const [openSections, setOpenSections] = useState({ categories: true, price: true, rating: true, tags: true });
 
   const toggle = (key: keyof typeof openSections) =>
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+
+  // Helper to update URL params
+  const updateURL = (params: Record<string, string | number | null>) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === null || value === "" || value === 0) {
+        current.delete(key);
+      } else {
+        current.set(key, String(value));
+      }
+    });
+    const search = current.toString();
+    const query = search ? `?${search}` : "";
+    router.push(`${pathname}${query}`);
+  };
+
+  // Sync state to URL (price is handled separately via onMouseUp to avoid spamming)
+  useEffect(() => {
+    updateURL({
+      rating: selectedRating,
+      tags: selectedTags.length > 0 ? selectedTags.join(",") : null,
+    });
+  }, [selectedRating, selectedTags]);
+
+  const handlePriceDragEnd = () => {
+    updateURL({ min: priceRange[0], max: priceRange[1] === 15000 ? null : priceRange[1] });
+  };
+
+  const handlePriceInput = (index: 0 | 1, val: number) => {
+    const newRange = [...priceRange];
+    newRange[index] = val;
+    setPriceRange(newRange);
+    updateURL({ min: newRange[0], max: newRange[1] === 15000 ? null : newRange[1] });
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+  };
 
   return (
     <aside style={{ width: 260, flexShrink: 0 }}>
@@ -35,6 +81,11 @@ export default function ShopSidebar({ currentCategory, onPriceChange, onRatingCh
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, padding: "12px 16px", background: "var(--red)", borderRadius: "var(--radius)", color: "white" }}>
         <Sliders size={18} />
         <span style={{ fontWeight: 700, fontSize: 15 }}>Filters</span>
+        {(selectedRating > 0 || selectedTags.length > 0 || priceRange[0] > 0 || priceRange[1] < 15000) && (
+          <button onClick={() => { setPriceRange([0, 15000]); setSelectedRating(0); setSelectedTags([]); router.push(pathname); }} style={{ marginLeft: "auto", background: "rgba(255,255,255,0.2)", border: "none", color: "white", fontSize: 12, padding: "2px 8px", borderRadius: 4, cursor: "pointer" }}>
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Categories */}
@@ -84,12 +135,15 @@ export default function ShopSidebar({ currentCategory, onPriceChange, onRatingCh
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--red)" }}>Rs. {priceRange[0].toLocaleString()}</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--red)" }}>Rs. {priceRange[1].toLocaleString()}</span>
             </div>
-            <input type="range" min={0} max={15000} value={priceRange[1]} onChange={e => setPriceRange([priceRange[0], +e.target.value])}
-              style={{ width: "100%", accentColor: "var(--red)" }} />
+            <input type="range" min={0} max={15000} value={priceRange[1]} 
+              onChange={e => setPriceRange([priceRange[0], +e.target.value])}
+              onMouseUp={handlePriceDragEnd}
+              onTouchEnd={handlePriceDragEnd}
+              style={{ width: "100%", accentColor: "var(--red)", cursor: "pointer" }} />
             <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <input type="number" placeholder="Min" value={priceRange[0]} onChange={e => setPriceRange([+e.target.value, priceRange[1]])}
+              <input type="number" placeholder="Min" value={priceRange[0]} onChange={e => handlePriceInput(0, +e.target.value)}
                 className="input" style={{ flex: 1, fontSize: 13, padding: "8px 10px" }} />
-              <input type="number" placeholder="Max" value={priceRange[1]} onChange={e => setPriceRange([priceRange[0], +e.target.value])}
+              <input type="number" placeholder="Max" value={priceRange[1]} onChange={e => handlePriceInput(1, +e.target.value)}
                 className="input" style={{ flex: 1, fontSize: 13, padding: "8px 10px" }} />
             </div>
           </div>
@@ -115,7 +169,7 @@ export default function ShopSidebar({ currentCategory, onPriceChange, onRatingCh
                   cursor: "pointer", width: "100%", textAlign: "left",
                   transition: "background 0.2s",
                 }}>
-                <div className="stars">
+                <div className="stars" style={{ display: "flex" }}>
                   {[1, 2, 3, 4, 5].map(s => (
                     <Star key={s} size={14} fill={s <= r ? "var(--yellow)" : "none"} color={s <= r ? "var(--yellow)" : "var(--gray-300)"} />
                   ))}
@@ -132,14 +186,23 @@ export default function ShopSidebar({ currentCategory, onPriceChange, onRatingCh
       <div style={{ background: "var(--white)", borderRadius: "var(--radius)", border: "1px solid var(--gray-200)", padding: 16 }}>
         <h4 style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-800)", marginBottom: 12 }}>Quick Filters</h4>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {["In Stock", "On Sale", "New Arrivals", "Best Seller", "COD Only"].map(tag => (
-            <button key={tag} style={{ padding: "6px 12px", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-full)", fontSize: 12, fontWeight: 600, background: "white", color: "var(--gray-600)", cursor: "pointer", transition: "all 0.2s" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--red)"; (e.currentTarget as HTMLElement).style.color = "white"; (e.currentTarget as HTMLElement).style.borderColor = "var(--red)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "white"; (e.currentTarget as HTMLElement).style.color = "var(--gray-600)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--gray-200)"; }}
-            >
-              {tag}
-            </button>
-          ))}
+          {["In Stock", "On Sale", "New Arrivals", "Best Seller", "COD Only"].map(tag => {
+            const isSelected = selectedTags.includes(tag);
+            return (
+              <button key={tag} onClick={() => toggleTag(tag)}
+                style={{ 
+                  padding: "6px 12px", border: "1px solid", 
+                  borderColor: isSelected ? "var(--red)" : "var(--gray-200)", 
+                  borderRadius: "var(--radius-full)", fontSize: 12, fontWeight: 600, 
+                  background: isSelected ? "var(--red)" : "white", 
+                  color: isSelected ? "white" : "var(--gray-600)", 
+                  cursor: "pointer", transition: "all 0.2s" 
+                }}
+              >
+                {tag}
+              </button>
+            );
+          })}
         </div>
       </div>
     </aside>

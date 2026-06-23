@@ -2,16 +2,16 @@
 import { Award, Target, Users, ShoppingBag, Heart } from "lucide-react";
 
 const team = [
-  { name: "Amir Khan", role: "Founder & CEO", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&q=80" },
-  { name: "Sara Malik", role: "Operations Manager", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&q=80" },
-  { name: "Bilal Ahmed", role: "Product Curator", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&q=80" },
+  { name: "Amir Khan", role: "Founder & Chief Executive Officer", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&q=80" },
+  { name: "Sara Malik", role: "Head of Operations & Logistics", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&q=80" },
+  { name: "Bilal Ahmed", role: "Chief Product Officer", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&q=80" },
 ];
 
 const milestones = [
-  { year: "2023", title: "Founded", desc: "Started with a vision to bring quality gadgets to every Pakistani home." },
-  { year: "2024", title: "1000+ Orders", desc: "Reached our first milestone of 1000 successful deliveries across Pakistan." },
-  { year: "2025", title: "10,000+ Customers", desc: "Expanded our product catalog and customer base to 10,000+ happy buyers." },
-  { year: "2026", title: "National Reach", desc: "Now delivering to all cities and towns across Pakistan with 48hr speed." },
+  { year: "2026", title: "The Beginning", desc: "Founded DastiyabStore in Karachi with a vision to bring premium, tested gadgets to every Pakistani home." },
+  { year: "2026", title: "Nationwide Logistics", desc: "Established partnerships with top couriers for reliable Cash on Delivery across Pakistan." },
+  { year: "2026", title: "Quality Assurance Hub", desc: "Set up our dedicated testing facility to ensure zero-compromise quality before any product is shipped." },
+  { year: "2026", title: "Growing Community", desc: "Rapidly expanding our trusted customer base with authentic tech products and 24/7 dedicated support." },
 ];
 
 export default function AboutPage() {

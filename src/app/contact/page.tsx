@@ -31,7 +31,7 @@ export default function ContactPage() {
             {[
               { icon: <Phone size={24} />, title: "Phone / WhatsApp", lines: ["0300-1234567", "Mon–Sat: 9 AM – 9 PM"] },
               { icon: <Mail size={24} />, title: "Email", lines: ["support@dastiyabstore.com", "Reply within 24 hours"] },
-              { icon: <MapPin size={24} />, title: "Address", lines: ["Lahore, Punjab", "Pakistan"] },
+              { icon: <MapPin size={24} />, title: "Address", lines: ["Karachi, Sindh", "Pakistan"] },
               { icon: <Clock size={24} />, title: "Business Hours", lines: ["Monday – Saturday", "9:00 AM – 9:00 PM PKT"] },
             ].map((c, i) => (
               <div key={i} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 20, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)", display: "flex", gap: 16, alignItems: "flex-start", transition: "all 0.3s" }}
@@ -107,6 +107,20 @@ export default function ContactPage() {
               </>
             )}
           </div>
+        </div>
+        
+        {/* Map Section */}
+        <div style={{ marginTop: 64 }}>
+          <h2 style={{ fontWeight: 800, fontSize: 22, marginBottom: 24, textAlign: "center" }}>Find Us in Karachi</h2>
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d462118.0249113642!2d66.87560127533355!3d25.193202390885145!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb33e06651d4bbf%3A0x9cf92f44555a0c23!2sKarachi%2C%20Karachi%20City%2C%20Sindh%2C%20Pakistan!5e0!3m2!1sen!2s!4v1718000000000!5m2!1sen!2s"
+            width="100%"
+            height="400"
+            style={{ border: 0, borderRadius: "var(--radius-lg)" }}
+            allowFullScreen={false}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
         </div>
       </section>
       <style>{`@media(max-width:768px){div[style*="grid-template-columns: 1fr 1.5fr"]{grid-template-columns:1fr!important}div[style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}}`}</style>

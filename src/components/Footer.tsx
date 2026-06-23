@@ -110,7 +110,7 @@ export default function Footer() {
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { icon: <MapPin size={15} />, text: "Lahore, Punjab, Pakistan" },
+                  { icon: <MapPin size={15} />, text: "Karachi, Sindh, Pakistan" },
                   { icon: <Phone size={15} />, text: "0300-1234567" },
                   { icon: <Mail size={15} />, text: "support@dastiyabstore.com" },
                 ].map((item, i) => (
