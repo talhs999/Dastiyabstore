@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingCart, Heart, Star, Eye, Zap } from "lucide-react";
 import { useCart } from "@/store/cartStore";
 import { useToast } from "@/components/ui/Toast";
@@ -84,10 +85,12 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Image */}
         <div className="product-image-wrap" style={{ height: 220, background: "var(--gray-50)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative" }}>
-          <img
+          <Image
             src={product.image}
             alt={product.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            style={{ objectFit: "cover", transition: "transform 0.5s ease" }}
           />
           {!product.inStock && (
             <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }}>

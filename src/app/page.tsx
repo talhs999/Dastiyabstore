@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight, ChevronRight, Truck, RotateCcw, Shield, Headphones,
   Star, Zap, Package, Wind, Laptop, Monitor, Home, ShoppingCart,
@@ -206,7 +207,7 @@ function CategorySidebar() {
             }}>
               {/* Image */}
               <div style={{ height: 115, overflow: "hidden", position: "relative", flexShrink: 0 }}>
-                <img src={activeCat.image} alt={activeCat.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <Image src={activeCat.image} alt={activeCat.name} fill sizes="300px" style={{ objectFit: "cover" }} />
                 <div style={{
                   position: "absolute", inset: 0,
                   background: "linear-gradient(135deg, rgba(0,0,0,0.65) 0%, transparent 100%)",
@@ -319,8 +320,8 @@ export default function HomePage() {
           {/* Image */}
           <div key={`img-${activeSlide}`} className="animate-fade-right" style={{ display: "flex", justifyContent: "center", alignItems: "flex-end" }}>
             <div style={{ position: "relative" }}>
-              <div style={{ width: "100%", maxWidth: 440, aspectRatio: "4/3", borderRadius: "var(--radius-lg)", overflow: "hidden", boxShadow: "var(--shadow-xl)" }}>
-                <img src={slide.image} alt={slide.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <div style={{ width: "100%", maxWidth: 440, aspectRatio: "4/3", borderRadius: "var(--radius-lg)", overflow: "hidden", boxShadow: "var(--shadow-xl)", position: "relative" }}>
+                <Image src={slide.image} alt={slide.title} fill sizes="(max-width: 768px) 100vw, 500px" style={{ objectFit: "cover" }} priority />
               </div>
               <div className="animate-float" style={{ position: "absolute", top: -20, right: -20, background: "white", borderRadius: "var(--radius)", padding: "12px 16px", boxShadow: "var(--shadow-lg)", display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#fff0f0", display: "flex", alignItems: "center", justifyContent: "center" }}>

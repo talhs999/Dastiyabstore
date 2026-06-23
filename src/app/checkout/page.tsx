@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
-import { CheckCircle, User, MapPin, Phone, Mail, Zap, Truck, Shield, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import { CheckCircle, User, MapPin, Phone, Mail, Zap, Truck, Shield, ChevronRight, Loader2 } from "lucide-react";
 import { useCart } from "@/store/cartStore";
+import { supabase } from "@/lib/supabase";
 
 const steps = ["Shipping", "Review", "Confirm"];
 
@@ -9,14 +11,62 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", city: "", notes: "" });
   const [placed, setPlaced] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { items, totalPrice, clearCart } = useCart();
   const shipping = totalPrice >= 2000 ? 0 : 200;
 
   const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  const handleOrder = () => {
-    setPlaced(true);
-    clearCart();
+  const handleOrder = async () => {
+    if (items.length === 0) return;
+    setLoading(true);
+
+    try {
+      // 1. Create order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          customer_name: form.name,
+          customer_email: form.email,
+          customer_phone: form.phone,
+          shipping_address: form.address,
+          shipping_city: form.city,
+          order_notes: form.notes,
+          subtotal: totalPrice,
+          shipping_fee: shipping,
+          total_amount: totalPrice + shipping,
+          payment_method: 'COD',
+          status: 'Pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // 2. Create order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        product_id: item.id,
+        product_name: item.name,
+        product_image: item.image,
+        price: item.price,
+        quantity: item.quantity
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      setPlaced(true);
+      clearCart();
+    } catch (err) {
+      console.error("Order submission failed:", err);
+      alert("There was an error submitting your order. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (placed) {
@@ -138,8 +188,9 @@ export default function CheckoutPage() {
               </div>
               <div style={{ display: "flex", gap: 12 }}>
                 <button onClick={() => setStep(0)} className="btn-ghost" style={{ border: "2px solid var(--gray-200)" }}>Back</button>
-                <button onClick={handleOrder} className="btn-red" style={{ flex: 1, justifyContent: "center" }}>
-                  <CheckCircle size={18} /> Place Order
+                <button onClick={handleOrder} className="btn-red" style={{ flex: 1, justifyContent: "center" }} disabled={loading}>
+                  {loading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />} 
+                  {loading ? "Placing Order..." : "Place Order"}
                 </button>
               </div>
             </div>
@@ -152,7 +203,9 @@ export default function CheckoutPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
             {items.map(item => (
               <div key={item.id} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <img src={item.image} alt={item.name} style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                <div style={{ position: "relative", width: 48, height: 48, flexShrink: 0, borderRadius: 8, overflow: "hidden" }}>
+                  <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />
+                </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)" }}>{item.name}</p>
                   <p style={{ fontSize: 12, color: "var(--gray-500)" }}>Qty: {item.quantity}</p>

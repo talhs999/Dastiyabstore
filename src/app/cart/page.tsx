@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingCart, Trash2, ArrowRight, Tag, Package } from "lucide-react";
 import { useCart } from "@/store/cartStore";
 import { Minus, Plus } from "lucide-react";
@@ -32,7 +33,9 @@ export default function CartPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {items.map(item => (
               <div key={item.id} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 20, boxShadow: "var(--shadow-sm)", border: "1px solid var(--gray-200)", display: "flex", gap: 16, alignItems: "center" }}>
-                <img src={item.image} alt={item.name} style={{ width: 88, height: 88, objectFit: "cover", borderRadius: "var(--radius)", flexShrink: 0 }} />
+                <div style={{ position: "relative", width: 88, height: 88, flexShrink: 0, borderRadius: "var(--radius)", overflow: "hidden" }}>
+                  <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />
+                </div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontWeight: 700, fontSize: 15, color: "var(--gray-900)", marginBottom: 6 }}>{item.name}</h3>
                   <p style={{ color: "var(--red)", fontWeight: 800, fontSize: 18 }}>Rs. {item.price.toLocaleString()}</p>
