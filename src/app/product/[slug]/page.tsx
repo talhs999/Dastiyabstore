@@ -327,7 +327,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= r.rating ? "var(--yellow)" : "none"} color={s <= r.rating ? "var(--yellow)" : "var(--gray-300)"} />)}
                         </div>
                       </div>
-                      <p style={{ color: "var(--gray-700)", fontSize: 14, lineHeight: 1.6 }}>{r.review_text}</p>
+                      <p style={{ color: "var(--gray-700)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>{r.review_text}</p>
+                      {r.reply_text && (
+                        <div style={{ marginTop: 12, padding: "12px 16px", background: "white", borderLeft: "3px solid var(--red)", borderRadius: "0 8px 8px 0" }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--red)", display: "block", marginBottom: 4 }}>DastiyabStore replied:</span>
+                          <p style={{ fontSize: 13, color: "var(--gray-600)", margin: 0 }}>{r.reply_text}</p>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
