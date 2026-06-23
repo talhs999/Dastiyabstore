@@ -44,7 +44,7 @@ export default function Footer() {
   return (
     <footer>
       {/* Trust Bar */}
-      <div style={{ background: "var(--gray-50)", borderTop: "3px solid var(--yellow)", padding: "40px 24px" }}>
+      <div style={{ background: "var(--gray-50)", padding: "40px 24px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24 }}>
             {trustFeatures.map((f, i) => (
@@ -90,103 +90,98 @@ export default function Footer() {
       </div>
 
       {/* Main Footer */}
-      <div style={{ background: "var(--gray-900)", padding: "64px 24px 32px" }}>
+      <div style={{ background: "white", padding: "80px 24px 32px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr repeat(3, auto)", gap: 48, marginBottom: 48 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 48, marginBottom: 64 }}>
 
-            {/* Brand Column */}
+            {/* Column 1: Brand */}
             <div style={{ maxWidth: 320 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, var(--red), var(--yellow))", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <ShoppingBag size={24} color="white" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: "var(--red)", lineHeight: 1 }}>Dastiyab</div>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: "var(--gray-900)", lineHeight: 1 }}>Dastiyab</div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: "var(--yellow)", letterSpacing: "2px", textTransform: "uppercase" }}>Store</div>
                 </div>
               </div>
-              <p style={{ color: "var(--gray-400)", fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
-                Jo Chahiye, Wahi Dastiyab — Your trusted destination for tech gadgets and accessories in Pakistan. Quality products, fast delivery, and Cash on Delivery available nationwide.
+              <p style={{ color: "var(--gray-600)", fontSize: 14, lineHeight: 1.8, marginBottom: 32 }}>
+                Jo Chahiye, Wahi Dastiyab — Your trusted destination for tech gadgets and accessories in Pakistan. We build trust through quality products and fast delivery.
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", gap: 16 }}>
                 {[
-                  { icon: <MapPin size={15} />, text: "Karachi, Sindh, Pakistan" },
-                  { icon: <Phone size={15} />, text: "0300-1234567" },
-                  { icon: <Mail size={15} />, text: "support@dastiyabstore.com" },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--gray-400)", fontSize: 14 }}>
-                    <span style={{ color: "var(--red)", flexShrink: 0 }}>{item.icon}</span>
-                    {item.text}
-                  </div>
+                  { icon: <FacebookIcon />, href: "#" },
+                  { icon: <InstagramIcon />, href: "#" },
+                  { icon: <TwitterIcon />, href: "#" },
+                ].map((s, i) => (
+                  <a key={i} href={s.href} style={{ color: "var(--gray-500)", transition: "color 0.2s" }} 
+                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
+                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-500)"}>
+                    {s.icon}
+                  </a>
                 ))}
               </div>
             </div>
 
-            {/* Link Columns */}
-            {Object.entries(footerLinks).map(([title, links]) => (
-              <div key={title}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, color: "white", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ width: 3, height: 18, background: "var(--red)", borderRadius: 2, display: "inline-block" }} />
-                  {title}
-                </h4>
-                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 12 }}>
-                  {links.map(link => (
-                    <li key={link.label}>
-                      <Link href={link.href} style={{ color: "var(--gray-400)", textDecoration: "none", fontSize: 14, display: "flex", alignItems: "center", gap: 6, transition: "color 0.2s" }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "var(--yellow)"}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "var(--gray-400)"}
-                      >
-                        <ChevronRight size={13} />
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {/* Payment & Social */}
-          <div style={{ borderTop: "1px solid var(--gray-800)", paddingTop: 32, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 20 }}>
+            {/* Column 2: Quick Links */}
             <div>
-              <p style={{ color: "var(--gray-500)", fontSize: 13, marginBottom: 12 }}>We accept</p>
-              <div style={{ display: "flex", gap: 8 }}>
-                {["COD", "JazzCash", "EasyPaisa", "Visa"].map(p => (
-                  <div key={p} style={{ padding: "6px 12px", background: "var(--gray-800)", borderRadius: 6, color: "var(--gray-300)", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-                    <CreditCard size={12} />
-                    {p}
-                  </div>
+              <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Quick Links</h4>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
+                {footerLinks["Quick Links"].map(link => (
+                  <li key={link.label}>
+                    <Link href={link.href} style={{ color: "var(--gray-600)", textDecoration: "none", fontSize: 14, transition: "color 0.2s" }} 
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-600)"}>
+                      {link.label}
+                    </Link>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
 
-            <div style={{ display: "flex", gap: 10 }}>
-              {[
-                { icon: <FacebookIcon />, href: "#", label: "Facebook" },
-                { icon: <InstagramIcon />, href: "#", label: "Instagram" },
-                { icon: <TwitterIcon />, href: "#", label: "Twitter" },
-                { icon: <YoutubeIcon />, href: "#", label: "Youtube" },
-              ].map(s => (
-                <a key={s.label} href={s.href} aria-label={s.label} style={{
-                  width: 40, height: 40, borderRadius: "50%",
-                  background: "var(--gray-800)", color: "var(--gray-400)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  textDecoration: "none", transition: "all 0.25s",
-                }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--red)"; (e.currentTarget as HTMLElement).style.color = "white"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--gray-800)"; (e.currentTarget as HTMLElement).style.color = "var(--gray-400)"; }}
-                >
-                  {s.icon}
-                </a>
-              ))}
+            {/* Column 3: Categories */}
+            <div>
+              <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Categories</h4>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
+                {footerLinks["Categories"].map(link => (
+                  <li key={link.label}>
+                    <Link href={link.href} style={{ color: "var(--gray-600)", textDecoration: "none", fontSize: 14, transition: "color 0.2s" }} 
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-600)"}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Column 4: Contact */}
+            <div>
+              <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Contact</h4>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
+                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>Karachi, Sindh, Pakistan</li>
+                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>support@dastiyabstore.com</li>
+                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>+92 300 1234567</li>
+                <li style={{ marginTop: 8 }}>
+                  <Link href="/contact" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--gray-600)", fontSize: 14, textDecoration: "none", transition: "color 0.2s" }} 
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-600)"}>
+                    <MapPin size={16} /> View on Google Maps
+                  </Link>
+                </li>
+              </ul>
             </div>
           </div>
 
-          {/* Copyright */}
-          <div style={{ marginTop: 24, textAlign: "center" }}>
-            <p style={{ color: "var(--gray-600)", fontSize: 13 }}>
-              &copy; {new Date().getFullYear()} DastiyabStore.com — All rights reserved. Made in Pakistan with love.
+          {/* Bottom Bar */}
+          <div style={{ borderTop: "1px solid var(--gray-200)", paddingTop: 32, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 20 }}>
+            <p style={{ color: "var(--gray-500)", fontSize: 13 }}>
+              &copy; {new Date().getFullYear()} Dastiyab Store. All rights reserved.
             </p>
+            <div style={{ display: "flex", gap: 32 }}>
+              <Link href="/privacy" style={{ color: "var(--gray-500)", fontSize: 13, textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-500)"}>Privacy Policy</Link>
+              <Link href="/terms" style={{ color: "var(--gray-500)", fontSize: 13, textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-500)"}>Terms & Conditions</Link>
+            </div>
           </div>
         </div>
       </div>

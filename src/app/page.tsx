@@ -17,7 +17,7 @@ const heroSlides = [
     subtitle: "Wearable 360° bladeless neck fan — perfect for Pakistani summers",
     cta: "Shop Now", href: "/shop/neck-fan",
     bg: "linear-gradient(135deg, #fff5f5 0%, #fff0e0 100%)", accent: "var(--red)",
-    image: "https://images.unsplash.com/photo-1625765503151-c1a10cc57b44?w=700&q=80",
+    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80",
   },
   {
     badge: "Best Seller", title: "Premium TWS\nEarbuds",
@@ -47,11 +47,36 @@ const sidebarCategories = [
 ];
 
 const stats = [
-  { value: "10,000+", label: "Happy Customers", icon: <Heart size={20} /> },
-  { value: "500+", label: "Products Sold", icon: <Package size={20} /> },
-  { value: "4.8/5", label: "Average Rating", icon: <Star size={20} /> },
-  { value: "48hr", label: "Fast Delivery", icon: <Truck size={20} /> },
+  { target: 10000, suffix: "+", label: "Happy Customers", icon: <Heart size={20} /> },
+  { target: 500, suffix: "+", label: "Products Sold", icon: <Package size={20} /> },
+  { target: 4.8, suffix: "/5", decimals: 1, label: "Average Rating", icon: <Star size={20} /> },
+  { target: 48, suffix: "hr", label: "Fast Delivery", icon: <Truck size={20} /> },
 ];
+
+function AnimatedCounter({ target, suffix = "", decimals = 0 }: { target: number, suffix?: string, decimals?: number }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTimestamp: number | null = null;
+    const duration = 2000;
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      setCount(easeProgress * target);
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [target]);
+
+  const formattedCount = decimals > 0
+    ? count.toFixed(decimals)
+    : Math.floor(count).toLocaleString();
+
+  return <span>{formattedCount}{suffix}</span>;
+}
 
 /* ─── FIXED OVERLAY SIDEBAR ─── */
 function CategorySidebar() {
@@ -326,9 +351,9 @@ export default function HomePage() {
           </div>
 
           {/* Image */}
-          <div key={`img-${activeSlide}`} className="animate-fade-right" style={{ display: "flex", justifyContent: "center", alignItems: "flex-end" }}>
-            <div style={{ position: "relative" }}>
-              <div style={{ width: "100%", maxWidth: 440, aspectRatio: "4/3", borderRadius: "var(--radius-lg)", overflow: "hidden", boxShadow: "var(--shadow-xl)", position: "relative" }}>
+          <div key={`img-${activeSlide}`} className="animate-fade-right" style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", width: "100%" }}>
+            <div style={{ position: "relative", width: "100%", maxWidth: 440 }}>
+              <div style={{ width: "100%", aspectRatio: "4/3", borderRadius: "var(--radius-lg)", overflow: "hidden", boxShadow: "var(--shadow-xl)", position: "relative" }}>
                 <Image src={slide.image} alt={slide.title} fill sizes="(max-width: 768px) 100vw, 500px" style={{ objectFit: "cover" }} priority />
               </div>
               <div className="animate-float" style={{ position: "absolute", top: -20, right: -20, background: "white", borderRadius: "var(--radius)", padding: "12px 16px", boxShadow: "var(--shadow-lg)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -369,7 +394,7 @@ export default function HomePage() {
           {stats.map((s, i) => (
             <div key={i} style={{ textAlign: "center", color: "white" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 6, opacity: 0.8 }}>{s.icon}</div>
-              <div style={{ fontSize: 26, fontWeight: 900 }}>{s.value}</div>
+              <div style={{ fontSize: 26, fontWeight: 900 }}><AnimatedCounter target={s.target} suffix={s.suffix} decimals={s.decimals} /></div>
               <div style={{ fontSize: 13, opacity: 0.85 }}>{s.label}</div>
             </div>
           ))}
@@ -449,26 +474,28 @@ export default function HomePage() {
       </section>
 
       {/* ── WHY CHOOSE US ── */}
-      <section style={{ padding: "80px 24px", background: "var(--gray-900)" }}>
+      <section style={{ padding: "80px 24px", background: "white" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div className="section-header">
-            <h2 style={{ color: "white" }}>Why Choose <span style={{ color: "var(--yellow)" }}>DastiyabStore?</span></h2>
-            <p style={{ color: "var(--gray-400)" }}>We are committed to providing the best shopping experience in Pakistan</p>
+            <h2>Why Choose <span>DastiyabStore?</span></h2>
+            <p>We are committed to providing the best shopping experience in Pakistan</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24 }}>
             {[
-              { icon: <Truck size={32} />, title: "Fast Nationwide Delivery", desc: "Delivery across all of Pakistan within 48-72 hours. Free on orders above Rs. 2000." },
-              { icon: <Shield size={32} />, title: "100% Authentic Products", desc: "All products are tested and verified. Quality guaranteed or your money back." },
-              { icon: <RotateCcw size={32} />, title: "Hassle-Free Returns", desc: "Not satisfied? Return within 7 days — no questions asked. Easy pickup." },
-              { icon: <Headphones size={32} />, title: "24/7 Customer Support", desc: "Our support team is always ready via WhatsApp, phone, or email." },
+              { icon: <Truck size={24} />, title: "Fast Nationwide Delivery", desc: "Delivery across all of Pakistan within 48-72 hours. Free on orders above Rs. 2000." },
+              { icon: <Shield size={24} />, title: "100% Authentic Products", desc: "All products are tested and verified. Quality guaranteed or your money back." },
+              { icon: <RotateCcw size={24} />, title: "Hassle-Free Returns", desc: "Not satisfied? Return within 7 days — no questions asked. Easy pickup." },
+              { icon: <Headphones size={24} />, title: "24/7 Customer Support", desc: "Our support team is always ready via WhatsApp, phone, or email." },
             ].map((f, i) => (
-              <div key={i} style={{ background: "var(--gray-800)", borderRadius: "var(--radius-lg)", padding: 28, border: "1px solid var(--gray-700)", transition: "all 0.3s" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--red)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--gray-700)"; (e.currentTarget as HTMLElement).style.transform = ""; }}
+              <div key={i} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 28, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)", transition: "all 0.3s ease" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)"; (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-xl)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--red)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-md)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--gray-200)"; }}
               >
-                <div style={{ color: "var(--yellow)", marginBottom: 16 }}>{f.icon}</div>
-                <h3 style={{ color: "white", fontWeight: 700, fontSize: 17, marginBottom: 10 }}>{f.title}</h3>
-                <p style={{ color: "var(--gray-400)", fontSize: 14, lineHeight: 1.6 }}>{f.desc}</p>
+                <div style={{ display: "inline-flex", width: 52, height: 52, borderRadius: "14px", background: "#fff0f0", alignItems: "center", justifyContent: "center", color: "var(--red)", marginBottom: 20 }}>
+                  {f.icon}
+                </div>
+                <h3 style={{ color: "var(--gray-900)", fontWeight: 700, fontSize: 17, marginBottom: 10 }}>{f.title}</h3>
+                <p style={{ color: "var(--gray-600)", fontSize: 14, lineHeight: 1.6 }}>{f.desc}</p>
               </div>
             ))}
           </div>
@@ -488,20 +515,46 @@ export default function HomePage() {
               { name: "Fatima Malik", city: "Karachi", text: "Laptop stand is very sturdy. Helps with neck pain during long work hours. Great quality!", product: "Aluminum Laptop Stand" },
               { name: "Usman Khan", city: "Islamabad", text: "AirPods sound quality is excellent at this price point. Battery lasts all day. Very happy!", product: "DastiyabBuds Pro" },
             ].map((r, i) => (
-              <div key={i} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 24, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)", transition: "all 0.3s" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-lg)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-md)"; }}
+              <div key={i} style={{ background: "white", borderRadius: "12px", padding: 24, boxShadow: "0 2px 6px rgba(0,0,0,0.08)", border: "1px solid var(--gray-200)", transition: "all 0.3s ease" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 6px rgba(0,0,0,0.08)"; }}
               >
-                <div className="stars" style={{ marginBottom: 12 }}>
-                  {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} fill="var(--yellow)" color="var(--yellow)" />)}
-                </div>
-                <p style={{ color: "var(--gray-700)", fontSize: 14, lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>"{r.text}"</p>
-                <div style={{ borderTop: "1px solid var(--gray-100)", paddingTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <div style={{ fontWeight: 700, color: "var(--gray-900)", fontSize: 14 }}>{r.name}</div>
-                    <div style={{ fontSize: 12, color: "var(--gray-500)" }}>{r.city}</div>
+                {/* Header: Avatar, Name, Time, Logo */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    {/* Avatar */}
+                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: i === 0 ? "#e91e63" : i === 1 ? "#9c27b0" : "#2196f3", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 18 }}>
+                      {r.name.charAt(0)}
+                    </div>
+                    {/* Name & Location */}
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                      <div style={{ fontWeight: 600, color: "#202124", fontSize: 15, lineHeight: 1.2 }}>{r.name}</div>
+                      <div style={{ fontSize: 12, color: "#70757a", marginTop: 2 }}>{r.city} • Local Guide</div>
+                    </div>
                   </div>
-                  <span className="badge badge-gray" style={{ fontSize: 11 }}>{r.product}</span>
+                  {/* Inline Google Logo */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                </div>
+                
+                {/* Stars & Time ago */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <div style={{ display: "flex", gap: 2 }}>
+                    {[1, 2, 3, 4, 5].map(s => <Star key={s} size={14} fill="#fbbc04" color="#fbbc04" />)}
+                  </div>
+                  <span style={{ fontSize: 13, color: "#70757a" }}>{["a week ago", "3 days ago", "2 weeks ago"][i]}</span>
+                </div>
+
+                {/* Review Text */}
+                <p style={{ color: "#3c4043", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>{r.text}</p>
+                
+                {/* Product Badge */}
+                <div>
+                  <span className="badge badge-gray" style={{ fontSize: 11, background: "#f1f3f4", color: "#3c4043", padding: "4px 8px", borderRadius: 4 }}>Purchased: {r.product}</span>
                 </div>
               </div>
             ))}
