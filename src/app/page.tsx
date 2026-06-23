@@ -591,7 +591,7 @@ export default function HomePage() {
       {/* ── REVIEWS ── */}
       <section style={{ 
         padding: "32px 24px", 
-        background: "linear-gradient(rgba(10, 10, 10, 0.85), rgba(10, 10, 10, 0.95)), url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1600&q=80') center/cover no-repeat",
+        background: "linear-gradient(rgba(10, 10, 10, 0.85), rgba(10, 10, 10, 0.95)), url('/reviews-bg.png') center/cover no-repeat",
         position: "relative"
       }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
