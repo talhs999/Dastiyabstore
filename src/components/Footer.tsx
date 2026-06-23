@@ -139,7 +139,23 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Column 3: Categories */}
+            {/* Column 3: Support */}
+            <div>
+              <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Support</h4>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
+                {footerLinks["Support"].map(link => (
+                  <li key={link.label}>
+                    <Link href={link.href} style={{ color: "var(--gray-600)", textDecoration: "none", fontSize: 14, transition: "color 0.2s" }} 
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-600)"}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Column 4: Categories */}
             <div>
               <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Categories</h4>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
@@ -155,7 +171,7 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Column 4: Contact */}
+            {/* Column 5: Contact */}
             <div>
               <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Contact</h4>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
@@ -163,11 +179,14 @@ export default function Footer() {
                 <li style={{ color: "var(--gray-600)", fontSize: 14 }}>support@dastiyabstore.com</li>
                 <li style={{ color: "var(--gray-600)", fontSize: 14 }}>+92 300 1234567</li>
                 <li style={{ marginTop: 8 }}>
-                  <Link href="/contact" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--gray-600)", fontSize: 14, textDecoration: "none", transition: "color 0.2s" }} 
+                  <Link href="/contact" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--gray-600)", fontSize: 14, textDecoration: "none", transition: "color 0.2s", marginBottom: 12 }} 
                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-600)"}>
                     <MapPin size={16} /> View on Google Maps
                   </Link>
+                  <div style={{ borderRadius: 8, overflow: "hidden", border: "1px solid var(--gray-200)" }}>
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d924234.630043513!2d66.59498263595563!3d25.193389476710437!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb33e06651d4bbf%3A0x9cf92f44555a0c23!2sKarachi%2C%20Karachi%20City%2C%20Sindh%2C%20Pakistan!5e0!3m2!1sen!2s!4v1718000000000!5m2!1sen!2s" width="100%" height="120" style={{ border: 0, display: "block" }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -178,6 +197,24 @@ export default function Footer() {
             <p style={{ color: "var(--gray-500)", fontSize: 13 }}>
               &copy; {new Date().getFullYear()} Dastiyab Store. All rights reserved.
             </p>
+            
+            {/* Payment Logos */}
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "var(--gray-800)" }}>COD</span>
+              </div>
+              <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center" }}>
+                <img src="https://easypaisa.com.pk/wp-content/uploads/2023/07/easypaisa-logo.png" alt="Easypaisa" style={{ height: 16, objectFit: "contain" }} />
+              </div>
+              <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center" }}>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Jazz_Cash_logo.png" alt="JazzCash" style={{ height: 16, objectFit: "contain" }} />
+              </div>
+              <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center" }}>
+                <CreditCard size={16} color="var(--gray-600)" />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-600)", marginLeft: 4 }}>Bank</span>
+              </div>
+            </div>
+
             <div style={{ display: "flex", gap: 32 }}>
               <Link href="/privacy" style={{ color: "var(--gray-500)", fontSize: 13, textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-500)"}>Privacy Policy</Link>
               <Link href="/terms" style={{ color: "var(--gray-500)", fontSize: 13, textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-500)"}>Terms & Conditions</Link>
