@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowRight, ChevronRight, Truck, RotateCcw, Shield, Headphones,
+  ArrowRight, ChevronRight, ChevronLeft, Truck, RotateCcw, Shield, Headphones,
   Star, Zap, Package, Wind, Laptop, Monitor, Home, ShoppingCart,
   TrendingUp, Award, Heart, Menu, Fan, Smartphone, Cpu, LayoutGrid, Music
 } from "lucide-react";
@@ -295,6 +295,14 @@ function CategorySidebar() {
 /* ─── HOME PAGE ─── */
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const reviewsRef = useRef<HTMLDivElement>(null);
+  
+  const scrollReviews = (dir: "left" | "right") => {
+    if (reviewsRef.current) {
+      reviewsRef.current.scrollBy({ left: dir === "left" ? -360 : 360, behavior: "smooth" });
+    }
+  };
+
   const featured = getFeaturedProducts();
   const bestSellers = getBestSellers();
 
@@ -588,33 +596,74 @@ export default function HomePage() {
       </section>
 
       {/* ── REVIEWS ── */}
-      <section style={{ padding: "72px 24px", background: "var(--gray-50)" }}>
+      <section style={{ 
+        padding: "32px 24px", 
+        background: "linear-gradient(rgba(10, 10, 10, 0.85), rgba(10, 10, 10, 0.95)), url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1600&q=80') center/cover no-repeat",
+        position: "relative"
+      }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div className="section-header">
-            <h2>What Our <span>Customers Say</span></h2>
-            <p>Real reviews from verified buyers across Pakistan</p>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32, gap: 20 }}>
+            <div className="section-header" style={{ marginBottom: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--yellow)" }}></span>
+                <span style={{ color: "var(--yellow)", fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: 2 }}>REVIEWS</span>
+              </div>
+              <h2 style={{ color: "var(--white)", textShadow: "0 2px 10px rgba(0,0,0,0.5)", fontSize: "clamp(32px, 4vw, 48px)" }}>What Our <span className="gradient-text">Customers Say</span></h2>
+              <p style={{ color: "var(--white)", opacity: 0.9, textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}>Real reviews from verified buyers across Pakistan</p>
+            </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
+          
+          <div 
+            className="reviews-slider"
+            ref={reviewsRef}
+            style={{ 
+              display: "flex", 
+              gap: 24, 
+              overflowX: "auto", 
+              scrollSnapType: "x mandatory", 
+              paddingBottom: 24, 
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none" // Firefox
+            }}
+          >
+            <style>{`
+              .reviews-slider::-webkit-scrollbar { display: none; }
+            `}</style>
+
             {[
-              { name: "Ahmed Raza", city: "Lahore", text: "Neck fan is amazing! Perfect for summer. COD delivery was smooth. Highly recommended!", product: "Neck Fan 360°" },
-              { name: "Fatima Malik", city: "Karachi", text: "Laptop stand is very sturdy. Helps with neck pain during long work hours. Great quality!", product: "Aluminum Laptop Stand" },
-              { name: "Usman Khan", city: "Islamabad", text: "AirPods sound quality is excellent at this price point. Battery lasts all day. Very happy!", product: "DastiyabBuds Pro" },
+              { name: "Ahmed Raza", city: "Lahore", text: "Neck fan is amazing! Perfect for summer. COD delivery was smooth. Highly recommended!", product: "Neck Fan 360°", time: "a week ago", color: "#e91e63" },
+              { name: "Fatima Malik", city: "Karachi", text: "Laptop stand is very sturdy. Helps with neck pain during long work hours. Great quality!", product: "Aluminum Laptop Stand", time: "3 days ago", color: "#9c27b0" },
+              { name: "Usman Khan", city: "Islamabad", text: "AirPods sound quality is excellent at this price point. Battery lasts all day. Very happy!", product: "DastiyabBuds Pro", time: "2 weeks ago", color: "#2196f3" },
+              { name: "Zainab Ali", city: "Rawalpindi", text: "The quality of the mobile accessories is top-notch. Cables are thick and durable. Delivered in 2 days.", product: "Fast Charging Cable", time: "1 month ago", color: "#00bcd4" },
+              { name: "Bilal Qureshi", city: "Peshawar", text: "Best tech store in Pakistan! Customer service is highly responsive. The smartwatch works perfectly.", product: "Smart Watch Series 8", time: "2 months ago", color: "#4caf50" },
+              { name: "Sana Tariq", city: "Multan", text: "I bought the ring light for my TikTok videos and the brightness is fantastic. Love the tripod quality.", product: "LED Ring Light 10\"", time: "3 weeks ago", color: "#ff9800" },
             ].map((r, i) => (
-              <div key={i} style={{ background: "white", borderRadius: "12px", padding: 24, boxShadow: "0 2px 6px rgba(0,0,0,0.08)", border: "1px solid var(--gray-200)", transition: "all 0.3s ease" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 6px rgba(0,0,0,0.08)"; }}
+              <div key={i} style={{ 
+                flex: "0 0 340px", 
+                scrollSnapAlign: "start",
+                background: "white", 
+                borderRadius: "16px", 
+                padding: 32, 
+                boxShadow: "0 10px 30px rgba(0,0,0,0.3)", 
+                border: "1px solid rgba(255,255,255,0.1)", 
+                transition: "all 0.3s ease",
+                display: "flex",
+                flexDirection: "column"
+              }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "none"; }}
               >
                 {/* Header: Avatar, Name, Time, Logo */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                   <div style={{ display: "flex", gap: 12 }}>
                     {/* Avatar */}
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: i === 0 ? "#e91e63" : i === 1 ? "#9c27b0" : "#2196f3", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 18 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: r.color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 20 }}>
                       {r.name.charAt(0)}
                     </div>
                     {/* Name & Location */}
                     <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                      <div style={{ fontWeight: 600, color: "#202124", fontSize: 15, lineHeight: 1.2 }}>{r.name}</div>
-                      <div style={{ fontSize: 12, color: "#70757a", marginTop: 2 }}>{r.city} • Local Guide</div>
+                      <div style={{ fontWeight: 700, color: "#111827", fontSize: 16, lineHeight: 1.2 }}>{r.name}</div>
+                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{r.city} • Local Guide</div>
                     </div>
                   </div>
                   {/* Inline Google Logo */}
@@ -627,22 +676,31 @@ export default function HomePage() {
                 </div>
 
                 {/* Stars & Time ago */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                   <div style={{ display: "flex", gap: 2 }}>
-                    {[1, 2, 3, 4, 5].map(s => <Star key={s} size={14} fill="#fbbc04" color="#fbbc04" />)}
+                    {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} fill="#fbbc04" color="#fbbc04" />)}
                   </div>
-                  <span style={{ fontSize: 13, color: "#70757a" }}>{["a week ago", "3 days ago", "2 weeks ago"][i]}</span>
+                  <span style={{ fontSize: 13, color: "#6b7280" }}>{r.time}</span>
                 </div>
 
                 {/* Review Text */}
-                <p style={{ color: "#3c4043", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>{r.text}</p>
+                <p style={{ color: "#374151", fontSize: 15, lineHeight: 1.6, marginBottom: 20, flex: 1 }}>{r.text}</p>
 
                 {/* Product Badge */}
                 <div>
-                  <span className="badge badge-gray" style={{ fontSize: 11, background: "#f1f3f4", color: "#3c4043", padding: "4px 8px", borderRadius: 4 }}>Purchased: {r.product}</span>
+                  <span className="badge" style={{ fontSize: 12, background: "#f3f4f6", color: "#4b5563", padding: "6px 10px", borderRadius: 6, fontWeight: 600 }}>Purchased: {r.product}</span>
                 </div>
               </div>
             ))}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 32 }}>
+            <button onClick={() => scrollReviews("left")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
+              <ChevronLeft size={20} />
+            </button>
+            <button onClick={() => scrollReviews("right")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
+              <ChevronRight size={20} />
+            </button>
           </div>
         </div>
       </section>
@@ -663,6 +721,60 @@ export default function HomePage() {
         /* Hide fixed sidebar on mobile */
         @media (max-width: 900px) {
           #cat-sidebar-fixed { display: none !important; }
+        }
+        
+        /* === BENTO GRID === */
+        .bento-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          grid-template-rows: repeat(2, minmax(240px, auto));
+          gap: 24px;
+        }
+        .bento-card {
+          position: relative;
+          border-radius: var(--radius-lg);
+          overflow: hidden;
+          transition: transform var(--transition), box-shadow var(--transition);
+        }
+        .bento-card:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-xl);
+        }
+        .bento-main {
+          grid-column: span 2;
+          grid-row: span 2;
+        }
+        .bento-wide {
+          grid-column: span 2;
+        }
+        .bento-small {
+          grid-column: span 1;
+        }
+        @media (max-width: 1024px) {
+          .bento-grid {
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: auto;
+          }
+          .bento-main {
+            grid-column: span 2;
+            grid-row: auto;
+            min-height: 380px;
+          }
+          .bento-wide {
+            grid-column: span 2;
+          }
+          .bento-small {
+            grid-column: span 1;
+          }
+        }
+        @media (max-width: 640px) {
+          .bento-grid {
+            display: flex;
+            flex-direction: column;
+          }
+          .bento-main, .bento-wide, .bento-small {
+            min-height: 280px;
+          }
         }
       `}</style>
     </div>
