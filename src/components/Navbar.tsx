@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/store/cartStore";
 import { useWishlist } from "@/store/wishlistStore";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { products } from "@/data/products";
 
 const categories = [
@@ -34,6 +34,9 @@ export default function Navbar() {
   const { items: wishlistItems } = useWishlist();
   const searchRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/admin")) return null;
 
   const searchResults = searchQuery.trim() ? products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5) : [];
 
