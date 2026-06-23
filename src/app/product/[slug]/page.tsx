@@ -1,7 +1,7 @@
 "use client";
 import { use, useState } from "react";
 import { notFound, useRouter } from "next/navigation";
-import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, MessageCircle, Facebook, Link as LinkIcon } from "lucide-react";
+import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, MessageCircle, Link as LinkIcon } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { products, getProductBySlug } from "@/data/products";
 import { useCart } from "@/store/cartStore";
@@ -148,7 +148,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     <MessageCircle size={16} color="#25D366" /> WhatsApp
                   </button>
                   <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <Facebook size={16} color="#1877F2" /> Facebook
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1877F2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> Facebook
                   </button>
                   <button onClick={() => { handleShare(); setShowShare(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
                     <LinkIcon size={16} color="var(--gray-500)" /> Copy Link
