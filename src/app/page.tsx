@@ -373,7 +373,6 @@ export default function HomePage() {
                   <div style={{ fontSize: 11, color: "var(--gray-500)" }}>500+ sold this week</div>
                 </div>
               </div>
-              </div>
             </div>
           </div>
         </div>
