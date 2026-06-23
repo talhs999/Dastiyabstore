@@ -1,5 +1,6 @@
 "use client";
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { notFound, useRouter } from "next/navigation";
 import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, Link as LinkIcon } from "lucide-react";
 import { FaWhatsapp, FaFacebook } from "react-icons/fa";
@@ -17,8 +18,62 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [activeTab, setActiveTab] = useState("description");
   const [activeImg, setActiveImg] = useState(0);
   const [showShare, setShowShare] = useState(false);
+  
+  // Reviews state
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   const { addToCart } = useCart();
   const { showToast } = useToast();
+
+  useEffect(() => {
+    async function fetchReviews() {
+      if (!product) return;
+      const { data } = await supabase
+        .from('product_reviews')
+        .select('*')
+        .eq('product_id', product.id)
+        .order('created_at', { ascending: false });
+      if (data) setReviews(data);
+      setLoadingReviews(false);
+    }
+    fetchReviews();
+  }, [product]);
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewName || !reviewText) {
+      showToast("Please fill all fields");
+      return;
+    }
+    setSubmittingReview(true);
+    
+    const newReview = {
+      product_id: product.id,
+      customer_name: reviewName,
+      rating: reviewRating,
+      review_text: reviewText,
+      created_at: new Date().toISOString()
+    };
+
+    const { error } = await supabase.from('product_reviews').insert([newReview]);
+    
+    if (error) {
+      showToast("Error submitting review");
+      console.error(error);
+    } else {
+      showToast("Review submitted successfully!");
+      setReviews([newReview, ...reviews]);
+      setReviewName("");
+      setReviewText("");
+      setReviewRating(5);
+    }
+    setSubmittingReview(false);
+  };
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : null;
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
   const images = product.images || [product.image];
@@ -223,24 +278,61 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
         {activeTab === "reviews" && (
           <div className="animate-fade-up">
-            <div style={{ display: "grid", gap: 16 }}>
-              {[
-                { name: "Muhammad Ali", rating: 5, date: "2 days ago", text: "Excellent product! Exactly as described. Very happy with the purchase." },
-                { name: "Ayesha Khan", rating: 4, date: "1 week ago", text: "Good quality. Delivery was fast. Would recommend to others." },
-              ].map((r, i) => (
-                <div key={i} style={{ background: "var(--gray-50)", borderRadius: "var(--radius)", padding: 20, border: "1px solid var(--gray-200)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                    <div>
-                      <span style={{ fontWeight: 700, color: "var(--gray-900)" }}>{r.name}</span>
-                      <span style={{ fontSize: 12, color: "var(--gray-500)", marginLeft: 12 }}>{r.date}</span>
-                    </div>
-                    <div className="stars">
-                      {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= r.rating ? "var(--yellow)" : "none"} color={s <= r.rating ? "var(--yellow)" : "var(--gray-300)"} />)}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 32 }}>
+              
+              {/* Form */}
+              <div style={{ background: "white", padding: 24, borderRadius: "var(--radius-lg)", border: "1px solid var(--gray-200)", boxShadow: "var(--shadow-sm)" }}>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)", marginBottom: 16 }}>Write a Review</h3>
+                <form onSubmit={handleSubmitReview} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div>
+                    <label className="label">Your Name</label>
+                    <input className="input" type="text" placeholder="Ali Khan" value={reviewName} onChange={e => setReviewName(e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="label">Rating</label>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <button type="button" key={s} onClick={() => setReviewRating(s)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                          <Star size={24} fill={s <= reviewRating ? "var(--yellow)" : "none"} color={s <= reviewRating ? "var(--yellow)" : "var(--gray-300)"} />
+                        </button>
+                      ))}
                     </div>
                   </div>
-                  <p style={{ color: "var(--gray-700)", fontSize: 14, lineHeight: 1.6 }}>{r.text}</p>
-                </div>
-              ))}
+                  <div>
+                    <label className="label">Your Review</label>
+                    <textarea className="input" rows={4} placeholder="What did you like about this product?" value={reviewText} onChange={e => setReviewText(e.target.value)} required></textarea>
+                  </div>
+                  <button type="submit" disabled={submittingReview} className="btn-red" style={{ justifyContent: "center" }}>
+                    {submittingReview ? "Submitting..." : "Submit Review"}
+                  </button>
+                </form>
+              </div>
+
+              {/* List */}
+              <div style={{ display: "grid", gap: 16 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Customer Reviews ({reviews.length})</h3>
+                {loadingReviews ? (
+                  <p style={{ color: "var(--gray-500)" }}>Loading reviews...</p>
+                ) : reviews.length === 0 ? (
+                  <p style={{ color: "var(--gray-500)", background: "var(--gray-50)", padding: 20, borderRadius: "var(--radius)", textAlign: "center" }}>No reviews yet. Be the first to review this product!</p>
+                ) : (
+                  reviews.map((r, i) => (
+                    <div key={i} style={{ background: "var(--gray-50)", borderRadius: "var(--radius)", padding: 20, border: "1px solid var(--gray-200)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                        <div>
+                          <span style={{ fontWeight: 700, color: "var(--gray-900)" }}>{r.customer_name}</span>
+                          <span style={{ fontSize: 12, color: "var(--gray-500)", marginLeft: 12 }}>{new Date(r.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div className="stars">
+                          {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= r.rating ? "var(--yellow)" : "none"} color={s <= r.rating ? "var(--yellow)" : "var(--gray-300)"} />)}
+                        </div>
+                      </div>
+                      <p style={{ color: "var(--gray-700)", fontSize: 14, lineHeight: 1.6 }}>{r.review_text}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+
             </div>
           </div>
         )}
