@@ -69,6 +69,50 @@ export default function AdminSettingsPage() {
     accountName: "", accountNumber: "", instructions: ""
   });
 
+  // Notification states
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSoundEnabled(localStorage.getItem("admin_sound_notifications") !== "false");
+      setPushEnabled(localStorage.getItem("admin_push_notifications") === "true");
+    }
+  }, []);
+
+  const playTestChime = () => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const now = ctx.currentTime;
+      
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(880, now);
+      gain1.gain.setValueAtTime(0.3, now);
+      gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.6);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(659.25, now + 0.15);
+      gain2.gain.setValueAtTime(0.3, now + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.15);
+      osc2.stop(now + 0.8);
+    } catch (e) {
+      console.error("Test chime error:", e);
+    }
+  };
+
   const tabs = [
     { label: "General", icon: <Store size={18} /> },
     { label: "Shipping & Delivery", icon: <Truck size={18} /> },
@@ -868,7 +912,142 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
-          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && activeTab !== "Delivery Areas" && activeTab !== "Coupons & Discounts" && activeTab !== "Emails & Marketing" && activeTab !== "Payments" && (
+          {activeTab === "Notifications" && (
+            <div>
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)" }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Order Alerts & Notifications</h2>
+                <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 4 }}>Configure real-time alerts when new orders are placed on your store.</p>
+              </div>
+
+              <div style={{ padding: "24px 32px", display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* Sound Alerts */}
+                <div style={{ border: "1px solid var(--gray-200)", borderRadius: 12, padding: 20, background: "white", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ width: 48, height: 48, background: "var(--gray-50)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gray-700)", border: "1px solid var(--gray-200)" }}>
+                      <Bell size={20} />
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--gray-900)" }}>Sound Chime Alerts</h4>
+                      <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 2 }}>Play a live chime sound in the admin panel as soon as a customer completes an order.</p>
+                      
+                      <button 
+                        onClick={playTestChime} 
+                        style={{
+                          marginTop: 12,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "6px 12px",
+                          background: "var(--gray-100)",
+                          border: "1px solid var(--gray-200)",
+                          borderRadius: 6,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "var(--gray-700)",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "var(--gray-200)"}
+                        onMouseLeave={(e) => e.currentTarget.style.background = "var(--gray-100)"}
+                      >
+                        Play Test Sound
+                      </button>
+                    </div>
+                  </div>
+
+                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                    <div style={{ position: "relative" }}>
+                      <input 
+                        type="checkbox" 
+                        className="sr-only" 
+                        checked={soundEnabled} 
+                        onChange={e => {
+                          const val = e.target.checked;
+                          setSoundEnabled(val);
+                          localStorage.setItem("admin_sound_notifications", String(val));
+                        }} 
+                        style={{ opacity: 0, width: 0, height: 0, position: "absolute" }} 
+                      />
+                      <div style={{ width: 44, height: 24, background: soundEnabled ? "var(--red)" : "var(--gray-300)", borderRadius: 999, transition: "background 0.2s" }}></div>
+                      <div style={{ position: "absolute", top: 2, left: soundEnabled ? 22 : 2, width: 20, height: 20, background: "white", borderRadius: "50%", transition: "all 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}></div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Push Notifications */}
+                <div style={{ border: "1px solid var(--gray-200)", borderRadius: 12, padding: 20, background: "white", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ width: 48, height: 48, background: "var(--gray-50)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gray-700)", border: "1px solid var(--gray-200)" }}>
+                      <Mail size={20} />
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--gray-900)" }}>Desktop Push Notifications</h4>
+                      <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 2 }}>Show browser desktop notifications even when you are working in another tab or the admin panel is minimized.</p>
+                      
+                      <div style={{ marginTop: 8, fontSize: 11, color: "var(--gray-500)", display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>Status:</span>
+                        {typeof window !== "undefined" && "Notification" in window ? (
+                          Notification.permission === "granted" ? (
+                            <span style={{ color: "#16a34a", fontWeight: 700 }}>Granted (Allowed)</span>
+                          ) : Notification.permission === "denied" ? (
+                            <span style={{ color: "var(--red)", fontWeight: 700 }}>Denied (Blocked by browser settings)</span>
+                          ) : (
+                            <span style={{ color: "#ca8a04", fontWeight: 700 }}>Default (Not requested yet)</span>
+                          )
+                        ) : (
+                          <span style={{ color: "var(--red)", fontWeight: 700 }}>Not supported in this browser</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                    <div style={{ position: "relative" }}>
+                      <input 
+                        type="checkbox" 
+                        className="sr-only" 
+                        checked={pushEnabled} 
+                        onChange={e => {
+                          const val = e.target.checked;
+                          if (val) {
+                            if (typeof window !== "undefined" && "Notification" in window) {
+                              Notification.requestPermission().then(permission => {
+                                if (permission === "granted") {
+                                  setPushEnabled(true);
+                                  localStorage.setItem("admin_push_notifications", "true");
+                                  alert("System desktop notifications enabled successfully!");
+                                } else {
+                                  setPushEnabled(false);
+                                  localStorage.setItem("admin_push_notifications", "false");
+                                  alert("Notification permission denied or dismissed. Please enable permissions manually in your browser address bar.");
+                                }
+                              });
+                            } else {
+                              alert("Notifications are not supported in this browser.");
+                            }
+                          } else {
+                            setPushEnabled(false);
+                            localStorage.setItem("admin_push_notifications", "false");
+                          }
+                        }} 
+                        style={{ opacity: 0, width: 0, height: 0, position: "absolute" }} 
+                      />
+                      <div style={{ width: 44, height: 24, background: pushEnabled ? "var(--red)" : "var(--gray-300)", borderRadius: 999, transition: "background 0.2s" }}></div>
+                      <div style={{ position: "absolute", top: 2, left: pushEnabled ? 22 : 2, width: 20, height: 20, background: "white", borderRadius: "50%", transition: "all 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}></div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--gray-200)" }}>
+                <button onClick={() => alert("Notification settings saved successfully!")} className="btn-red">
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && activeTab !== "Delivery Areas" && activeTab !== "Coupons & Discounts" && activeTab !== "Emails & Marketing" && activeTab !== "Payments" && activeTab !== "Notifications" && (
             <div style={{ padding: 60, textAlign: "center", color: "var(--gray-500)" }}>
               <p>Settings for <strong>{activeTab}</strong> will appear here.</p>
             </div>

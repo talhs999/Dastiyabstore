@@ -6,11 +6,14 @@ import {
   LayoutDashboard, Package, FolderTree, ShoppingCart, 
   Users, Star, Settings, LogOut, MessageSquare, LayoutList
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/Toast";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const sessionStr = localStorage.getItem("customer_session");
@@ -40,6 +43,71 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setIsAuthorized(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isAuthorized) return;
+
+    // Listen for new orders in real-time
+    const channel = supabase
+      .channel('realtime-orders-admin')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+        const newOrder = payload.new;
+        if (!newOrder) return;
+
+        // 1. Play Sound chime if enabled
+        const soundVal = localStorage.getItem("admin_sound_notifications") !== "false";
+        if (soundVal) {
+          try {
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioContextClass) {
+              const ctx = new AudioContextClass();
+              const now = ctx.currentTime;
+              
+              const osc1 = ctx.createOscillator();
+              const gain1 = ctx.createGain();
+              osc1.type = "sine";
+              osc1.frequency.setValueAtTime(880, now);
+              gain1.gain.setValueAtTime(0.3, now);
+              gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+              osc1.connect(gain1);
+              gain1.connect(ctx.destination);
+              osc1.start(now);
+              osc1.stop(now + 0.6);
+
+              const osc2 = ctx.createOscillator();
+              const gain2 = ctx.createGain();
+              osc2.type = "sine";
+              osc2.frequency.setValueAtTime(659.25, now + 0.15);
+              gain2.gain.setValueAtTime(0.3, now + 0.15);
+              gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+              osc2.connect(gain2);
+              gain2.connect(ctx.destination);
+              osc2.start(now + 0.15);
+              osc2.stop(now + 0.8);
+            }
+          } catch (e) {
+            console.error("Audio chime error:", e);
+          }
+        }
+
+        // 2. Custom Toast Alert
+        showToast(`🔔 New Order! Rs. ${Number(newOrder.total_amount).toLocaleString()} from ${newOrder.customer_name}`, "success");
+
+        // 3. Desktop Push Notification if enabled
+        const pushVal = localStorage.getItem("admin_push_notifications") === "true";
+        if (pushVal && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+          new Notification("🔔 New Order Received!", {
+            body: `Total: Rs. ${Number(newOrder.total_amount).toLocaleString()} - Customer: ${newOrder.customer_name} (${newOrder.shipping_city})`,
+            icon: "/favicon.ico"
+          });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthorized, showToast]);
 
   const handleSignOut = () => {
     document.cookie = "admin_session=; path=/; max-age=0";
