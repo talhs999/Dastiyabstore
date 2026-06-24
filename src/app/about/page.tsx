@@ -27,11 +27,11 @@ export default function AboutPage() {
           <p style={{ fontSize: 18, color: "var(--gray-600)", lineHeight: 1.7, marginBottom: 32 }}>
             We started DastiyabStore with a simple mission: make quality tech gadgets and accessories accessible to every Pakistani — at fair prices, with trusted service.
           </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 32, marginTop: 16 }}>
             {[{ n: "10,000+", l: "Happy Customers" }, { n: "48hr", l: "Avg. Delivery" }, { n: "4.8★", l: "Rating" }, { n: "100%", l: "Authentic" }].map((s, i) => (
               <div key={i} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 28, fontWeight: 900, color: "var(--red)" }}>{s.n}</div>
-                <div style={{ fontSize: 13, color: "var(--gray-500)" }}>{s.l}</div>
+                <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 900, color: "var(--red)", marginBottom: 4 }}>{s.n}</div>
+                <div style={{ fontSize: 13, color: "var(--gray-500)", fontWeight: 600 }}>{s.l}</div>
               </div>
             ))}
           </div>
@@ -81,15 +81,11 @@ export default function AboutPage() {
             <h2>Our <span>Journey</span></h2>
             <p>From a small idea to Pakistan's growing e-commerce store</p>
           </div>
-          <div style={{ position: "relative" }}>
-            <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 2, background: "var(--gray-200)", transform: "translateX(-50%)" }} />
+          <div className="timeline-container" style={{ position: "relative" }}>
+            <div className="timeline-line" />
             {milestones.map((m, i) => (
-              <div key={i} style={{ display: "flex", gap: 24, marginBottom: 32, justifyContent: i % 2 === 0 ? "flex-start" : "flex-end" }}>
-                <div style={{
-                  width: "45%", background: "white", borderRadius: "var(--radius)",
-                  padding: 20, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)",
-                  marginLeft: i % 2 === 1 ? "auto" : 0,
-                }}>
+              <div key={i} className={`timeline-item ${i % 2 === 0 ? "left" : "right"}`}>
+                <div className="timeline-card">
                   <div style={{ color: "var(--red)", fontWeight: 900, fontSize: 18, marginBottom: 6 }}>{m.year}</div>
                   <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{m.title}</div>
                   <div style={{ fontSize: 13, color: "var(--gray-500)", lineHeight: 1.6 }}>{m.desc}</div>
@@ -98,6 +94,24 @@ export default function AboutPage() {
             ))}
           </div>
         </div>
+        <style>{`
+          .timeline-line {
+            position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--gray-200); transform: translateX(-50%);
+          }
+          .timeline-item {
+            display: flex; gap: 24px; margin-bottom: 32px; width: 100%;
+          }
+          .timeline-item.left { justify-content: flex-start; }
+          .timeline-item.right { justify-content: flex-end; }
+          .timeline-card {
+            width: 45%; background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-md); border: 1px solid var(--gray-200); position: relative;
+          }
+          @media(max-width: 768px){
+            .timeline-line { left: 0; transform: none; }
+            .timeline-item.left, .timeline-item.right { justify-content: flex-end; }
+            .timeline-card { width: calc(100% - 24px); }
+          }
+        `}</style>
       </section>
 
       {/* Team */}

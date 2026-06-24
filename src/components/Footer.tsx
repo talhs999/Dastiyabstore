@@ -148,10 +148,10 @@ export default function Footer() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
-                  style={{ flex: 1, padding: "14px 20px", border: "none", fontSize: 14, fontFamily: "inherit", outline: "none", background: "white" }}
+                  style={{ flex: 1, minWidth: 0, padding: "14px 20px", border: "none", fontSize: 14, fontFamily: "inherit", outline: "none", background: "white" }}
                   disabled={loading}
                 />
-                <button disabled={loading} style={{ padding: "14px 24px", background: "var(--yellow)", border: "none", cursor: loading ? "not-allowed" : "pointer", color: "var(--black)", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 8, transition: "background 0.2s" }}>
+                <button disabled={loading} style={{ flexShrink: 0, padding: "14px 24px", background: "var(--yellow)", border: "none", cursor: loading ? "not-allowed" : "pointer", color: "var(--black)", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 8, transition: "background 0.2s" }}>
                   {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                   Subscribe
                 </button>

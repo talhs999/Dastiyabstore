@@ -284,7 +284,7 @@ export default function Navbar() {
               </button>
 
               {/* Wishlist */}
-              <Link href="/account/wishlist" className="icon-btn tooltip-wrap" style={{ textDecoration: "none", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", color: "var(--gray-700)", transition: "all var(--transition)" }}>
+              <Link href="/account/wishlist" className="icon-btn tooltip-wrap desktop-only" style={{ textDecoration: "none", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", color: "var(--gray-700)", transition: "all var(--transition)" }}>
                 <Heart size={22} />
                 <span className="tooltip">Wishlist</span>
                 {wishlistItems.length > 0 && (
@@ -300,7 +300,7 @@ export default function Navbar() {
               </Link>
 
               {/* Account */}
-              <Link href={accountHref} className="icon-btn tooltip-wrap" style={{ textDecoration: "none", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", color: "var(--gray-700)", transition: "all var(--transition)" }}>
+              <Link href={accountHref} className="icon-btn tooltip-wrap desktop-only" style={{ textDecoration: "none", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", color: "var(--gray-700)", transition: "all var(--transition)" }}>
                 <User size={22} />
                 <span className="tooltip">Account</span>
               </Link>
@@ -518,10 +518,18 @@ export default function Navbar() {
             </div>
             <nav style={{ flex: 1, overflowY: "auto", padding: 12 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: 1, padding: "8px 12px", marginBottom: 4 }}>Navigation</p>
-              {[{ label: "Home", href: "/", icon: <Home size={16} /> }, { label: "Shop All", href: "/shop", icon: <Package size={16} /> }, { label: "About Us", href: "/about", icon: <Star size={16} /> }, { label: "Contact", href: "/contact", icon: <Phone size={16} /> }].map(link => (
+              {[
+                { label: "Home", href: "/", icon: <Home size={16} /> }, 
+                { label: "Shop All", href: "/shop", icon: <Package size={16} /> }, 
+                { label: "Wishlist", href: "/account/wishlist", icon: <Heart size={16} />, badge: wishlistItems.length > 0 ? wishlistItems.length : null },
+                { label: "My Account", href: accountHref, icon: <User size={16} /> },
+                { label: "About Us", href: "/about", icon: <Star size={16} /> }, 
+                { label: "Contact", href: "/contact", icon: <Phone size={16} /> }
+              ].map(link => (
                 <Link key={link.label} href={link.href} onClick={() => setMobileOpen(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: "var(--radius)", textDecoration: "none", color: "var(--gray-700)", fontWeight: 500, transition: "all var(--transition)", marginBottom: 2 }}>
                   <span style={{ color: "var(--red)" }}>{link.icon}</span>
-                  {link.label}
+                  <span style={{ flex: 1 }}>{link.label}</span>
+                  {link.badge && <span className="badge badge-red" style={{ fontSize: 10, padding: "2px 7px" }}>{link.badge}</span>}
                 </Link>
               ))}
               <div className="divider" style={{ margin: "12px 0" }} />

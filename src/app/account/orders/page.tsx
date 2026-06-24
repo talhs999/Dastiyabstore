@@ -152,10 +152,10 @@ export default function AccountOrdersPage() {
                         <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Package size={12} /> Subtotal: Rs. {order.subtotal.toLocaleString()}</span>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right", minWidth: 160 }}>
+                    <div className="order-actions" style={{ minWidth: 160 }}>
                       <div style={{ fontSize: 20, fontWeight: 900, color: "var(--red)" }}>Rs. {order.total_amount.toLocaleString()}</div>
                       <div style={{ fontSize: 12, color: "var(--gray-500)", marginBottom: 8 }}>Payment: {order.payment_method}</div>
-                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                      <div className="order-btn-group" style={{ display: "flex", gap: 8 }}>
                         <Link href={`/track-order?id=${order.id}`} className="btn-ghost" style={{ fontSize: 12, padding: "6px 14px", border: "1px solid var(--gray-200)", textDecoration: "none", color: "var(--gray-700)", borderRadius: 6 }}>
                           Track
                         </Link>
@@ -171,7 +171,15 @@ export default function AccountOrdersPage() {
           )}
         </div>
       </div>
-      <style>{`@media(max-width:768px){div[style*="grid-template-columns: 240px 1fr"]{grid-template-columns:1fr!important}}`}</style>
+      <style>{`
+        .order-actions { text-align: right; }
+        .order-btn-group { justify-content: flex-end; }
+        @media(max-width:768px){
+          div[style*="grid-template-columns: 240px 1fr"]{grid-template-columns:1fr!important}
+          .order-actions { text-align: left; width: 100%; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--gray-100); }
+          .order-btn-group { justify-content: flex-start; }
+        }
+      `}</style>
     </div>
   );
 }

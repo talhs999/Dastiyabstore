@@ -365,11 +365,13 @@ export default function HomePage() {
     <div style={{ overflowX: "hidden" }}>
 
       {/* ── FIXED CATEGORY SIDEBAR (overlay, not in layout) ── */}
-      <CategorySidebar categories={sidebarCategories} />
+      <div className="desktop-only">
+        <CategorySidebar categories={sidebarCategories} />
+      </div>
 
       {/* ── HERO ── */}
       <section style={{ background: slide.bg, transition: "background 0.8s ease", minHeight: 520 }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 24px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center", minHeight: 520 }}>
+        <div className="hero-grid" style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 24px 0", alignItems: "center", minHeight: 520 }}>
 
           {/* Text */}
           <div key={activeSlide} className="animate-fade-left">
@@ -437,7 +439,7 @@ export default function HomePage() {
 
       {/* ── STATS BAR ── */}
       <section style={{ background: "var(--red)", padding: "28px 24px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+        <div className="stats-grid" style={{ maxWidth: 1280, margin: "0 auto" }}>
           {stats.map((s, i) => (
             <div key={i} style={{ textAlign: "center", color: "white" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 6, opacity: 0.8 }}>{s.icon}</div>
@@ -451,7 +453,7 @@ export default function HomePage() {
       {/* ── FEATURED PRODUCTS ── */}
       <section style={{ padding: "72px 24px", background: "var(--gray-50)" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 40 }}>
+          <div className="header-flex" style={{ marginBottom: 40 }}>
             <div>
               <span className="badge badge-yellow" style={{ fontSize: 11, marginBottom: 8, display: "inline-flex", gap: 4 }}><Award size={11} /> Featured</span>
               <h2 style={{ fontSize: "clamp(26px, 3vw, 38px)", fontWeight: 800, color: "var(--gray-900)" }}>
@@ -472,7 +474,7 @@ export default function HomePage() {
       {/* ── PROMO BANNER ── */}
       <section style={{ padding: "0 24px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "linear-gradient(135deg, var(--red) 0%, #c62333 40%, #9b1526 100%)", padding: "48px 48px", display: "grid", gridTemplateColumns: "1fr auto", gap: 32, alignItems: "center" }}>
+          <div className="promo-grid" style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "linear-gradient(135deg, var(--red) 0%, #c62333 40%, #9b1526 100%)", padding: "48px 48px", alignItems: "center" }}>
             <div>
               <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                 <span className="badge badge-yellow" style={{ fontSize: 12 }}>Limited Time</span>
@@ -502,7 +504,7 @@ export default function HomePage() {
       {/* ── BEST SELLERS ── */}
       <section style={{ padding: "72px 24px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 40 }}>
+          <div className="header-flex" style={{ marginBottom: 40 }}>
             <div>
               <span className="badge badge-red" style={{ fontSize: 11, marginBottom: 8, display: "inline-flex", gap: 4 }}><TrendingUp size={11} /> Best Sellers</span>
               <h2 style={{ fontSize: "clamp(26px, 3vw, 38px)", fontWeight: 800, color: "var(--gray-900)" }}>
@@ -573,7 +575,7 @@ export default function HomePage() {
             </div>
 
             {/* Block 2: Wide Top (Mobile Accessories) */}
-            <div className="bento-card bento-wide" style={{ background: "#e0f2fe", padding: "32px", display: "flex", alignItems: "center", justifyContent: "space-between", overflow: "hidden" }}>
+            <div className="bento-card bento-wide bento-wide-inner" style={{ background: "#e0f2fe", padding: "32px", overflow: "hidden" }}>
               <div style={{ position: "relative", zIndex: 2, flex: 1 }}>
                 <h3 style={{ fontSize: 24, fontWeight: 800, color: "var(--gray-900)", marginBottom: 8 }}>
                   Mobile<br />Accessories
@@ -583,7 +585,7 @@ export default function HomePage() {
                   Explore <ChevronRight size={14} style={{ display: "inline", verticalAlign: "middle" }} />
                 </Link>
               </div>
-              <div style={{ position: "relative", width: "160px", height: "160px", flexShrink: 0, zIndex: 1, borderRadius: "12px", overflow: "hidden", boxShadow: "0 10px 20px rgba(0,0,0,0.1)" }}>
+              <div className="bento-wide-img">
                 <Image src="https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=500&q=80" alt="Mobile Accessories" fill style={{ objectFit: "cover" }} />
               </div>
             </div>
@@ -592,7 +594,7 @@ export default function HomePage() {
             <div className="bento-card bento-small" style={{ background: "#fff0f0", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
               <h4 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 4 }}>Home</h4>
               <p style={{ fontSize: 12, color: "var(--gray-500)", marginBottom: 16 }}>Smart gadgets</p>
-              <div style={{ position: "relative", width: "100%", height: "120px", marginBottom: 16, borderRadius: "12px", overflow: "hidden", boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}>
+              <div className="bento-small-img" style={{ marginBottom: 16 }}>
                 <Image src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" alt="Home Products" fill style={{ objectFit: "cover" }} />
               </div>
               <Link href="/shop/home-gadgets" style={{ color: "var(--red)", fontSize: 12, fontWeight: 700, textDecoration: "none", textTransform: "uppercase", letterSpacing: 1 }}>
@@ -606,7 +608,7 @@ export default function HomePage() {
                 <h4 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 4 }}>Computer</h4>
                 <p style={{ fontSize: 12, color: "var(--gray-500)" }}>Stands, Hubs & More</p>
               </div>
-              <div style={{ position: "relative", width: "100%", height: "120px", marginTop: "auto", borderRadius: "12px", overflow: "hidden", boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}>
+              <div className="bento-small-img" style={{ marginTop: "auto" }}>
                 <Image src="https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80" alt="Computer Accessories" fill style={{ objectFit: "cover" }} />
               </div>
               <Link href="/shop/laptop-stand" style={{ color: "#16a34a", fontSize: 12, fontWeight: 700, textDecoration: "none", textTransform: "uppercase", letterSpacing: 1, marginTop: 12 }}>
@@ -615,7 +617,7 @@ export default function HomePage() {
             </div>
 
             {/* Block 5: Wide Bottom (All Categories) */}
-            <div className="bento-card bento-wide" style={{ background: "linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%)", padding: "32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="bento-card bento-wide bento-wide-inner" style={{ background: "linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%)", padding: "32px" }}>
               <div style={{ position: "relative", zIndex: 2, flex: 1 }}>
                 <h3 style={{ fontSize: 24, fontWeight: 800, color: "var(--gray-900)", marginBottom: 8 }}>
                   Explore All<br />Categories
@@ -625,7 +627,7 @@ export default function HomePage() {
                   Browse Catalog <ArrowRight size={14} style={{ display: "inline", verticalAlign: "middle", marginLeft: 4 }} />
                 </Link>
               </div>
-              <div style={{ position: "relative", width: "180px", height: "140px", flexShrink: 0, zIndex: 1, borderRadius: "12px", overflow: "hidden", boxShadow: "0 10px 20px rgba(0,0,0,0.1)" }}>
+              <div className="bento-wide-img">
                 <Image src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80" alt="All Categories" fill style={{ objectFit: "cover" }} />
               </div>
             </div>

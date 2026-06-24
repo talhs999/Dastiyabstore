@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import IconPicker from "@/components/admin/IconPicker";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -78,6 +79,15 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  const updateIcon = async (id: string, icon: string) => {
+    const { error } = await supabase.from("categories").update({ icon: icon || "Package" }).eq("id", id);
+    if (!error) {
+      setCategories(categories.map(c => c.id === id ? { ...c, icon: icon || "Package" } : c));
+    } else {
+      alert("Error updating icon: " + error.message);
+    }
+  };
+
   const filtered = categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -99,12 +109,13 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
 
-      <div style={{ background: "white", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--gray-200)", overflow: "hidden" }}>
+      <div style={{ background: "white", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--gray-200)" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)" }}>
               <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Category Name</th>
               <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Slug</th>
+              <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Icon (Lucide)</th>
               <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Products</th>
               <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Show in Header?</th>
               <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Header Badge</th>
@@ -126,6 +137,16 @@ export default function AdminCategoriesPage() {
                 </td>
                 <td style={{ padding: "16px 24px", fontSize: 13, color: "var(--gray-500)" }}>
                   {c.slug}
+                </td>
+                <td style={{ padding: "16px 24px" }}>
+                  <IconPicker 
+                    value={c.icon || "Package"} 
+                    onChange={(newIcon) => {
+                      if (newIcon !== (c.icon || "Package")) {
+                        updateIcon(c.id, newIcon);
+                      }
+                    }} 
+                  />
                 </td>
                 <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--gray-700)", fontWeight: 600 }}>
                   {c.productCount} Products

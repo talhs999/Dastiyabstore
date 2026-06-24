@@ -4,16 +4,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ChevronDown, ChevronRight, Headphones, Wind, Laptop, Monitor, Home, Package, Star, Tag, Sliders } from "lucide-react";
 
-const categories = [
-  { name: "All Products", href: "/shop", icon: <Package size={16} />, count: 48 },
-  { name: "Neckband Earphones", href: "/shop/neckband", icon: <Headphones size={16} />, count: 12 },
-  { name: "AirPods / TWS", href: "/shop/airpods", icon: <Headphones size={16} />, count: 10 },
-  { name: "Neck Fan", href: "/shop/neck-fan", icon: <Wind size={16} />, count: 8 },
-  { name: "Portable Fan", href: "/shop/portable-fan", icon: <Wind size={16} />, count: 6 },
-  { name: "Laptop Stand", href: "/shop/laptop-stand", icon: <Laptop size={16} />, count: 7 },
-  { name: "Mobile Accessories", href: "/shop/mobile-accessories", icon: <Monitor size={16} />, count: 3 },
-  { name: "Home Gadgets", href: "/shop/home-gadgets", icon: <Home size={16} />, count: 2 },
-];
+import * as LucideIcons from "lucide-react";
+
+import { supabase } from "@/lib/supabase";
 
 interface Props {
   currentCategory?: string;
@@ -33,6 +26,35 @@ export default function ShopSidebar({ currentCategory }: Props) {
   const [selectedRating, setSelectedRating] = useState(initialRating);
   const [selectedTags, setSelectedTags] = useState<string[]>(initialTags);
   const [openSections, setOpenSections] = useState({ categories: true, price: true, rating: true, tags: true });
+  
+  const [dbCategories, setDbCategories] = useState<any[]>([
+    { name: "All Products", href: "/shop", icon: <Package size={16} /> }
+  ]);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const { data, error } = await supabase.from("categories").select("*").order("name");
+        if (data && !error) {
+          const mapped = data.map((c: any) => {
+            const IconComponent = (LucideIcons as any)[c.icon] || LucideIcons.Package;
+            return {
+              name: c.name,
+              href: `/shop/${c.slug}`,
+              icon: <IconComponent size={16} />
+            };
+          });
+          setDbCategories([
+            { name: "All Products", href: "/shop", icon: <Package size={16} /> },
+            ...mapped
+          ]);
+        }
+      } catch (err) {
+        console.error("Error fetching sidebar categories", err);
+      }
+    }
+    fetchCategories();
+  }, []);
 
   const toggle = (key: keyof typeof openSections) =>
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -98,7 +120,7 @@ export default function ShopSidebar({ currentCategory }: Props) {
         </button>
         {openSections.categories && (
           <div style={{ padding: "0 8px 8px" }}>
-            {categories.map(cat => (
+            {dbCategories.map(cat => (
               <Link
                 key={cat.name}
                 href={cat.href}
@@ -114,7 +136,6 @@ export default function ShopSidebar({ currentCategory }: Props) {
               >
                 <span style={{ color: "var(--red)" }}>{cat.icon}</span>
                 <span style={{ flex: 1 }}>{cat.name}</span>
-                <span style={{ fontSize: 11, color: "var(--gray-400)", background: "var(--gray-100)", padding: "1px 6px", borderRadius: 4 }}>{cat.count}</span>
               </Link>
             ))}
           </div>

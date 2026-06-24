@@ -116,7 +116,7 @@ function ShopContent() {
               </h1>
               <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 2 }}>{filteredProducts.length} products found</p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               {/* Mobile Filter */}
               <button onClick={() => setSidebarOpen(!sidebarOpen)} className="mobile-only btn-outline-red" style={{ display: "none", gap: 8 }}>
                 <SlidersHorizontal size={16} /> Filter
