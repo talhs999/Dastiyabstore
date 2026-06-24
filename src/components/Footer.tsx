@@ -51,8 +51,6 @@ export default function Footer() {
   const [couponMessage, setCouponMessage] = useState("");
   const [newsletterEnabled, setNewsletterEnabled] = useState(true); // Default true
   
-  if (pathname.startsWith("/admin")) return null;
-
   useEffect(() => {
     const fetchSetting = async () => {
       const { data } = await supabase.from("store_settings").select("value").eq("key", "newsletter_enabled").single();
@@ -60,6 +58,8 @@ export default function Footer() {
     };
     fetchSetting();
   }, []);
+
+  if (pathname.startsWith("/admin")) return null;
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
