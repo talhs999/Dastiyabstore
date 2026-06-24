@@ -116,9 +116,17 @@ export default function AdminSettingsPage() {
       jazzcash: { enabled: paymentJazzCashEnabled, details: paymentJazzCashDetails },
       easypaisa: { enabled: paymentEasyPaisaEnabled, details: paymentEasyPaisaDetails }
     };
-    await supabase.from("store_settings").upsert({ key: "payment_settings", value: JSON.stringify(payload) });
+    const { error } = await supabase
+      .from("store_settings")
+      .upsert({ key: "payment_settings", value: JSON.stringify(payload) }, { onConflict: 'key' });
+    
     setSavingPayments(false);
-    alert("Payment settings saved!");
+    if (error) {
+      console.error("Failed to save payment settings:", error);
+      alert("Failed to save payment settings: " + error.message);
+    } else {
+      alert("Payment settings saved successfully!");
+    }
   };
 
   const fetchMarketingSettings = async () => {

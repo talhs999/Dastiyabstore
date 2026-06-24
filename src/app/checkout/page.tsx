@@ -684,9 +684,18 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                     {selectedPaymentMethod === "JazzCash" && paymentSettings.jazzcash?.details && (
-                      <div className="animate-fade-up" style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #fca5a5", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 15 }}>
-                        <div><span style={{ color: "#6b7280" }}>Account Name:</span> <strong style={{ color: "#111827", fontWeight: 700, marginLeft: 4 }}>{paymentSettings.jazzcash.details.accountName}</strong></div>
-                        <div><span style={{ color: "#6b7280" }}>Mobile Number:</span> <strong style={{ color: "#111827", fontWeight: 700, marginLeft: 4, userSelect: "all" }}>{paymentSettings.jazzcash.details.accountNumber}</strong></div>
+                      <div className="animate-fade-up" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #fca5a5", display: "flex", flexDirection: "column", gap: 12 }}>
+                        <p style={{ fontSize: 11, fontWeight: 800, color: "#991b1b", letterSpacing: 1, textTransform: "uppercase" }}>JazzCash Details</p>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                          <span style={{ color: "var(--gray-500)" }}>Account Name</span>
+                          <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>{paymentSettings.jazzcash.details.accountName}</span>
+                        </div>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                          <span style={{ color: "var(--gray-500)" }}>Mobile Number</span>
+                          <span style={{ fontWeight: 600, color: "var(--gray-900)", userSelect: "all" }}>{paymentSettings.jazzcash.details.accountNumber}</span>
+                        </div>
                       </div>
                     )}
                     {selectedPaymentMethod === "JazzCash" && paymentSettings.jazzcash?.details?.instructions && (
@@ -697,27 +706,36 @@ export default function CheckoutPage() {
                 {paymentSettings?.easypaisa?.enabled && (
                   <div 
                     onClick={() => setSelectedPaymentMethod("EasyPaisa")}
-                    style={{ border: selectedPaymentMethod === "EasyPaisa" ? "1px solid #16a34a" : "1px solid var(--gray-200)", borderRadius: "var(--radius)", padding: 16, background: selectedPaymentMethod === "EasyPaisa" ? "#f0fdf4" : "white", cursor: "pointer", transition: "all 0.2s" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid", borderColor: selectedPaymentMethod === "EasyPaisa" ? "#16a34a" : "var(--gray-300)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        {selectedPaymentMethod === "EasyPaisa" && <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#16a34a" }} />}
+                    style={{ border: selectedPaymentMethod === "EasyPaisa" ? "1px solid #16a34a" : "1px solid var(--gray-200)", borderRadius: 8, padding: "16px 20px", background: selectedPaymentMethod === "EasyPaisa" ? "#f0fdf4" : "white", cursor: "pointer", transition: "all 0.2s" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid", borderColor: selectedPaymentMethod === "EasyPaisa" ? "#16a34a" : "var(--gray-300)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: "white" }}>
+                        {selectedPaymentMethod === "EasyPaisa" && <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#16a34a" }} />}
                       </div>
-                      <div style={{ width: 40, height: 28, borderRadius: 4, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "white", border: "1px solid var(--gray-200)", flexShrink: 0 }}>
-                        <img src="/easypaisa.png" alt="EasyPaisa" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 2 }} />
+                      <div style={{ width: 46, height: 32, borderRadius: 6, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "white", border: "1px solid var(--gray-200)", flexShrink: 0 }}>
+                        <img src="/easypaisa.png" alt="EasyPaisa" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }} />
                       </div>
                       <div>
-                        <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>EasyPaisa</div>
-                        <div style={{ fontSize: 12, color: "var(--gray-500)" }}>Transfer to our EasyPaisa mobile account</div>
+                        <div style={{ fontWeight: 700, color: "var(--gray-900)", fontSize: 16 }}>EasyPaisa</div>
+                        <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>Transfer to our EasyPaisa mobile account</div>
                       </div>
                     </div>
                     {selectedPaymentMethod === "EasyPaisa" && paymentSettings.easypaisa?.details && (
-                      <div className="animate-fade-up" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #86efac", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
-                        <div><span style={{ color: "var(--gray-500)" }}>Account Name:</span> <strong style={{ color: "var(--gray-900)" }}>{paymentSettings.easypaisa.details.accountName}</strong></div>
-                        <div><span style={{ color: "var(--gray-500)" }}>Mobile Number:</span> <strong style={{ color: "var(--gray-900)", userSelect: "all" }}>{paymentSettings.easypaisa.details.accountNumber}</strong></div>
+                      <div className="animate-fade-up" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #86efac", display: "flex", flexDirection: "column", gap: 12 }}>
+                        <p style={{ fontSize: 11, fontWeight: 800, color: "#166534", letterSpacing: 1, textTransform: "uppercase" }}>EasyPaisa Details</p>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                          <span style={{ color: "var(--gray-500)" }}>Account Name</span>
+                          <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>{paymentSettings.easypaisa.details.accountName}</span>
+                        </div>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                          <span style={{ color: "var(--gray-500)" }}>Mobile Number</span>
+                          <span style={{ fontWeight: 600, color: "var(--gray-900)", userSelect: "all" }}>{paymentSettings.easypaisa.details.accountNumber}</span>
+                        </div>
                       </div>
                     )}
                     {selectedPaymentMethod === "EasyPaisa" && paymentSettings.easypaisa?.details?.instructions && (
-                      <p className="animate-fade-up" style={{ fontSize: 12, color: "#166534", fontStyle: "italic", marginTop: 12 }}>{paymentSettings.easypaisa.details.instructions}</p>
+                      <p className="animate-fade-up" style={{ fontSize: 13, color: "#166534", fontStyle: "italic", marginTop: 12 }}>{paymentSettings.easypaisa.details.instructions}</p>
                     )}
                   </div>
                 )}
