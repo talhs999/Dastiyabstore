@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Headers removed to allow Google Maps and other external resources without strict CSP
+
 };
 
 export default nextConfig;

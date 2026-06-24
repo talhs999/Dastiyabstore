@@ -16,8 +16,11 @@ interface Product {
   reviews: number;
   badge?: string;
   badgeType?: "red" | "yellow";
+  badges?: { text: string; type: string }[];
   isNew?: boolean;
   inStock?: boolean;
+  in_stock?: boolean;
+  [key: string]: any;
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -36,7 +39,7 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={`/product/${product.slug || product.id}`} style={{ textDecoration: "none", display: "block" }}>
       <div
         style={{
           background: "var(--white)", borderRadius: "var(--radius-lg)",
@@ -63,7 +66,10 @@ export default function ProductCard({ product }: { product: Product }) {
       >
         {/* Badges */}
         <div style={{ position: "absolute", top: 12, left: 12, display: "flex", flexDirection: "column", gap: 6, zIndex: 2 }}>
-          {product.badge && (
+          {product.badges && product.badges.map((b: any, index: number) => (
+            <span key={index} className={`badge badge-${b.type || "red"}`} style={{ fontSize: 11 }}>{b.text}</span>
+          ))}
+          {!product.badges && product.badge && (
             <span className={`badge badge-${product.badgeType || "red"}`} style={{ fontSize: 11 }}>{product.badge}</span>
           )}
           {discount && <span className="discount-tag">{discount}% OFF</span>}
@@ -104,27 +110,29 @@ export default function ProductCard({ product }: { product: Product }) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             style={{ objectFit: "cover", transition: "transform 0.5s ease" }}
           />
-          {!product.inStock && (
+          {!(product.in_stock !== undefined ? product.in_stock : product.inStock) && (
             <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ background: "var(--gray-800)", color: "white", padding: "6px 16px", borderRadius: "var(--radius-full)", fontSize: 13, fontWeight: 600 }}>Out of Stock</span>
             </div>
           )}
           {/* Hover Actions */}
-          <div className="card-actions" style={{
-            position: "absolute", bottom: 12, left: 0, right: 0,
-            display: "flex", justifyContent: "center", gap: 8,
-            opacity: 0, transform: "translateY(8px)", transition: "all 0.25s",
-          }}>
-            <button
-              onClick={handleAddToCart}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "var(--red)", color: "white", border: "none", borderRadius: "var(--radius-full)", cursor: "pointer", fontWeight: 600, fontSize: 13, boxShadow: "0 4px 12px rgba(230,57,70,0.4)" }}
-            >
-              <ShoppingCart size={14} /> Add to Cart
-            </button>
-            <button style={{ width: 36, height: 36, background: "white", border: "none", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-sm)" }}>
-              <Eye size={15} color="var(--gray-600)" />
-            </button>
-          </div>
+          {(product.in_stock !== undefined ? product.in_stock : product.inStock) !== false && (
+            <div className="card-actions" style={{
+              position: "absolute", bottom: 12, left: 0, right: 0,
+              display: "flex", justifyContent: "center", gap: 8,
+              opacity: 0, transform: "translateY(8px)", transition: "all 0.25s",
+            }}>
+              <button
+                onClick={handleAddToCart}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "var(--red)", color: "white", border: "none", borderRadius: "var(--radius-full)", cursor: "pointer", fontWeight: 600, fontSize: 13, boxShadow: "0 4px 12px rgba(230,57,70,0.4)" }}
+              >
+                <ShoppingCart size={14} /> Add to Cart
+              </button>
+              <button style={{ width: 36, height: 36, background: "white", border: "none", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-sm)" }}>
+                <Eye size={15} color="var(--gray-600)" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Info */}

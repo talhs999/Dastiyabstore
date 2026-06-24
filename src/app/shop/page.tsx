@@ -1,19 +1,60 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Grid, List, SlidersHorizontal, ChevronDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ShopSidebar from "@/components/ShopSidebar";
 import { products } from "@/data/products";
+import { supabase } from "@/lib/supabase";
 
 const sortOptions = ["Newest First", "Price: Low to High", "Price: High to Low", "Most Popular", "Top Rated"];
 
-export default function ShopPage() {
+function ShopContent() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [sort, setSort] = useState("Newest First");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dbProducts, setDbProducts] = useState<any[]>(products);
 
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*, categories(name)");
+
+        if (data && data.length > 0) {
+          const mapped = data.map((p: any) => ({
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            price: Number(p.price),
+            originalPrice: p.original_price ? Number(p.original_price) : undefined,
+            image: p.image,
+            images: p.images,
+            rating: Number(p.rating || 0),
+            reviews: Number(p.reviews || 0),
+            badge: p.badge,
+            badgeType: p.badge_type,
+            isNew: p.is_new,
+            inStock: p.in_stock !== undefined ? p.in_stock : true,
+            stock_quantity: p.stock_quantity,
+            category: p.categories?.name || "",
+            description: p.description || "",
+            specs: p.specs,
+            features: p.features,
+            isFeatured: p.is_featured,
+            isBestSeller: p.is_best_seller,
+          }));
+          setDbProducts(mapped);
+        }
+      } catch (err) {
+        console.error("Error fetching shop products:", err);
+      }
+    }
+    fetchProducts();
+  }, []);
 
   const filteredProducts = useMemo(() => {
     const q = searchParams.get("q")?.toLowerCase();
@@ -22,7 +63,7 @@ export default function ShopPage() {
     const rating = searchParams.get("rating") ? Number(searchParams.get("rating")) : 0;
     const tags = searchParams.get("tags") ? searchParams.get("tags")!.split(",") : [];
 
-    let filtered = products.filter(p => {
+    let filtered = dbProducts.filter(p => {
       // Search query
       if (q && !p.name.toLowerCase().includes(q) && !p.description.toLowerCase().includes(q)) return false;
       // Price range
@@ -32,7 +73,7 @@ export default function ShopPage() {
       // Tags
       if (tags.length > 0) {
         let tagMatch = true;
-        if (tags.includes("In Stock") && !p.inStock) tagMatch = false;
+        if (tags.includes("In Stock") && !(p.in_stock !== undefined ? p.in_stock : p.inStock)) tagMatch = false;
         if (tags.includes("On Sale") && !p.originalPrice) tagMatch = false;
         if (tags.includes("New Arrivals") && !p.isNew) tagMatch = false;
         if (tags.includes("Best Seller") && !p.isBestSeller) tagMatch = false;
@@ -46,10 +87,9 @@ export default function ShopPage() {
     else if (sort === "Price: High to Low") filtered.sort((a, b) => b.price - a.price);
     else if (sort === "Most Popular") filtered.sort((a, b) => b.reviews - a.reviews);
     else if (sort === "Top Rated") filtered.sort((a, b) => b.rating - a.rating);
-    // Newest First is default, we can assume original array order or by id.
 
     return filtered;
-  }, [searchParams, sort]);
+  }, [dbProducts, searchParams, sort]);
 
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
@@ -127,5 +167,13 @@ export default function ShopPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "100px 40px", textAlign: "center", color: "var(--gray-500)", fontSize: 16 }}>Loading Shop...</div>}>
+      <ShopContent />
+    </Suspense>
   );
 }

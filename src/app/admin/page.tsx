@@ -1,44 +1,120 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { DollarSign, Package, ShoppingCart, Users, ArrowUpRight } from "lucide-react";
+import { DollarSign, Package, ShoppingCart, Users, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import Link from "next/link";
-import { products } from "@/data/products";
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalCustomers, setTotalCustomers] = useState(0);
+  const [productsCount, setProductsCount] = useState(0);
+  const [revenueChange, setRevenueChange] = useState(0);
+  const [activeChange, setActiveChange] = useState(0);
+  const [productsChange, setProductsChange] = useState(0);
+  const [customersChange, setCustomersChange] = useState(0);
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
-    const { data: ordersData, error } = await supabase
+    // 1. Fetch Orders
+    const { data: ordersData, error: ordersError } = await supabase
       .from("orders")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && ordersData) {
+    // 2. Fetch Products
+    const { data: productsData, error: productsError } = await supabase
+      .from("products")
+      .select("created_at");
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(now.getDate() - 60);
+
+    const calculatePercentageChange = (current: number, previous: number) => {
+      if (previous === 0) {
+        return current > 0 ? 100 : 0;
+      }
+      return Math.round(((current - previous) / previous) * 100);
+    };
+
+    if (!ordersError && ordersData) {
       setOrders(ordersData);
       
       const rev = ordersData.reduce((acc, order) => acc + order.total_amount, 0);
       setTotalRevenue(rev);
       
-      // Calculate unique customers based on email
       const uniqueEmails = new Set(ordersData.map(o => o.customer_email));
       setTotalCustomers(uniqueEmails.size);
+
+      // Percentage Change Calculations:
+      const currentPeriodOrders = ordersData.filter(o => new Date(o.created_at) >= thirtyDaysAgo);
+      const previousPeriodOrders = ordersData.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= sixtyDaysAgo && d < thirtyDaysAgo;
+      });
+
+      // Revenue Change
+      const revCurrent = currentPeriodOrders.reduce((acc, order) => acc + order.total_amount, 0);
+      const revPrevious = previousPeriodOrders.reduce((acc, order) => acc + order.total_amount, 0);
+      setRevenueChange(calculatePercentageChange(revCurrent, revPrevious));
+
+      // Active Orders Change
+      const activeCurrent = currentPeriodOrders.filter(o => ['Pending', 'Processing'].includes(o.status)).length;
+      const activePrevious = previousPeriodOrders.filter(o => ['Pending', 'Processing'].includes(o.status)).length;
+      setActiveChange(calculatePercentageChange(activeCurrent, activePrevious));
+
+      // Customers Change
+      const custCurrent = new Set(currentPeriodOrders.map(o => o.customer_email)).size;
+      const custPrevious = new Set(previousPeriodOrders.map(o => o.customer_email)).size;
+      setCustomersChange(calculatePercentageChange(custCurrent, custPrevious));
     }
+
+    if (!productsError && productsData) {
+      setProductsCount(productsData.length);
+
+      const currentProds = productsData.filter(p => new Date(p.created_at) >= thirtyDaysAgo).length;
+      const previousProds = productsData.filter(p => {
+        const d = new Date(p.created_at);
+        return d >= sixtyDaysAgo && d < thirtyDaysAgo;
+      }).length;
+      setProductsChange(calculatePercentageChange(currentProds, previousProds));
+    }
+
     setLoading(false);
   };
 
   const statCards = [
-    { label: "TOTAL REVENUE", value: `Rs ${totalRevenue.toLocaleString()}`, icon: <DollarSign size={20} color="var(--gray-500)" /> },
-    { label: "ACTIVE ORDERS", value: orders.filter(o => ['Pending', 'Processing'].includes(o.status)).length, icon: <ShoppingCart size={20} color="var(--gray-500)" /> },
-    { label: "PRODUCTS", value: products.length, icon: <Package size={20} color="var(--gray-500)" /> },
-    { label: "TOTAL CUSTOMERS", value: totalCustomers, icon: <Users size={20} color="var(--gray-500)" /> },
+    { 
+      label: "TOTAL REVENUE", 
+      value: `Rs ${totalRevenue.toLocaleString()}`, 
+      icon: <DollarSign size={20} color="var(--gray-500)" />,
+      change: revenueChange 
+    },
+    { 
+      label: "ACTIVE ORDERS", 
+      value: orders.filter(o => ['Pending', 'Processing'].includes(o.status)).length, 
+      icon: <ShoppingCart size={20} color="var(--gray-500)" />,
+      change: activeChange 
+    },
+    { 
+      label: "PRODUCTS", 
+      value: productsCount, 
+      icon: <Package size={20} color="var(--gray-500)" />,
+      change: productsChange 
+    },
+    { 
+      label: "TOTAL CUSTOMERS", 
+      value: totalCustomers, 
+      icon: <Users size={20} color="var(--gray-500)" />,
+      change: customersChange 
+    },
   ];
 
   return (
@@ -57,7 +133,21 @@ export default function AdminDashboard() {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
               <span style={{ fontSize: 32, fontWeight: 800, color: "var(--gray-900)", lineHeight: 1 }}>{stat.value}</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a", display: "flex", alignItems: "center", gap: 4 }}><ArrowUpRight size={14} /> 0%</span>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {stat.change > 0 ? (
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#16a34a", display: "flex", alignItems: "center", gap: 4 }}>
+                    <ArrowUpRight size={14} /> +{stat.change}%
+                  </span>
+                ) : stat.change < 0 ? (
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#ef4444", display: "flex", alignItems: "center", gap: 4 }}>
+                    <ArrowDownRight size={14} /> {stat.change}%
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-400)", display: "flex", alignItems: "center", gap: 4 }}>
+                    0%
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}

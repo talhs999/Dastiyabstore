@@ -5,12 +5,13 @@ import {
   ShoppingCart, Heart, User, Search, Menu, X, ChevronDown,
   Phone, MapPin, Truck, Star, Bell, Headphones, Monitor,
   Wind, Laptop, Package, Home, ChevronRight, LogIn, Settings,
-  ShoppingBag, Clock
+  ShoppingBag, Clock, Plus, Minus
 } from "lucide-react";
 import { useCart } from "@/store/cartStore";
 import { useWishlist } from "@/store/wishlistStore";
 import { useRouter, usePathname } from "next/navigation";
 import { products } from "@/data/products";
+import { supabase } from "@/lib/supabase";
 
 const categories = [
   { name: "Neckband Earphones", icon: <Headphones size={16} />, href: "/shop/neckband" },
@@ -30,15 +31,88 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const { items, totalItems, totalPrice, removeFromCart } = useCart();
+  const { items, totalItems, totalPrice, removeFromCart, updateQuantity } = useCart();
   const { items: wishlistItems } = useWishlist();
   const searchRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const pathname = usePathname();
 
-  if (pathname.startsWith("/admin")) return null;
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [accountHref, setAccountHref] = useState("/login");
 
-  const searchResults = searchQuery.trim() ? products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5) : [];
+  useEffect(() => {
+    const checkSessions = () => {
+      const adminSession = typeof document !== "undefined" && document.cookie.includes("admin_session=true");
+      const customerSession = typeof window !== "undefined" && localStorage.getItem("customer_session");
+      if (adminSession) {
+        setAccountHref("/admin");
+      } else if (customerSession) {
+        setAccountHref("/account/orders");
+      } else {
+        setAccountHref("/login");
+      }
+    };
+    checkSessions();
+    window.addEventListener("storage", checkSessions);
+    const interval = setInterval(checkSessions, 1000);
+    return () => {
+      window.removeEventListener("storage", checkSessions);
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*, categories(name)")
+          .ilike("name", `%${searchQuery}%`)
+          .limit(5);
+
+        if (data && data.length > 0) {
+          const mappedResults = data.map((p: any) => ({
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            price: Number(p.price),
+            image: p.image,
+            category: p.categories?.name || "",
+          }));
+          setSearchResults(mappedResults);
+        } else {
+          // Fallback to local products search
+          const localResults = products
+            .filter(
+              (p) =>
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.category.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .slice(0, 5);
+          setSearchResults(localResults);
+        }
+      } catch (err) {
+        console.error("Error searching products:", err);
+        const localResults = products
+          .filter(
+            (p) =>
+              p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              p.category.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+          .slice(0, 5);
+        setSearchResults(localResults);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  if (pathname.startsWith("/admin")) return null;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,7 +233,7 @@ export default function Navbar() {
                   zIndex: 200, overflow: "hidden",
                 }}>
                   {searchResults.map(p => (
-                    <Link key={p.id} href={`/product/${p.id}`} onClick={() => setSearchQuery("")} style={{
+                    <Link key={p.id} href={`/product/${p.slug || p.id}`} onClick={() => setSearchQuery("")} style={{
                       display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
                       textDecoration: "none", borderBottom: "1px solid var(--gray-100)",
                       transition: "background 0.2s"
@@ -215,7 +289,7 @@ export default function Navbar() {
               </Link>
 
               {/* Account */}
-              <Link href="/login" className="icon-btn tooltip-wrap" style={{ textDecoration: "none", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", color: "var(--gray-700)", transition: "all var(--transition)" }}>
+              <Link href={accountHref} className="icon-btn tooltip-wrap" style={{ textDecoration: "none", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", color: "var(--gray-700)", transition: "all var(--transition)" }}>
                 <User size={22} />
                 <span className="tooltip">Account</span>
               </Link>
@@ -250,7 +324,7 @@ export default function Navbar() {
 
           {/* Mobile Search Bar */}
           {searchOpen && (
-            <div className="animate-fade-down mobile-only" style={{ padding: "0 0 12px" }}>
+            <div className="animate-fade-down mobile-only" style={{ padding: "0 0 12px", position: "relative" }}>
               <form onSubmit={handleSearch} style={{ display: "flex", alignItems: "center", background: "var(--gray-50)", border: "2px solid var(--red)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
                 <input
                   ref={searchRef}
@@ -258,12 +332,47 @@ export default function Navbar() {
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  style={{ flex: 1, padding: "10px 16px", border: "none", background: "transparent", fontSize: 14, fontFamily: "inherit", outline: "none" }}
+                  style={{ flex: 1, padding: "10px 16px", border: "none", background: "transparent", fontSize: 14, fontFamily: "inherit", outline: "none", color: "var(--gray-900)" }}
                 />
-                <button type="submit" style={{ padding: "10px 16px", background: "var(--red)", border: "none", cursor: "pointer", color: "white" }}>
+                <button type="submit" style={{ padding: "10px 16px", height: "100%", background: "var(--red)", border: "none", cursor: "pointer", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Search size={16} />
                 </button>
               </form>
+              
+              {/* Mobile Live Search Suggestions */}
+              {searchQuery.trim() && searchResults.length > 0 && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4,
+                  background: "white", borderRadius: "var(--radius-lg)",
+                  boxShadow: "var(--shadow-xl)", border: "1px solid var(--gray-200)",
+                  zIndex: 200, overflow: "hidden",
+                }}>
+                  {searchResults.map(p => (
+                    <Link key={p.id} href={`/product/${p.slug || p.id}`} onClick={() => { setSearchQuery(""); setSearchOpen(false); }} style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                      textDecoration: "none", borderBottom: "1px solid var(--gray-100)",
+                      transition: "background 0.2s"
+                    }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--gray-50)"}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                    >
+                      <img src={p.image} alt={p.name} style={{ width: 40, height: 40, objectFit: "contain", borderRadius: 6, background: "var(--gray-50)" }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 200 }}>{p.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--gray-500)" }}>{p.category}</div>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--red)" }}>Rs. {p.price.toLocaleString()}</div>
+                    </Link>
+                  ))}
+                  <button onClick={handleSearch} style={{
+                    width: "100%", padding: 12, background: "var(--gray-50)",
+                    border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+                    color: "var(--red)", textAlign: "center"
+                  }}>
+                    View all results
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -342,7 +451,11 @@ export default function Navbar() {
                       <div style={{ flex: 1 }}>
                         <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{item.name}</p>
                         <p style={{ color: "var(--red)", fontWeight: 700, fontSize: 15 }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
-                        <p style={{ fontSize: 12, color: "var(--gray-500)" }}>Qty: {item.quantity}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                          <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Minus size={12} /></button>
+                          <span style={{ fontSize: 13, fontWeight: 600 }}>{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Plus size={12} /></button>
+                        </div>
                       </div>
                       <button onClick={() => removeFromCart(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", alignSelf: "flex-start" }}>
                         <X size={16} />

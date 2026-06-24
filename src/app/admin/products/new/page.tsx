@@ -2,14 +2,26 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 export default function AddProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [specs, setSpecs] = useState<{ label: string; value: string }[]>([]);
   
+  const [badges, setBadges] = useState<{ text: string; type: string }[]>([
+    { text: "", type: "yellow" }
+  ]);
+  const [features, setFeatures] = useState<string[]>([""]);
+  const [trustPoints, setTrustPoints] = useState<{ icon: string; text: string }[]>([
+    { icon: "truck", text: "Free delivery on orders above Rs. 2000" },
+    { icon: "shield", text: "100% authentic & quality guaranteed" },
+    { icon: "rotate-ccw", text: "7-day easy returns & exchanges" },
+    { icon: "zap", text: "Cash on Delivery available nationwide" }
+  ]);
+
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -24,6 +36,7 @@ export default function AddProductPage() {
     category_id: "",
     description: "",
     in_stock: true,
+    stock_quantity: "10",
     is_featured: false,
     is_best_seller: false
   });
@@ -46,19 +59,89 @@ export default function AddProductPage() {
     }
   };
 
+  // Specs handlers
+  const handleAddSpec = () => {
+    setSpecs([...specs, { label: "", value: "" }]);
+  };
+  const handleSpecChange = (index: number, field: "label" | "value", val: string) => {
+    const newSpecs = [...specs];
+    newSpecs[index][field] = val;
+    setSpecs(newSpecs);
+  };
+  const handleRemoveSpec = (index: number) => {
+    setSpecs(specs.filter((_, i) => i !== index));
+  };
+
+  // Badges handlers
+  const handleAddBadge = () => {
+    setBadges([...badges, { text: "", type: "yellow" }]);
+  };
+  const handleBadgeChange = (index: number, field: "text" | "type", val: string) => {
+    const newBadges = [...badges];
+    newBadges[index][field] = val;
+    setBadges(newBadges);
+  };
+  const handleRemoveBadge = (index: number) => {
+    setBadges(badges.filter((_, i) => i !== index));
+  };
+
+  // Features (Description Points) handlers
+  const handleAddFeature = () => {
+    setFeatures([...features, ""]);
+  };
+  const handleFeatureChange = (index: number, val: string) => {
+    const newFeatures = [...features];
+    newFeatures[index] = val;
+    setFeatures(newFeatures);
+  };
+  const handleRemoveFeature = (index: number) => {
+    setFeatures(features.filter((_, i) => i !== index));
+  };
+
+  // Trust Points handlers
+  const handleAddTrustPoint = () => {
+    setTrustPoints([...trustPoints, { icon: "truck", text: "" }]);
+  };
+  const handleTrustPointChange = (index: number, field: "icon" | "text", val: string) => {
+    const newTrustPoints = [...trustPoints];
+    newTrustPoints[index][field] = val;
+    setTrustPoints(newTrustPoints);
+  };
+  const handleRemoveTrustPoint = (index: number) => {
+    setTrustPoints(trustPoints.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    const activeBadges = badges.filter(b => b.text.trim() !== "");
+
+    const qtyVal = parseInt(formData.stock_quantity, 10);
+    const calculatedQty = isNaN(qtyVal) ? 0 : qtyVal;
+
+    // Prepare payload
     const product = {
-      ...formData,
+      name: formData.name,
+      slug: formData.slug,
       price: parseFloat(formData.price),
       original_price: formData.original_price ? parseFloat(formData.original_price) : null,
+      image: formData.image,
       images: formData.images.split(",").map(s => s.trim()).filter(Boolean),
       rating: parseFloat(formData.rating),
       reviews: parseInt(formData.reviews, 10),
-      badge: formData.badge || null,
-      badge_type: formData.badge ? formData.badge_type : null
+      badge: activeBadges.length > 0 ? activeBadges[0].text : null,
+      badge_type: activeBadges.length > 0 ? activeBadges[0].type : null,
+      badges: activeBadges,
+      category_id: formData.category_id || null,
+      description: formData.description,
+      in_stock: calculatedQty > 0 ? formData.in_stock : false,
+      stock_quantity: calculatedQty,
+      is_featured: formData.is_featured,
+      is_best_seller: formData.is_best_seller,
+      specs: specs.filter(s => s.label.trim() !== "" || s.value.trim() !== ""),
+      features: features.filter(f => f.trim() !== ""),
+      trust_points: trustPoints.filter(tp => tp.text.trim() !== "")
     };
 
     const { error } = await supabase.from("products").insert([product]);
@@ -128,34 +211,427 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-          <div>
-            <label className="label">Badge Text (e.g. HOT, NEW)</label>
-            <input className="input" style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} value={formData.badge} onChange={e => setFormData({ ...formData, badge: e.target.value })} />
-          </div>
-          <div>
-            <label className="label">Badge Color</label>
-            <select className="input" style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} value={formData.badge_type} onChange={e => setFormData({ ...formData, badge_type: e.target.value })}>
-              <option value="yellow">Yellow</option>
-              <option value="red">Red</option>
-              <option value="green">Green</option>
-            </select>
-          </div>
+        {/* Badges Section */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label className="label" style={{ marginBottom: 0 }}>Product Badges</label>
+          <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: -8 }}>Add promotional badges to showcase on product image cards (e.g. HOT, 20% OFF, NEW).</p>
+          
+          <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid var(--gray-200)", borderRadius: "var(--radius)", overflow: "hidden" }}>
+            <thead>
+              <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)" }}>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "50%" }}>Badge Text</th>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "35%" }}>Badge Type / Color</th>
+                <th style={{ padding: "12px 16px", textAlign: "center", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "15%" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {badges.length === 0 ? (
+                <tr>
+                  <td colSpan={3} style={{ padding: "24px 16px", textAlign: "center", color: "var(--gray-400)", fontSize: 14 }}>
+                    No badges added yet. Add a badge below.
+                  </td>
+                </tr>
+              ) : (
+                badges.map((b, index) => (
+                  <tr key={index} style={{ borderBottom: "1px solid var(--gray-100)" }}>
+                    <td style={{ padding: "10px 16px" }}>
+                      <input 
+                        type="text" 
+                        className="input" 
+                        style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: "10px 14px", fontSize: 14 }}
+                        placeholder="e.g. HOT" 
+                        value={b.text} 
+                        onChange={e => handleBadgeChange(index, "text", e.target.value)}
+                      />
+                    </td>
+                    <td style={{ padding: "10px 16px" }}>
+                      <select 
+                        className="input" 
+                        style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: "10px 14px", fontSize: 14 }}
+                        value={b.type} 
+                        onChange={e => handleBadgeChange(index, "type", e.target.value)}
+                      >
+                        <option value="yellow">Yellow (New, Standard)</option>
+                        <option value="red">Red (Hot, Discount)</option>
+                        <option value="green">Green (Featured)</option>
+                        <option value="gray">Gray (Out of stock/Secondary)</option>
+                      </select>
+                    </td>
+                    <td style={{ padding: "10px 16px", textAlign: "center" }}>
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveBadge(index)}
+                        style={{ 
+                          background: "var(--red)", 
+                          color: "white", 
+                          border: "none", 
+                          borderRadius: "var(--radius-sm)", 
+                          padding: "8px 12px", 
+                          cursor: "pointer", 
+                          fontSize: 13, 
+                          fontWeight: 600,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4
+                        }}
+                      >
+                        <Trash2 size={14} /> Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+              
+              <tr style={{ background: "var(--gray-50)", borderTop: "1px solid var(--gray-200)" }}>
+                <td colSpan={3} style={{ padding: 12 }}>
+                  <button 
+                    type="button" 
+                    onClick={handleAddBadge}
+                    style={{ 
+                      width: "100%", 
+                      background: "white", 
+                      border: "2px dashed var(--red)", 
+                      color: "var(--red)", 
+                      padding: "12px", 
+                      borderRadius: "var(--radius)", 
+                      fontSize: 14, 
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      transition: "all var(--transition)"
+                    }}
+                  >
+                    <Plus size={16} /> + Add Badge Row
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div style={{ display: "flex", gap: 32, padding: "20px", background: "var(--gray-50)", borderRadius: "var(--radius)", border: "1px solid var(--gray-200)" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontWeight: 600 }}>
-            <input type="checkbox" checked={formData.in_stock} onChange={e => setFormData({ ...formData, in_stock: e.target.checked })} style={{ width: 18, height: 18 }} />
-            In Stock
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontWeight: 600 }}>
-            <input type="checkbox" checked={formData.is_featured} onChange={e => setFormData({ ...formData, is_featured: e.target.checked })} style={{ width: 18, height: 18 }} />
-            Featured Product
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontWeight: 600 }}>
-            <input type="checkbox" checked={formData.is_best_seller} onChange={e => setFormData({ ...formData, is_best_seller: e.target.checked })} style={{ width: 18, height: 18 }} />
-            Best Seller
-          </label>
+        {/* Description Points Section */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label className="label" style={{ marginBottom: 0 }}>Description Bullet Points</label>
+          <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: -8 }}>Add key product features or highlights shown on the product detail tabs (e.g. "360° bladeless airflow", "Ultra-quiet operation").</p>
+          
+          <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid var(--gray-200)", borderRadius: "var(--radius)", overflow: "hidden" }}>
+            <thead>
+              <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)" }}>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "85%" }}>Description / Feature Highlight</th>
+                <th style={{ padding: "12px 16px", textAlign: "center", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "15%" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {features.length === 0 ? (
+                <tr>
+                  <td colSpan={2} style={{ padding: "24px 16px", textAlign: "center", color: "var(--gray-400)", fontSize: 14 }}>
+                    No bullet points added yet. Add a description point below.
+                  </td>
+                </tr>
+              ) : (
+                features.map((f, index) => (
+                  <tr key={index} style={{ borderBottom: "1px solid var(--gray-100)" }}>
+                    <td style={{ padding: "10px 16px" }}>
+                      <input 
+                        type="text" 
+                        className="input" 
+                        style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: "10px 14px", fontSize: 14 }}
+                        placeholder="e.g. Flexible lightweight neck design" 
+                        value={f} 
+                        onChange={e => handleFeatureChange(index, e.target.value)}
+                      />
+                    </td>
+                    <td style={{ padding: "10px 16px", textAlign: "center" }}>
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveFeature(index)}
+                        style={{ 
+                          background: "var(--red)", 
+                          color: "white", 
+                          border: "none", 
+                          borderRadius: "var(--radius-sm)", 
+                          padding: "8px 12px", 
+                          cursor: "pointer", 
+                          fontSize: 13, 
+                          fontWeight: 600,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4
+                        }}
+                      >
+                        <Trash2 size={14} /> Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+              
+              <tr style={{ background: "var(--gray-50)", borderTop: "1px solid var(--gray-200)" }}>
+                <td colSpan={2} style={{ padding: 12 }}>
+                  <button 
+                    type="button" 
+                    onClick={handleAddFeature}
+                    style={{ 
+                      width: "100%", 
+                      background: "white", 
+                      border: "2px dashed var(--red)", 
+                      color: "var(--red)", 
+                      padding: "12px", 
+                      borderRadius: "var(--radius)", 
+                      fontSize: 14, 
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      transition: "all var(--transition)"
+                    }}
+                  >
+                    <Plus size={16} /> + Add Description Point Row
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Trust Points / Delivery Info Section */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label className="label" style={{ marginBottom: 0 }}>Trust Points & Delivery Info</label>
+          <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: -8 }}>Customize the delivery & trust highlights displayed next to the product purchase block (e.g. Free Delivery, 7-day returns).</p>
+          
+          <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid var(--gray-200)", borderRadius: "var(--radius)", overflow: "hidden" }}>
+            <thead>
+              <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)" }}>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "30%" }}>Icon</th>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "55%" }}>Trust Highlight / Text</th>
+                <th style={{ padding: "12px 16px", textAlign: "center", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "15%" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trustPoints.length === 0 ? (
+                <tr>
+                  <td colSpan={3} style={{ padding: "24px 16px", textAlign: "center", color: "var(--gray-400)", fontSize: 14 }}>
+                    No trust highlights added yet. Add a trust point below.
+                  </td>
+                </tr>
+              ) : (
+                trustPoints.map((tp, index) => (
+                  <tr key={index} style={{ borderBottom: "1px solid var(--gray-100)" }}>
+                    <td style={{ padding: "10px 16px" }}>
+                      <select 
+                        className="input" 
+                        style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: "10px 14px", fontSize: 14 }}
+                        value={tp.icon} 
+                        onChange={e => handleTrustPointChange(index, "icon", e.target.value)}
+                      >
+                        <option value="truck">Truck (Delivery, Shipping)</option>
+                        <option value="shield">Shield (Quality, Guarantee)</option>
+                        <option value="rotate-ccw">Rotate CCW (Returns, Exchange)</option>
+                        <option value="zap">Lightning Zap (COD, Fast)</option>
+                        <option value="check-circle">Checkmark (Verified, Authentic)</option>
+                        <option value="heart">Heart (Premium, Customer Love)</option>
+                      </select>
+                    </td>
+                    <td style={{ padding: "10px 16px" }}>
+                      <input 
+                        type="text" 
+                        className="input" 
+                        style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: "10px 14px", fontSize: 14 }}
+                        placeholder="e.g. Free delivery on orders above Rs. 2000" 
+                        value={tp.text} 
+                        onChange={e => handleTrustPointChange(index, "text", e.target.value)}
+                      />
+                    </td>
+                    <td style={{ padding: "10px 16px", textAlign: "center" }}>
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveTrustPoint(index)}
+                        style={{ 
+                          background: "var(--red)", 
+                          color: "white", 
+                          border: "none", 
+                          borderRadius: "var(--radius-sm)", 
+                          padding: "8px 12px", 
+                          cursor: "pointer", 
+                          fontSize: 13, 
+                          fontWeight: 600,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4
+                        }}
+                      >
+                        <Trash2 size={14} /> Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+              
+              <tr style={{ background: "var(--gray-50)", borderTop: "1px solid var(--gray-200)" }}>
+                <td colSpan={3} style={{ padding: 12 }}>
+                  <button 
+                    type="button" 
+                    onClick={handleAddTrustPoint}
+                    style={{ 
+                      width: "100%", 
+                      background: "white", 
+                      border: "2px dashed var(--red)", 
+                      color: "var(--red)", 
+                      padding: "12px", 
+                      borderRadius: "var(--radius)", 
+                      fontSize: 14, 
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      transition: "all var(--transition)"
+                    }}
+                  >
+                    <Plus size={16} /> + Add Trust Point Row
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Specifications Section */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label className="label" style={{ marginBottom: 0 }}>Product Specifications</label>
+          <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: -8 }}>Add custom specifications for this product (e.g., Label: "Battery", Value: "2000mAh"). This builds a custom specs table on the product page.</p>
+          
+          <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid var(--gray-200)", borderRadius: "var(--radius)", overflow: "hidden" }}>
+            <thead>
+              <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)" }}>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "40%" }}>Specification Label</th>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "45%" }}>Specification Value</th>
+                <th style={{ padding: "12px 16px", textAlign: "center", fontSize: 14, fontWeight: 700, color: "var(--gray-700)", width: "15%" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {specs.length === 0 ? (
+                <tr>
+                  <td colSpan={3} style={{ padding: "24px 16px", textAlign: "center", color: "var(--gray-400)", fontSize: 14 }}>
+                    No specifications added yet. Add a custom specification below.
+                  </td>
+                </tr>
+              ) : (
+                specs.map((spec, index) => (
+                  <tr key={index} style={{ borderBottom: "1px solid var(--gray-100)" }}>
+                    <td style={{ padding: "10px 16px" }}>
+                      <input 
+                        type="text" 
+                        className="input" 
+                        style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: "10px 14px", fontSize: 14 }}
+                        placeholder="e.g. Battery" 
+                        value={spec.label} 
+                        onChange={e => handleSpecChange(index, "label", e.target.value)}
+                      />
+                    </td>
+                    <td style={{ padding: "10px 16px" }}>
+                      <input 
+                        type="text" 
+                        className="input" 
+                        style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: "10px 14px", fontSize: 14 }}
+                        placeholder="e.g. 2000mAh Li-ion" 
+                        value={spec.value} 
+                        onChange={e => handleSpecChange(index, "value", e.target.value)}
+                      />
+                    </td>
+                    <td style={{ padding: "10px 16px", textAlign: "center" }}>
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveSpec(index)}
+                        style={{ 
+                          background: "var(--red)", 
+                          color: "white", 
+                          border: "none", 
+                          borderRadius: "var(--radius-sm)", 
+                          padding: "8px 12px", 
+                          cursor: "pointer", 
+                          fontSize: 13, 
+                          fontWeight: 600,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4
+                        }}
+                      >
+                        <Trash2 size={14} /> Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+              
+              {/* Table-type row for adding field */}
+              <tr style={{ background: "var(--gray-50)", borderTop: "1px solid var(--gray-200)" }}>
+                <td colSpan={3} style={{ padding: 12 }}>
+                  <button 
+                    type="button" 
+                    onClick={handleAddSpec}
+                    style={{ 
+                      width: "100%", 
+                      background: "white", 
+                      border: "2px dashed var(--red)", 
+                      color: "var(--red)", 
+                      padding: "12px", 
+                      borderRadius: "var(--radius)", 
+                      fontSize: 14, 
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      transition: "all var(--transition)"
+                    }}
+                  >
+                    <Plus size={16} /> + Add Specification Row
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, padding: "24px", background: "var(--gray-50)", borderRadius: "var(--radius)", border: "1px solid var(--gray-200)" }}>
+          <div>
+            <label className="label">Stock Quantity *</label>
+            <input 
+              className="input" 
+              type="number" 
+              required 
+              style={{ background: "white", border: "1px solid var(--gray-200)" }} 
+              value={formData.stock_quantity} 
+              onChange={e => setFormData({ ...formData, stock_quantity: e.target.value })} 
+              placeholder="e.g. 10"
+              min="0"
+            />
+          </div>
+          <div>
+            <label className="label" style={{ marginBottom: 12 }}>Product Options</label>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontWeight: 600 }}>
+                <input type="checkbox" checked={formData.in_stock} onChange={e => setFormData({ ...formData, in_stock: e.target.checked })} style={{ width: 18, height: 18 }} />
+                In Stock
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontWeight: 600 }}>
+                <input type="checkbox" checked={formData.is_featured} onChange={e => setFormData({ ...formData, is_featured: e.target.checked })} style={{ width: 18, height: 18 }} />
+                Featured
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontWeight: 600 }}>
+                <input type="checkbox" checked={formData.is_best_seller} onChange={e => setFormData({ ...formData, is_best_seller: e.target.checked })} style={{ width: 18, height: 18 }} />
+                Best Seller
+              </label>
+            </div>
+          </div>
         </div>
 
         <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--gray-200)", paddingTop: 24, marginTop: 8 }}>

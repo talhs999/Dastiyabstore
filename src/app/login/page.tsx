@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff, ShoppingBag, ArrowRight, User, Phone } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ShoppingBag, ArrowRight, User, Phone, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const [show, setShow] = useState(false);
@@ -9,13 +10,135 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Register state variables
+  const [regName, setRegName] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === "admin@dastiyab.com" && password === "dastiyab@123") {
-      document.cookie = "admin_session=true; path=/";
-      window.location.href = "/admin";
-    } else {
-      alert("Invalid credentials or customer login disabled.");
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    setLoading(true);
+
+    try {
+      // 1. Try matching by email
+      let { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('email', cleanEmail)
+        .eq('password', cleanPassword);
+
+      // 2. Try matching by phone if email didn't match
+      if (!data || data.length === 0) {
+        const { data: byPhone, error: phoneError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('phone', cleanEmail)
+          .eq('password', cleanPassword);
+        
+        data = byPhone;
+        error = phoneError;
+      }
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const user = data[0];
+        localStorage.setItem("customer_session", JSON.stringify(user));
+        document.cookie = "customer_session=true; path=/";
+
+        // Check if the user is an administrator
+        if (user.role === "ADMIN") {
+          document.cookie = "admin_session=true; path=/";
+          window.dispatchEvent(new Event("storage"));
+          alert("Logged in as Administrator successfully!");
+          window.location.href = "/admin";
+        } else {
+          window.dispatchEvent(new Event("storage"));
+          alert("Logged in successfully!");
+          window.location.href = "/account/orders";
+        }
+      } else {
+        // Fallback to hardcoded admin login
+        if (cleanEmail === "admin@dastiyab.com" && cleanPassword === "dastiyab@123") {
+          document.cookie = "admin_session=true; path=/";
+          alert("Logged in as Administrator successfully!");
+          window.location.href = "/admin";
+          return;
+        }
+        alert("Invalid email/phone or password. Please try again.");
+      }
+    } catch (err: any) {
+      console.error("Login failed, trying local fallback:", err);
+      // Fallback to hardcoded admin login on network failure
+      if (cleanEmail === "admin@dastiyab.com" && cleanPassword === "dastiyab@123") {
+        document.cookie = "admin_session=true; path=/";
+        alert("Logged in as Administrator (Offline Fallback) successfully!");
+        window.location.href = "/admin";
+        return;
+      }
+      alert("Login failed: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regName.trim() || !regPhone.trim() || !regEmail.trim() || !regPassword.trim()) {
+      alert("All fields are required!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Check if email already exists
+      const { data: existing, error: checkError } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('email', regEmail.trim().toLowerCase());
+
+      if (existing && existing.length > 0) {
+        alert("An account with this email already exists.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Insert new customer record
+      const { data: newCustomer, error: insertError } = await supabase
+        .from('customers')
+        .insert({
+          name: regName.trim(),
+          email: regEmail.trim().toLowerCase(),
+          phone: regPhone.trim(),
+          password: regPassword.trim(),
+          address: "",
+          city: ""
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 3. Save session in localStorage
+      localStorage.setItem("customer_session", JSON.stringify(newCustomer));
+      document.cookie = "customer_session=true; path=/";
+      
+      // Trigger storage event to update other components
+      window.dispatchEvent(new Event("storage"));
+      
+      alert("Account created successfully!");
+      window.location.href = "/account/orders";
+    } catch (err: any) {
+      console.error("Registration failed:", err);
+      alert("Registration failed: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,42 +195,44 @@ export default function LoginPage() {
               <div style={{ textAlign: "right" }}>
                 <Link href="/forgot-password" style={{ fontSize: 13, color: "var(--red)", textDecoration: "none", fontWeight: 600 }}>Forgot Password?</Link>
               </div>
-              <button type="submit" className="btn-red" style={{ justifyContent: "center", padding: "14px" }}>
-                Sign In <ArrowRight size={16} />
+              <button type="submit" disabled={loading} className="btn-red" style={{ justifyContent: "center", padding: "14px" }}>
+                {loading ? <Loader2 size={16} className="animate-spin" /> : "Sign In"} 
+                {!loading && <ArrowRight size={16} />}
               </button>
             </form>
           ) : (
-            <form onSubmit={e => e.preventDefault()} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
               <div>
                 <label className="label">Full Name</label>
                 <div style={{ position: "relative" }}>
                   <User size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40 }} type="text" placeholder="Muhammad Ali" />
+                  <input className="input" style={{ paddingLeft: 40 }} type="text" placeholder="Muhammad Ali" value={regName} onChange={e => setRegName(e.target.value)} required />
                 </div>
               </div>
               <div>
                 <label className="label">Phone Number</label>
                 <div style={{ position: "relative" }}>
                   <Phone size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40 }} type="tel" placeholder="0300-1234567" />
+                  <input className="input" style={{ paddingLeft: 40 }} type="tel" placeholder="0300-1234567" value={regPhone} onChange={e => setRegPhone(e.target.value)} required />
                 </div>
               </div>
               <div>
                 <label className="label">Email Address</label>
                 <div style={{ position: "relative" }}>
                   <Mail size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40 }} type="email" placeholder="email@example.com" />
+                  <input className="input" style={{ paddingLeft: 40 }} type="email" placeholder="email@example.com" value={regEmail} onChange={e => setRegEmail(e.target.value)} required />
                 </div>
               </div>
               <div>
                 <label className="label">Create Password</label>
                 <div style={{ position: "relative" }}>
                   <Lock size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40 }} type="password" placeholder="Min 8 characters" />
+                  <input className="input" style={{ paddingLeft: 40 }} type="password" placeholder="Min 8 characters" value={regPassword} onChange={e => setRegPassword(e.target.value)} required />
                 </div>
               </div>
-              <button type="submit" className="btn-red" style={{ justifyContent: "center", padding: "14px" }}>
-                Create Account <ArrowRight size={16} />
+              <button type="submit" disabled={loading} className="btn-red" style={{ justifyContent: "center", padding: "14px" }}>
+                {loading ? <Loader2 size={16} className="animate-spin" /> : "Create Account"} 
+                {!loading && <ArrowRight size={16} />}
               </button>
             </form>
           )}

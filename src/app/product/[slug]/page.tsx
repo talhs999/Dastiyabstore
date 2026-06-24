@@ -2,22 +2,47 @@
 import { use, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { notFound, useRouter } from "next/navigation";
-import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, Link as LinkIcon } from "lucide-react";
+import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, Link as LinkIcon, Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
 import { FaWhatsapp, FaFacebook } from "react-icons/fa";
 import ProductCard from "@/components/ProductCard";
 import { products, getProductBySlug } from "@/data/products";
 import { useCart } from "@/store/cartStore";
 import { useToast } from "@/components/ui/Toast";
+import { useWishlist } from "@/store/wishlistStore";
+
+const renderTrustIcon = (iconName: string) => {
+  const size = 18;
+  const color = "var(--red)";
+  switch (iconName) {
+    case "truck":
+      return <Truck size={size} color={color} style={{ flexShrink: 0 }} />;
+    case "shield":
+      return <Shield size={size} color={color} style={{ flexShrink: 0 }} />;
+    case "rotate-ccw":
+      return <RotateCcw size={size} color={color} style={{ flexShrink: 0 }} />;
+    case "zap":
+      return <Zap size={size} color="var(--yellow-dark)" style={{ flexShrink: 0 }} />;
+    case "check-circle":
+      return <CheckCircle size={size} color={color} style={{ flexShrink: 0 }} />;
+    case "heart":
+      return <Heart size={size} color={color} style={{ flexShrink: 0 }} />;
+    default:
+      return <CheckCircle size={size} color={color} style={{ flexShrink: 0 }} />;
+  }
+};
 
 export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const product = getProductBySlug(slug) || products.find(p => p.id === slug);
-  if (!product) return notFound();
+  const [product, setProduct] = useState<any>(null);
+  const [loadingProduct, setLoadingProduct] = useState(true);
 
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
   const [activeImg, setActiveImg] = useState(0);
   const [showShare, setShowShare] = useState(false);
+  const [showZoom, setShowZoom] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [showStickyCart, setShowStickyCart] = useState(false);
   
   // Reviews state
   const [reviews, setReviews] = useState<any[]>([]);
@@ -29,6 +54,59 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        // Clean up slug in case it has spaces or is missing hyphens
+        let cleanSlug = decodeURIComponent(slug).trim();
+        
+        // If it matches a UUID with spaces (e.g. "48849048 a92a 41d6 8102 d664365e1263")
+        if (/^[a-fA-F0-9]{8}\s[a-fA-F0-9]{4}\s[a-fA-F0-9]{4}\s[a-fA-F0-9]{4}\s[a-fA-F0-9]{12}$/.test(cleanSlug)) {
+          cleanSlug = cleanSlug.replace(/\s/g, "-");
+        }
+        // If it's a UUID without hyphens (e.g. "48849048a92a41d68102d664365e1263")
+        else if (/^[a-fA-F0-9]{32}$/.test(cleanSlug)) {
+          cleanSlug = `${cleanSlug.slice(0, 8)}-${cleanSlug.slice(8, 12)}-${cleanSlug.slice(12, 16)}-${cleanSlug.slice(16, 20)}-${cleanSlug.slice(20)}`;
+        }
+
+        const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(cleanSlug);
+
+        let query = supabase.from("products").select("*");
+        if (isUUID) {
+          query = query.or(`id.eq.${cleanSlug},slug.eq.${cleanSlug}`);
+        } else {
+          query = query.eq("slug", cleanSlug);
+        }
+
+        const { data, error } = await query.maybeSingle();
+
+        if (data) {
+          // Map snake_case to camelCase
+          const mapped = {
+            ...data,
+            originalPrice: data.original_price,
+            badgeType: data.badge_type,
+            isNew: data.is_new,
+            inStock: data.in_stock,
+            stockQuantity: data.stock_quantity,
+          };
+          setProduct(mapped);
+        } else {
+          const staticProd = getProductBySlug(cleanSlug) || products.find(p => p.id === cleanSlug);
+          if (staticProd) setProduct(staticProd);
+        }
+      } catch (err) {
+        console.error("Error fetching product:", err);
+        const staticProd = getProductBySlug(slug) || products.find(p => p.id === slug);
+        if (staticProd) setProduct(staticProd);
+      } finally {
+        setLoadingProduct(false);
+      }
+    }
+    fetchProduct();
+  }, [slug]);
 
   useEffect(() => {
     async function fetchReviews() {
@@ -43,6 +121,26 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
     fetchReviews();
   }, [product]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 500) {
+        setShowStickyCart(true);
+      } else {
+        setShowStickyCart(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  if (loadingProduct) {
+    return <div style={{ padding: "100px 40px", textAlign: "center", color: "var(--gray-500)", fontSize: 16 }}>Loading product details...</div>;
+  }
+
+  if (!product) {
+    return notFound();
+  }
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,8 +173,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     setSubmittingReview(false);
   };
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : null;
+  const isProductInStock = product.in_stock !== undefined ? product.in_stock : (product.inStock !== undefined ? product.inStock : true);
+  const stockQty = product.stock_quantity !== undefined ? product.stock_quantity : (product.stockQuantity !== undefined ? product.stockQuantity : 10);
+  const isOutOfStock = !isProductInStock || stockQty <= 0;
+  
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
-  const images = product.images || [product.image];
+  const images = (product.images && product.images.length > 0) ? product.images : [product.image];
 
   const router = useRouter();
 
@@ -91,7 +193,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   };
 
   const handleWishlist = () => {
-    showToast(`${product.name} added to wishlist!`);
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+      showToast(`${product.name} removed from wishlist`, "info");
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        rating: product.rating,
+        reviews: product.reviews
+      } as any);
+      showToast(`${product.name} added to wishlist!`, "info");
+    }
   };
 
   const handleShare = () => {
@@ -115,24 +230,27 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
         {/* Images */}
         <div>
-          <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "var(--gray-50)", marginBottom: 12, position: "relative", aspectRatio: "4/3" }}>
-            <img src={images[activeImg]} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "var(--gray-50)", marginBottom: 12, position: "relative" }}>
+            <img src={images[activeImg]} alt={product.name} onClick={() => { setShowZoom(true); setZoomLevel(1); }} style={{ width: "100%", height: "auto", display: "block", cursor: "zoom-in" }} />
             {discount && (
               <div style={{ position: "absolute", top: 16, left: 16 }}>
                 <span className="badge badge-red">{discount}% OFF</span>
               </div>
             )}
+            <button onClick={() => { setShowZoom(true); setZoomLevel(1); }} style={{ position: "absolute", bottom: 16, right: 16, background: "white", width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "none", boxShadow: "var(--shadow-md)", cursor: "pointer", color: "var(--gray-700)", transition: "transform 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+              <Maximize2 size={18} />
+            </button>
           </div>
           {images.length > 1 && (
             <div style={{ display: "flex", gap: 12 }}>
-              {images.map((img, i) => (
+              {images.map((img: string, i: number) => (
                 <button key={i} onClick={() => setActiveImg(i)} style={{
                   width: 72, height: 72, borderRadius: "var(--radius)", overflow: "hidden",
                   border: `2px solid ${activeImg === i ? "var(--red)" : "var(--gray-200)"}`,
                   cursor: "pointer", padding: 0, background: "var(--gray-50)",
                   transition: "border-color 0.2s",
                 }}>
-                  <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                 </button>
               ))}
             </div>
@@ -141,7 +259,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
         {/* Info */}
         <div>
-          {product.badge && <span className={`badge badge-${product.badgeType || "red"}`} style={{ marginBottom: 12 }}>{product.badge}</span>}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+            {product.badges && product.badges.map((b: any, index: number) => (
+              <span key={index} className={`badge badge-${b.type || "red"}`}>{b.text}</span>
+            ))}
+            {!product.badges && product.badge && (
+              <span className={`badge badge-${product.badgeType || "red"}`}>{product.badge}</span>
+            )}
+          </div>
           <h1 style={{ fontSize: "clamp(20px, 2.5vw, 30px)", fontWeight: 800, color: "var(--gray-900)", lineHeight: 1.3, marginBottom: 12 }}>
             {product.name}
           </h1>
@@ -167,65 +292,124 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
           {/* Availability */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-            <CheckCircle size={16} color={product.inStock ? "#16a34a" : "var(--gray-400)"} />
-            <span style={{ fontSize: 14, color: product.inStock ? "#16a34a" : "var(--gray-500)", fontWeight: 600 }}>
-              {product.inStock ? "In Stock — Ready to Ship" : "Out of Stock"}
+            <CheckCircle size={16} color={!isOutOfStock ? "#16a34a" : "var(--gray-400)"} />
+            <span style={{ fontSize: 14, color: !isOutOfStock ? "#16a34a" : "var(--gray-500)", fontWeight: 600 }}>
+              {!isOutOfStock ? "In Stock — Ready to Ship" : "Out of Stock"}
             </span>
           </div>
 
-          {/* Quantity */}
-          <div style={{ marginBottom: 24 }}>
-            <label className="label">Quantity</label>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button onClick={() => setQty(Math.max(1, qty - 1))} className="qty-btn"><Minus size={14} /></button>
-              <span style={{ fontSize: 18, fontWeight: 700, minWidth: 32, textAlign: "center" }}>{qty}</span>
-              <button onClick={() => setQty(qty + 1)} className="qty-btn"><Plus size={14} /></button>
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-            <button onClick={handleAdd} className="btn-red" style={{ flex: 1, justifyContent: "center", minWidth: 160 }}>
-              <ShoppingCart size={18} /> Add to Cart
-            </button>
-            <button onClick={handleBuyNow} className="btn-yellow" style={{ flex: 1, justifyContent: "center", minWidth: 160 }}>
-              <Zap size={18} /> Buy Now
-            </button>
-            <button onClick={handleWishlist} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px" }}>
-              <Heart size={18} />
-            </button>
-            <div style={{ position: "relative" }}>
-              <button onClick={() => setShowShare(!showShare)} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px", height: "100%" }}>
-                <Share2 size={18} />
-              </button>
-              {showShare && (
-                <div className="animate-fade-up" style={{ position: "absolute", bottom: "100%", right: 0, marginBottom: 8, background: "white", padding: 8, borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-xl)", display: "flex", flexDirection: "column", gap: 4, minWidth: 150, zIndex: 10, border: "1px solid var(--gray-200)" }}>
-                  <button onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + window.location.href)}`, '_blank')} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <FaWhatsapp size={16} color="#25D366" /> WhatsApp
+          {isOutOfStock ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24, width: "100%" }}>
+              {/* Out of Stock Professional English Alert */}
+              <div style={{ 
+                background: "#fef2f2", 
+                border: "1px solid #fecaca", 
+                borderRadius: "var(--radius)", 
+                padding: "16px 20px", 
+                color: "#991b1b",
+                fontSize: 14,
+                fontWeight: 500,
+                lineHeight: 1.5
+              }}>
+                This item is currently <strong>Out of Stock</strong>. We are working hard to restock it as soon as possible. Please add this item to your wishlist so you can keep track of it and place your order as soon as it is restocked.
+              </div>
+              
+              {/* Wishlist Button Only */}
+              <div style={{ display: "flex", gap: 12 }}>
+                <button 
+                  onClick={handleWishlist} 
+                  className="btn-yellow" 
+                  style={{ flex: 1, justifyContent: "center", padding: "12px 28px", display: "flex", alignItems: "center", gap: 8 }}
+                >
+                  <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} /> 
+                  {isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                </button>
+                
+                <div style={{ position: "relative" }}>
+                  <button onClick={() => setShowShare(!showShare)} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px", height: "100%" }}>
+                    <Share2 size={18} />
                   </button>
-                  <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <FaFacebook size={16} color="#1877F2" /> Facebook
-                  </button>
-                  <button onClick={() => { handleShare(); setShowShare(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
-                    <LinkIcon size={16} color="var(--gray-500)" /> Copy Link
-                  </button>
+                  {showShare && (
+                    <div className="animate-fade-up" style={{ position: "absolute", bottom: "100%", right: 0, marginBottom: 8, background: "white", padding: 8, borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-xl)", display: "flex", flexDirection: "column", gap: 4, minWidth: 150, zIndex: 10, border: "1px solid var(--gray-200)" }}>
+                      <button onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + window.location.href)}`, '_blank')} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        <FaWhatsapp size={16} color="#25D366" /> WhatsApp
+                      </button>
+                      <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        <FaFacebook size={16} color="#1877F2" /> Facebook
+                      </button>
+                      <button onClick={() => { handleShare(); setShowShare(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        <LinkIcon size={16} color="var(--gray-500)" /> Copy Link
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              {/* Quantity */}
+              <div style={{ marginBottom: 24 }}>
+                <label className="label">Quantity</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <button onClick={() => setQty(Math.max(1, qty - 1))} className="qty-btn"><Minus size={14} /></button>
+                  <span style={{ fontSize: 18, fontWeight: 700, minWidth: 32, textAlign: "center" }}>{qty}</span>
+                  <button onClick={() => setQty(qty + 1)} className="qty-btn"><Plus size={14} /></button>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+                <button onClick={handleAdd} className="btn-red" style={{ flex: 1, justifyContent: "center", minWidth: 160 }}>
+                  <ShoppingCart size={18} /> Add to Cart
+                </button>
+                <button onClick={handleBuyNow} className="btn-yellow" style={{ flex: 1, justifyContent: "center", minWidth: 160 }}>
+                  <Zap size={18} /> Buy Now
+                </button>
+                <button onClick={handleWishlist} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px" }}>
+                  <Heart size={18} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
+                </button>
+                <div style={{ position: "relative" }}>
+                  <button onClick={() => setShowShare(!showShare)} className="btn-ghost" style={{ border: "2px solid var(--gray-200)", padding: "12px 14px", height: "100%" }}>
+                    <Share2 size={18} />
+                  </button>
+                  {showShare && (
+                    <div className="animate-fade-up" style={{ position: "absolute", bottom: "100%", right: 0, marginBottom: 8, background: "white", padding: 8, borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-xl)", display: "flex", flexDirection: "column", gap: 4, minWidth: 150, zIndex: 10, border: "1px solid var(--gray-200)" }}>
+                      <button onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(product.name + ' ' + window.location.href)}`, '_blank')} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        <FaWhatsapp size={16} color="#25D366" /> WhatsApp
+                      </button>
+                      <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        <FaFacebook size={16} color="#1877F2" /> Facebook
+                      </button>
+                      <button onClick={() => { handleShare(); setShowShare(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "none", background: "none", cursor: "pointer", fontSize: 14, fontWeight: 500, color: "var(--gray-700)", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+                        <LinkIcon size={16} color="var(--gray-500)" /> Copy Link
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Delivery info */}
           <div style={{ background: "var(--gray-50)", borderRadius: "var(--radius)", padding: 20, display: "flex", flexDirection: "column", gap: 12, border: "1px solid var(--gray-200)" }}>
-            {[
-              { icon: <Truck size={16} color="var(--red)" />, text: "Free delivery on orders above Rs. 2000" },
-              { icon: <Shield size={16} color="var(--red)" />, text: "100% authentic & quality guaranteed" },
-              { icon: <RotateCcw size={16} color="var(--red)" />, text: "7-day easy returns & exchanges" },
-              { icon: <Zap size={16} color="var(--yellow-dark)" />, text: "Cash on Delivery available nationwide" },
-            ].map((t, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--gray-700)" }}>
-                {t.icon} {t.text}
-              </div>
-            ))}
+            {product.trust_points && product.trust_points.length > 0 ? (
+              product.trust_points.map((t: any, i: number) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--gray-700)" }}>
+                  {renderTrustIcon(t.icon)} {t.text}
+                </div>
+              ))
+            ) : (
+              [
+                { icon: "truck", text: "Free delivery on orders above Rs. 2000" },
+                { icon: "shield", text: "100% authentic & quality guaranteed" },
+                { icon: "rotate-ccw", text: "7-day easy returns & exchanges" },
+                { icon: "zap", text: "Cash on Delivery available nationwide" }
+              ].map((t, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--gray-700)" }}>
+                  {renderTrustIcon(t.icon)} {t.text}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -251,7 +435,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             <p style={{ color: "var(--gray-700)", lineHeight: 1.8, fontSize: 15, marginBottom: 24 }}>{product.description}</p>
             {product.features && (
               <ul style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {product.features.map((f, i) => (
+                {product.features.map((f: string, i: number) => (
                   <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 15, color: "var(--gray-700)" }}>
                     <CheckCircle size={16} color="var(--red)" /> {f}
                   </li>
@@ -265,7 +449,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           <div className="animate-fade-up">
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
-                {product.specs.map((s, i) => (
+                {product.specs.map((s: any, i: number) => (
                   <tr key={i} style={{ borderBottom: "1px solid var(--gray-100)" }}>
                     <td style={{ padding: "14px 20px", fontWeight: 700, color: "var(--gray-700)", width: 180, background: i % 2 === 0 ? "var(--gray-50)" : "white", fontSize: 14 }}>{s.label}</td>
                     <td style={{ padding: "14px 20px", color: "var(--gray-800)", background: i % 2 === 0 ? "var(--gray-50)" : "white", fontSize: 14 }}>{s.value}</td>
@@ -316,7 +500,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 ) : reviews.length === 0 ? (
                   <p style={{ color: "var(--gray-500)", background: "var(--gray-50)", padding: 20, borderRadius: "var(--radius)", textAlign: "center" }}>No reviews yet. Be the first to review this product!</p>
                 ) : (
-                  reviews.map((r, i) => (
+                  reviews.map((r: any, i: number) => (
                     <div key={i} style={{ background: "var(--gray-50)", borderRadius: "var(--radius)", padding: 20, border: "1px solid var(--gray-200)" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                         <div>
@@ -354,7 +538,86 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         </div>
       )}
 
+      {/* Zoom Modal */}
+      {showZoom && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.95)", display: "flex", flexDirection: "column" }}>
+          {/* Header Controls */}
+          <div style={{ padding: 20, display: "flex", justifyContent: "flex-end", gap: 16, position: "absolute", top: 0, right: 0, width: "100%", zIndex: 10000 }}>
+            <button onClick={() => setZoomLevel(Math.max(1, zoomLevel - 0.5))} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.2)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}>
+              <ZoomOut size={20} />
+            </button>
+            <button onClick={() => setZoomLevel(Math.min(4, zoomLevel + 0.5))} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.2)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}>
+              <ZoomIn size={20} />
+            </button>
+            <button onClick={() => setShowZoom(false)} style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--red)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", marginLeft: 16, transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "#c62333"} onMouseLeave={e => e.currentTarget.style.background = "var(--red)"}>
+              <X size={20} />
+            </button>
+          </div>
+          
+          {/* Image Container */}
+          <div style={{ flex: 1, overflow: "auto", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, cursor: "zoom-out" }} onClick={(e) => { if(e.target === e.currentTarget) setShowZoom(false); }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "100%", minHeight: "100%" }}>
+              <img 
+                src={images[activeImg]} 
+                alt={product.name} 
+                style={{ 
+                  maxWidth: "90vw", 
+                  maxHeight: "90vh", 
+                  objectFit: "contain", 
+                  transform: `scale(${zoomLevel})`,
+                  transformOrigin: "center center",
+                  transition: "transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
+                  cursor: zoomLevel >= 4 ? "zoom-out" : "zoom-in",
+                  boxShadow: zoomLevel > 1 ? "0 20px 50px rgba(0,0,0,0.5)" : "none",
+                  borderRadius: zoomLevel > 1 ? "8px" : "0"
+                }} 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoomLevel(prev => prev >= 4 ? 1 : prev + 1);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky Bottom Bar (Desktop Only) */}
+      {!isOutOfStock && (
+        <div className={`sticky-cart ${showStickyCart ? "visible" : ""}`} style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "white", padding: "16px 24px", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", zIndex: 90, transition: "transform 0.3s ease-out", transform: showStickyCart ? "translateY(0)" : "translateY(100%)", borderTop: "1px solid var(--gray-200)" }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <img src={images[0]} alt={product.name} style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, background: "var(--gray-50)" }} />
+              <div>
+                <div style={{ fontWeight: 700, color: "var(--gray-900)", fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 300 }}>{product.name}</div>
+                <div style={{ color: "var(--red)", fontWeight: 800 }}>Rs. {product.price.toLocaleString()}</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 16, background: "var(--gray-50)", padding: "4px", borderRadius: "var(--radius-full)", border: "1px solid var(--gray-200)" }}>
+                <button onClick={() => setQty(Math.max(1, qty - 1))} className="qty-btn" style={{ width: 32, height: 32 }}><Minus size={14} /></button>
+                <span style={{ fontSize: 15, fontWeight: 700, minWidth: 24, textAlign: "center" }}>{qty}</span>
+                <button onClick={() => setQty(qty + 1)} className="qty-btn" style={{ width: 32, height: 32 }}><Plus size={14} /></button>
+              </div>
+              <button onClick={handleAdd} className="btn-red" style={{ padding: "12px 24px", minWidth: 140, justifyContent: "center" }}>
+                <ShoppingCart size={18} /> Add to Cart
+              </button>
+              <button onClick={handleBuyNow} className="btn-yellow" style={{ padding: "12px 24px", minWidth: 140, justifyContent: "center" }}>
+                <Zap size={18} /> Buy Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
+        .sticky-cart {
+          display: none !important;
+        }
+        @media (min-width: 768px) {
+          .sticky-cart {
+            display: block !important;
+          }
+        }
         @media (max-width: 768px) {
           div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
         }

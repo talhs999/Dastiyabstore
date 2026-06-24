@@ -12,7 +12,8 @@ export default function TrackOrderPage() {
 
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orderNumber.trim()) return;
+    const input = orderNumber.trim().toLowerCase();
+    if (!input) return;
 
     setLoading(true);
     setError("");
@@ -20,23 +21,39 @@ export default function TrackOrderPage() {
     setItems([]);
 
     try {
-      // Order number is actually the UUID id in our system
-      const { data, error: orderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderNumber.trim())
-        .single();
+      let query = supabase.from('orders').select('*');
+
+      // Check if the input is a full UUID
+      const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input);
+
+      if (isFullUuid) {
+        query = query.eq('id', input);
+      } else if (input.length === 8 && /^[0-9a-f]{8}$/i.test(input)) {
+        // If it's the 8-character short ID segment, construct bounds for the query
+        const lowerBound = `${input}-0000-0000-0000-000000000000`;
+        const upperBound = `${input}-ffff-ffff-ffff-ffffffffffff`;
+        query = query.gte('id', lowerBound).lte('id', upperBound);
+      } else {
+        throw new Error("Invalid order format");
+      }
+
+      const { data, error: orderError } = await query;
 
       if (orderError) throw orderError;
+      if (!data || data.length === 0) {
+        throw new Error("Order not found");
+      }
+
+      const matchedOrder = data[0];
 
       const { data: itemsData, error: itemsError } = await supabase
         .from('order_items')
         .select('*')
-        .eq('order_id', data.id);
+        .eq('order_id', matchedOrder.id);
 
       if (itemsError) throw itemsError;
 
-      setOrder(data);
+      setOrder(matchedOrder);
       setItems(itemsData || []);
     } catch (err: any) {
       console.error(err);

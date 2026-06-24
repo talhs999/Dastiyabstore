@@ -1,21 +1,75 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useWishlist } from "@/store/wishlistStore";
 import { useCart } from "@/store/cartStore";
 import { Heart, ShoppingCart, Trash2, ArrowRight } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { useToast } from "@/components/ui/Toast";
+import { supabase } from "@/lib/supabase";
 
 export default function WishlistPage() {
   const { items, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const [displayItems, setDisplayItems] = useState<any[]>(items);
+
+  useEffect(() => {
+    setDisplayItems(items);
+
+    if (items.length === 0) return;
+
+    async function fetchLatestStock() {
+      try {
+        const itemIds = items.map(i => i.id);
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .in("id", itemIds);
+
+        if (data && data.length > 0) {
+          const updatedItems = items.map(item => {
+            const dbProduct = data.find(db => db.id === item.id);
+            if (dbProduct) {
+              const isProductInStock = dbProduct.in_stock !== undefined ? dbProduct.in_stock : true;
+              const stockQty = dbProduct.stock_quantity !== undefined ? dbProduct.stock_quantity : 10;
+              return {
+                ...item,
+                price: Number(dbProduct.price),
+                originalPrice: dbProduct.original_price ? Number(dbProduct.original_price) : undefined,
+                inStock: isProductInStock && stockQty > 0,
+                in_stock: isProductInStock && stockQty > 0,
+                stock_quantity: stockQty,
+                image: dbProduct.image,
+                name: dbProduct.name
+              };
+            }
+            return item;
+          });
+          setDisplayItems(updatedItems);
+        }
+      } catch (err) {
+        console.error("Error fetching latest stock for wishlist:", err);
+      }
+    }
+
+    fetchLatestStock();
+  }, [items]);
 
   const handleAddAllToCart = () => {
-    items.forEach(item => {
-      addToCart({ id: item.id, name: item.name, price: item.price, image: item.image });
+    let addedCount = 0;
+    displayItems.forEach(item => {
+      const isItemInStock = item.in_stock !== undefined ? item.in_stock : item.inStock;
+      if (isItemInStock) {
+        addToCart({ id: item.id, name: item.name, price: item.price, image: item.image });
+        addedCount++;
+      }
     });
-    showToast("All items added to cart!");
+    if (addedCount > 0) {
+      showToast(`${addedCount} available item(s) added to cart!`);
+    } else {
+      showToast("No available items in stock to add.", "error");
+    }
   };
 
   return (
@@ -65,7 +119,7 @@ export default function WishlistPage() {
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 24 }}>
-          {items.map(product => (
+          {displayItems.map(product => (
             <div key={product.id} style={{ position: "relative" }}>
               <ProductCard product={product} />
             </div>

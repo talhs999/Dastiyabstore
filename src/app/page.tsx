@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
+import { supabase } from "@/lib/supabase";
 
 /* ─── DATA ─── */
 const heroSlides = [
@@ -296,6 +297,9 @@ function CategorySidebar() {
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const reviewsRef = useRef<HTMLDivElement>(null);
+  const [featured, setFeatured] = useState<any[]>([]);
+  const [bestSellers, setBestSellers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const scrollReviews = (dir: "left" | "right") => {
     if (reviewsRef.current) {
@@ -303,8 +307,40 @@ export default function HomePage() {
     }
   };
 
-  const featured = getFeaturedProducts();
-  const bestSellers = getBestSellers();
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const { data: featuredData, error: featuredErr } = await supabase
+          .from("products")
+          .select("*")
+          .eq("is_featured", true);
+
+        const { data: bestData, error: bestErr } = await supabase
+          .from("products")
+          .select("*")
+          .eq("is_best_seller", true);
+
+        if (featuredData && featuredData.length > 0) {
+          setFeatured(featuredData);
+        } else {
+          setFeatured(getFeaturedProducts());
+        }
+
+        if (bestData && bestData.length > 0) {
+          setBestSellers(bestData);
+        } else {
+          setBestSellers(getBestSellers());
+        }
+      } catch (err) {
+        console.error("Error fetching homepage products:", err);
+        setFeatured(getFeaturedProducts());
+        setBestSellers(getBestSellers());
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {

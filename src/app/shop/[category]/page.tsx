@@ -1,11 +1,12 @@
 "use client";
-import { useState, use, useMemo } from "react";
+import { useState, use, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Grid, List, SlidersHorizontal, ChevronDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ShopSidebar from "@/components/ShopSidebar";
 import { products } from "@/data/products";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 const sortOptions = ["Newest First", "Price: Low to High", "Price: High to Low", "Most Popular", "Top Rated"];
 
@@ -19,16 +20,56 @@ const categoryMap: Record<string, string> = {
   "home-gadgets": "Home Gadgets",
 };
 
-export default function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
+function CategoryContent({ params }: { params: Promise<{ category: string }> }) {
   const unwrappedParams = use(params);
   const categorySlug = unwrappedParams.category;
   
   const [view, setView] = useState<"grid" | "list">("grid");
   const [sort, setSort] = useState("Newest First");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dbProducts, setDbProducts] = useState<any[]>(products);
 
   const searchParams = useSearchParams();
   const categoryName = categoryMap[categorySlug] || categorySlug.replace("-", " ");
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*, categories(name)");
+
+        if (data && data.length > 0) {
+          const mapped = data.map((p: any) => ({
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            price: Number(p.price),
+            originalPrice: p.original_price ? Number(p.original_price) : undefined,
+            image: p.image,
+            images: p.images,
+            rating: Number(p.rating || 0),
+            reviews: Number(p.reviews || 0),
+            badge: p.badge,
+            badgeType: p.badge_type,
+            isNew: p.is_new,
+            inStock: p.in_stock !== undefined ? p.in_stock : true,
+            stock_quantity: p.stock_quantity,
+            category: p.categories?.name || "",
+            description: p.description || "",
+            specs: p.specs,
+            features: p.features,
+            isFeatured: p.is_featured,
+            isBestSeller: p.is_best_seller,
+          }));
+          setDbProducts(mapped);
+        }
+      } catch (err) {
+        console.error("Error fetching shop products:", err);
+      }
+    }
+    fetchProducts();
+  }, []);
   
   const filteredProducts = useMemo(() => {
     const q = searchParams.get("q")?.toLowerCase();
@@ -37,7 +78,7 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
     const rating = searchParams.get("rating") ? Number(searchParams.get("rating")) : 0;
     const tags = searchParams.get("tags") ? searchParams.get("tags")!.split(",") : [];
 
-    let filtered = products.filter(p => {
+    let filtered = dbProducts.filter(p => {
       // Must match category
       if (p.category !== categoryMap[categorySlug] && p.category.toLowerCase() !== categoryName.toLowerCase()) return false;
 
@@ -50,7 +91,7 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
       // Tags
       if (tags.length > 0) {
         let tagMatch = true;
-        if (tags.includes("In Stock") && !p.inStock) tagMatch = false;
+        if (tags.includes("In Stock") && !(p.in_stock !== undefined ? p.in_stock : p.inStock)) tagMatch = false;
         if (tags.includes("On Sale") && !p.originalPrice) tagMatch = false;
         if (tags.includes("New Arrivals") && !p.isNew) tagMatch = false;
         if (tags.includes("Best Seller") && !p.isBestSeller) tagMatch = false;
@@ -145,5 +186,13 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
         }
       `}</style>
     </div>
+  );
+}
+
+export default function CategoryPage(props: { params: Promise<{ category: string }> }) {
+  return (
+    <Suspense fallback={<div style={{ padding: "100px 40px", textAlign: "center", color: "var(--gray-500)", fontSize: 16 }}>Loading Category...</div>}>
+      <CategoryContent {...props} />
+    </Suspense>
   );
 }
