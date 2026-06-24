@@ -322,7 +322,7 @@ export default function CheckoutPage() {
 
     try {
       // 1. Format the delivery address with selected area and estimated distance
-      const distanceVal = KARACHI_AREAS.find(a => a.name === selectedArea)?.distance || 0;
+      const distanceVal = karachiAreas.find((a: any) => a.name === selectedArea)?.distance || 0;
 
       const formattedAddress = form.city.toLowerCase() === "karachi"
         ? `${form.address}, Area: ${selectedArea} (Est. Distance: ${distanceVal} km from Model Colony Hub)`
@@ -486,8 +486,8 @@ export default function CheckoutPage() {
                     <div>
                       <label className="label" style={{ fontWeight: 700 }}>Select Area / Location *</label>
                       <select className="input" value={selectedArea} onChange={e => setSelectedArea(e.target.value)} style={{ background: "white" }}>
-                        {karachiAreas.map((area, i) => (
-                          <option key={i} value={area.name}>{area.name}</option>
+                        {karachiAreas.map((a: any) => (
+                          <option key={a.name} value={a.name}>{a.name} (~{a.distance} km)</option>
                         ))}
                       </select>
                     </div>
@@ -525,7 +525,7 @@ export default function CheckoutPage() {
                 <p style={{ color: "var(--gray-700)", fontSize: 15 }}>{form.name}</p>
                 <p style={{ color: "var(--gray-600)", fontSize: 14 }}>
                   {form.address}
-                  {form.city.toLowerCase() === "karachi" && `, ${selectedArea} (~${KARACHI_AREAS.find(a => a.name === selectedArea)?.distance || 0} km)`}
+                  {form.city.toLowerCase() === "karachi" && `, ${selectedArea} (~${karachiAreas.find((a: any) => a.name === selectedArea)?.distance || 0} km)`}
                   , {form.city}
                 </p>
                 <p style={{ color: "var(--gray-600)", fontSize: 14 }}>{form.phone}</p>
