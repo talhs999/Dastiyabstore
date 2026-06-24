@@ -757,9 +757,11 @@ export default function CheckoutPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
             {items.map(item => (
               <div key={item.id} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <div style={{ width: 64, height: 64, borderRadius: "var(--radius)", background: "var(--gray-50)", border: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-                  <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/64x64?text=Invalid+Image'; }} />
-                  <div style={{ position: "absolute", top: -8, right: -8, background: "var(--gray-500)", color: "white", width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600 }}>
+                <div style={{ position: "relative", width: 64, height: 64 }}>
+                  <div style={{ width: "100%", height: "100%", borderRadius: "var(--radius)", background: "var(--gray-50)", border: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                    <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/64x64?text=Invalid+Image'; }} />
+                  </div>
+                  <div style={{ position: "absolute", top: -8, right: -8, background: "var(--gray-500)", color: "white", width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, zIndex: 10 }}>
                     {item.quantity}
                   </div>
                 </div>

@@ -113,6 +113,15 @@ export default function AdminSettingsPage() {
     }
   };
 
+  // Security states
+  const [loadingSecurity, setLoadingSecurity] = useState(true);
+  const [savingSecurity, setSavingSecurity] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [sessionTimeout, setSessionTimeout] = useState("24 Hours");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
   const tabs = [
     { label: "General", icon: <Store size={18} /> },
     { label: "Shipping & Delivery", icon: <Truck size={18} /> },
@@ -130,6 +139,7 @@ export default function AdminSettingsPage() {
     else if (activeTab === "Coupons & Discounts") fetchCoupons();
     else if (activeTab === "Emails & Marketing") fetchMarketingSettings();
     else if (activeTab === "Payments") fetchPaymentSettings();
+    else if (activeTab === "Security") fetchSecuritySettings();
   }, [activeTab]);
 
   const fetchPaymentSettings = async () => {
@@ -171,6 +181,111 @@ export default function AdminSettingsPage() {
     } else {
       alert("Payment settings saved successfully!");
     }
+  };
+
+  const fetchSecuritySettings = async () => {
+    setLoadingSecurity(true);
+    const { data } = await supabase.from("store_settings").select("value").eq("key", "security_settings").single();
+    if (data && data.value) {
+      try {
+        const settings = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+        setTwoFactorEnabled(settings.twoFactorEnabled ?? false);
+        setSessionTimeout(settings.sessionTimeout ?? "24 Hours");
+      } catch (e) {
+        console.error("Failed to parse security settings", e);
+      }
+    }
+    setLoadingSecurity(false);
+  };
+
+  const saveSecuritySettings = async () => {
+    setSavingSecurity(true);
+    const payload = {
+      twoFactorEnabled,
+      sessionTimeout
+    };
+    await supabase.from("store_settings").upsert({ key: "security_settings", value: JSON.stringify(payload) });
+    setSavingSecurity(false);
+    alert("Security settings saved!");
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      alert("Please enter both current and new password");
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert("New password must be at least 6 characters");
+      return;
+    }
+    
+    setPasswordLoading(true);
+
+    let userEmail = "admin@dastiyab.com";
+    try {
+      const sessionStr = localStorage.getItem("customer_session");
+      if (sessionStr) {
+        const sessionObj = JSON.parse(sessionStr);
+        if (sessionObj && sessionObj.email) userEmail = sessionObj.email;
+      }
+    } catch(e) {}
+    
+    // First verify current password exists
+    const { data: user, error: verifyError } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("email", userEmail)
+      .eq("password", currentPassword)
+      .single();
+        
+    if (verifyError || !user) {
+      // If they are using the hardcoded credentials and it's not in DB yet
+      if (currentPassword === "dastiyab@123" && userEmail === "admin@dastiyab.com") {
+        const { data: existingAdmin } = await supabase.from("customers").select("*").eq("email", "admin@dastiyab.com").single();
+        if (existingAdmin) {
+           const { error: updateError } = await supabase.from("customers").update({ password: newPassword }).eq("id", existingAdmin.id);
+           if (updateError) {
+             alert("Failed to update password: " + updateError.message);
+             setPasswordLoading(false);
+             return;
+           }
+        } else {
+           const { error: insertError } = await supabase.from("customers").insert({
+             email: "admin@dastiyab.com",
+             password: newPassword,
+             name: "Administrator",
+             role: "ADMIN",
+             phone: "00000000000"
+           });
+           if (insertError) {
+             alert("Failed to create admin record: " + insertError.message);
+             setPasswordLoading(false);
+             return;
+           }
+        }
+      } else {
+        alert("Incorrect current password.");
+        setPasswordLoading(false);
+        return;
+      }
+    } else {
+      // Update the password in customers table
+      const { error: updateError } = await supabase
+        .from("customers")
+        .update({ password: newPassword })
+        .eq("id", user.id);
+          
+      if (updateError) {
+        alert("Failed to update password: " + updateError.message);
+        setPasswordLoading(false);
+        return;
+      }
+    }
+    
+    setPasswordLoading(false);
+    alert("Password updated successfully! You can use this new password on the login screen.");
+    setCurrentPassword("");
+    setNewPassword("");
   };
 
   const fetchMarketingSettings = async () => {
@@ -912,6 +1027,7 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
+
           {activeTab === "Notifications" && (
             <div>
               <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)" }}>
@@ -1046,8 +1162,87 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           )}
+          {activeTab === "Security" && (
+            <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", background: "white", borderRadius: "var(--radius-lg)", border: "1px solid var(--gray-200)", boxShadow: "var(--shadow-sm)", overflow: "hidden" }}>
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-200)" }}>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)" }}>Security Settings</h2>
+              </div>
+              
+              <div style={{ padding: "32px", display: "flex", flexDirection: "column", gap: 32 }}>
+                {loadingSecurity ? (
+                  <div style={{ padding: 40, textAlign: "center", color: "var(--gray-500)" }}>Loading security settings...</div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 24, border: "1px solid var(--gray-200)", borderRadius: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gray-900)" }}>Two-Factor Authentication (2FA)</div>
+                        <div style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 4 }}>Require a secondary code when logging into the admin panel.</div>
+                      </div>
+                      <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                        <input type="checkbox" style={{ display: "none" }} checked={twoFactorEnabled} onChange={(e) => setTwoFactorEnabled(e.target.checked)} />
+                        <div style={{ width: 44, height: 24, background: twoFactorEnabled ? "var(--red)" : "var(--gray-300)", borderRadius: 12, position: "relative", transition: "background 0.2s" }}>
+                          <div style={{ width: 20, height: 20, background: "white", borderRadius: "50%", position: "absolute", top: 2, left: twoFactorEnabled ? 22 : 2, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+                        </div>
+                      </label>
+                    </div>
 
-          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && activeTab !== "Delivery Areas" && activeTab !== "Coupons & Discounts" && activeTab !== "Emails & Marketing" && activeTab !== "Payments" && activeTab !== "Notifications" && (
+                    <div>
+                      <label className="label">Admin Session Timeout</label>
+                      <select className="input" style={{ maxWidth: 300 }} value={sessionTimeout} onChange={(e) => setSessionTimeout(e.target.value)}>
+                        <option value="1 Hour">1 Hour</option>
+                        <option value="2 Hours">2 Hours</option>
+                        <option value="4 Hours">4 Hours</option>
+                        <option value="8 Hours">8 Hours</option>
+                        <option value="12 Hours">12 Hours</option>
+                        <option value="16 Hours">16 Hours</option>
+                        <option value="24 Hours">24 Hours</option>
+                      </select>
+                      <div style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 8 }}>Automatically log out inactive administrators after this duration.</div>
+                    </div>
+
+                    <div className="divider" />
+
+                    <div>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 16 }}>Change Password</h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 400 }}>
+                        <input 
+                          type="password" 
+                          className="input" 
+                          placeholder="Current Password" 
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                        />
+                        <input 
+                          type="password" 
+                          className="input" 
+                          placeholder="New Password" 
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                        <button 
+                          onClick={handleUpdatePassword} 
+                          disabled={passwordLoading}
+                          className="btn-red" 
+                          style={{ alignSelf: "flex-start", marginTop: 8 }}
+                        >
+                          {passwordLoading ? "Updating..." : "Update Password"}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--gray-200)" }}>
+                <button onClick={saveSecuritySettings} disabled={savingSecurity} className="btn-red" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {savingSecurity ? "Saving..." : "Save Changes"}
+
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && activeTab !== "Delivery Areas" && activeTab !== "Coupons & Discounts" && activeTab !== "Emails & Marketing" && activeTab !== "Payments" && activeTab !== "Notifications" && activeTab !== "Security" && (
             <div style={{ padding: 60, textAlign: "center", color: "var(--gray-500)" }}>
               <p>Settings for <strong>{activeTab}</strong> will appear here.</p>
             </div>
