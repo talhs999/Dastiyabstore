@@ -34,21 +34,28 @@ const DEFAULT_SHIPPING_RULES = [
   }
 ];
 
-const KARACHI_AREAS = [
-  { name: "Saddar / PECHS / Bahadurabad", distance: 0 },
-  { name: "Clifton", distance: 5 },
-  { name: "DHA (Phase 1-8)", distance: 8 },
-  { name: "Gulshan-e-Iqbal", distance: 7 },
-  { name: "Gulistan-e-Jauhar", distance: 10 },
-  { name: "Nazimabad / North Nazimabad", distance: 12 },
-  { name: "Federal B Area", distance: 9 },
-  { name: "Korangi / Landhi", distance: 15 },
-  { name: "North Karachi / Surjani Town", distance: 18 },
-  { name: "Orangi / Baldia Town", distance: 16 },
-  { name: "Malir / Model Colony", distance: 16 },
-  { name: "Scheme 33", distance: 15 },
-  { name: "Bahria Town Karachi", distance: 35 },
-  { name: "Other (Custom Distance)", distance: -1 }
+const DEFAULT_KARACHI_AREAS = [
+  { name: "Model Colony / Malir Cantt", distance: 0 },
+  { name: "Malir Halt / Malir City", distance: 3 },
+  { name: "Scheme 33 / Safari Park", distance: 5 },
+  { name: "Korangi", distance: 7 },
+  { name: "Landhi", distance: 9 },
+  { name: "Gulistan-e-Jauhar", distance: 7 },
+  { name: "Gulshan-e-Iqbal", distance: 10 },
+  { name: "Bahadurabad / PECHS", distance: 12 },
+  { name: "Saddar / City Area", distance: 15 },
+  { name: "Federal B Area / Nazimabad", distance: 15 },
+  { name: "North Nazimabad", distance: 18 },
+  { name: "Clifton", distance: 18 },
+  { name: "DHA (Phase 1-6)", distance: 20 },
+  { name: "DHA (Phase 7-8)", distance: 25 },
+  { name: "North Karachi / Surjani Town", distance: 25 },
+  { name: "Orangi / Baldia Town", distance: 22 },
+  { name: "Karsaz / Shahrah-e-Faisal", distance: 10 },
+  { name: "SMCHS / Shaheed-e-Millat", distance: 13 },
+  { name: "Bin Qasim / Steel Town", distance: 12 },
+  { name: "Bahria Town Karachi", distance: 30 },
+  { name: "Other Area", distance: 15 },
 ];
 
 const PAKISTAN_CITIES = [
@@ -95,7 +102,8 @@ export default function CheckoutPage() {
 
   // Dynamic shipping states
   const [shippingRules, setShippingRules] = useState<any[]>([]);
-  const [selectedArea, setSelectedArea] = useState<string>("Saddar / PECHS / Bahadurabad");
+  const [karachiAreas, setKarachiAreas] = useState<any[]>(DEFAULT_KARACHI_AREAS);
+  const [selectedArea, setSelectedArea] = useState<string>("Model Colony / Malir Cantt");
   const [customDistance, setCustomDistance] = useState<number>(0);
   const [shippingFee, setShippingFee] = useState<number>(150);
   const [shippingExplanation, setShippingExplanation] = useState<string>("");
@@ -143,26 +151,38 @@ export default function CheckoutPage() {
     }
   }, [dropdownCity, customCity]);
 
-  // 1. Fetch Shipping Rules on mount
+  // 1. Fetch Shipping Rules & Delivery Areas on mount
   useEffect(() => {
-    async function loadRules() {
+    async function loadData() {
       try {
-        const { data, error } = await supabase
+        // Fetch Shipping Rules
+        const { data: rulesData, error: rulesError } = await supabase
           .from("shipping_rules")
           .select("*")
           .eq("is_active", true);
 
-        if (!error && data && data.length > 0) {
-          setShippingRules(data);
+        if (!rulesError && rulesData && rulesData.length > 0) {
+          setShippingRules(rulesData);
         } else {
           setShippingRules(DEFAULT_SHIPPING_RULES);
         }
+
+        // Fetch Delivery Areas
+        const { data: areasData, error: areasError } = await supabase
+          .from("delivery_areas")
+          .select("*")
+          .eq("is_active", true)
+          .order("distance", { ascending: true });
+
+        if (!areasError && areasData && areasData.length > 0) {
+          setKarachiAreas(areasData);
+        }
       } catch (err) {
-        console.error("Failed to fetch shipping rules:", err);
+        console.error("Failed to fetch shipping data:", err);
         setShippingRules(DEFAULT_SHIPPING_RULES);
       }
     }
-    loadRules();
+    loadData();
   }, []);
 
   // 2. Recalculate Shipping Fee dynamically
@@ -202,45 +222,39 @@ export default function CheckoutPage() {
     // Calculate distance for Karachi local rule
     let distance = 0;
     if (form.city.toLowerCase() === "karachi") {
-      if (selectedArea === "Other (Custom Distance)") {
-        distance = Number(customDistance) || 0;
-      } else {
-        const areaObj = KARACHI_AREAS.find(a => a.name === selectedArea);
-        distance = areaObj ? areaObj.distance : 0;
-      }
+      const areaObj = karachiAreas.find(a => a.name === selectedArea);
+      distance = areaObj ? areaObj.distance : 0;
     }
 
     let isFree = false;
     let explanation = "";
 
-    // Check free delivery by order threshold
-    if (totalPrice >= freeThreshold) {
-      let areaEligible = true;
-      let kmEligible = true;
-
-      // Check if location is restricted for free shipping
-      if (freeAreasList.length > 0) {
-        const areaNameToCheck = (selectedArea === "Other (Custom Distance)" ? "other" : selectedArea).toLowerCase();
-        const matched = freeAreasList.some((fa: string) => areaNameToCheck.includes(fa) || fa.includes(areaNameToCheck));
-        if (!matched) {
-          areaEligible = false;
-        }
+    // 1. Check if area is in the "always free delivery" list (regardless of order amount)
+    if (freeAreasList.length > 0 && form.city.toLowerCase() === "karachi") {
+      const areaNameToCheck = selectedArea.toLowerCase();
+      const isInFreeArea = freeAreasList.some((fa: string) => areaNameToCheck.includes(fa) || fa.includes(areaNameToCheck));
+      if (isInFreeArea) {
+        isFree = true;
+        explanation = `Free delivery — your area is eligible for free shipping!`;
       }
+    }
+
+    // 2. Check free delivery by order threshold (for areas not already free)
+    if (!isFree && totalPrice >= freeThreshold) {
+      let kmEligible = true;
 
       // Check if distance is restricted for free shipping
       if (freeMaxKm !== null && distance > freeMaxKm) {
         kmEligible = false;
       }
 
-      if (areaEligible && kmEligible) {
+      if (kmEligible) {
         isFree = true;
         explanation = `Free shipping applied (Order above Rs. ${freeThreshold.toLocaleString()})`;
-      } else if (!areaEligible) {
-        explanation = `Order above Rs. ${freeThreshold.toLocaleString()}, but free shipping is only for select areas.`;
-      } else if (!kmEligible) {
+      } else {
         explanation = `Order above Rs. ${freeThreshold.toLocaleString()}, but free shipping is restricted within ${freeMaxKm} km.`;
       }
-    } else {
+    } else if (!isFree) {
       explanation = `Add Rs. ${(freeThreshold - totalPrice).toLocaleString()} more for Free Shipping.`;
     }
 
@@ -248,11 +262,13 @@ export default function CheckoutPage() {
       setShippingFee(0);
       setShippingExplanation(explanation);
     } else {
-      const calculatedFee = baseFee + (perKmFee * distance);
+      // Only apply per-km fee if the rule explicitly has a non-null, non-zero per_km_fee
+      const hasPerKm = rule.per_km_fee !== null && rule.per_km_fee !== undefined && Number(rule.per_km_fee) > 0;
+      const calculatedFee = hasPerKm ? baseFee + (perKmFee * distance) : baseFee;
       setShippingFee(calculatedFee);
       
       let breakdown = `Base rate: Rs. ${baseFee}`;
-      if (perKmFee > 0 && distance > 0) {
+      if (hasPerKm && distance > 0) {
         breakdown += ` + Rs. ${perKmFee}/km × ${distance} km (Total: Rs. ${calculatedFee})`;
       }
       setShippingExplanation(`${breakdown}. ${explanation}`);
@@ -265,12 +281,10 @@ export default function CheckoutPage() {
 
     try {
       // 1. Format the delivery address with selected area and estimated distance
-      const distanceVal = selectedArea === "Other (Custom Distance)" 
-        ? customDistance 
-        : (KARACHI_AREAS.find(a => a.name === selectedArea)?.distance || 0);
+      const distanceVal = KARACHI_AREAS.find(a => a.name === selectedArea)?.distance || 0;
 
       const formattedAddress = form.city.toLowerCase() === "karachi"
-        ? `${form.address}, Area: ${selectedArea === "Other (Custom Distance)" ? "Custom Location" : selectedArea} (Est. Distance: ${distanceVal} km)`
+        ? `${form.address}, Area: ${selectedArea} (Est. Distance: ${distanceVal} km from Model Colony Hub)`
         : form.address;
 
       // 2. Create order
@@ -429,32 +443,11 @@ export default function CheckoutPage() {
                     <div>
                       <label className="label" style={{ fontWeight: 700 }}>Select Area / Location *</label>
                       <select className="input" value={selectedArea} onChange={e => setSelectedArea(e.target.value)} style={{ background: "white" }}>
-                        {KARACHI_AREAS.map(a => (
-                          <option key={a.name} value={a.name}>
-                            {a.name} {a.distance >= 0 ? `(${a.distance} km)` : ""}
-                          </option>
+                        {karachiAreas.map((area, i) => (
+                          <option key={i} value={area.name}>{area.name}</option>
                         ))}
                       </select>
                     </div>
-
-                    {selectedArea === "Other (Custom Distance)" && (
-                      <div className="animate-fade-up">
-                        <label className="label">Estimated Distance from Central Saddar/PECHS Hub (km) *</label>
-                        <input 
-                          className="input" 
-                          type="number" 
-                          min="0" 
-                          max="100" 
-                          value={customDistance || ""} 
-                          onChange={e => setCustomDistance(Math.max(0, Number(e.target.value)))} 
-                          placeholder="e.g. 12" 
-                          style={{ background: "white" }}
-                        />
-                        <p style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 6 }}>
-                          Specify the delivery distance in kilometers to compute the exact per-km delivery fee.
-                        </p>
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -471,8 +464,7 @@ export default function CheckoutPage() {
                   !form.name || 
                   !form.phone || 
                   !form.address || 
-                  !form.city ||
-                  (form.city.toLowerCase() === "karachi" && selectedArea === "Other (Custom Distance)" && !customDistance)
+                  !form.city
                 }
               >
                 Continue to Review <ChevronRight size={16} />
@@ -490,7 +482,7 @@ export default function CheckoutPage() {
                 <p style={{ color: "var(--gray-700)", fontSize: 15 }}>{form.name}</p>
                 <p style={{ color: "var(--gray-600)", fontSize: 14 }}>
                   {form.address}
-                  {form.city.toLowerCase() === "karachi" && `, ${selectedArea === "Other (Custom Distance)" ? `${customDistance} km (Custom)` : selectedArea}`}
+                  {form.city.toLowerCase() === "karachi" && `, ${selectedArea} (~${KARACHI_AREAS.find(a => a.name === selectedArea)?.distance || 0} km)`}
                   , {form.city}
                 </p>
                 <p style={{ color: "var(--gray-600)", fontSize: 14 }}>{form.phone}</p>

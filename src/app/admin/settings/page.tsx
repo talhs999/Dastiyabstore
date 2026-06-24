@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Store, Truck, Tag, CreditCard, Mail, Bell, Shield, Plus, Edit2, Trash2, X, AlertCircle } from "lucide-react";
+import { Store, Truck, Tag, CreditCard, Mail, Bell, Shield, Plus, Edit2, Trash2, X, AlertCircle, MapPin } from "lucide-react";
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState("General");
@@ -23,9 +23,21 @@ export default function AdminSettingsPage() {
     is_active: true
   });
 
+  // Delivery Areas states
+  const [deliveryAreas, setDeliveryAreas] = useState<any[]>([]);
+  const [loadingAreas, setLoadingAreas] = useState(false);
+  const [editingArea, setEditingArea] = useState<any | null>(null);
+  const [showAddAreaModal, setShowAddAreaModal] = useState(false);
+  const [areaForm, setAreaForm] = useState({
+    name: "",
+    distance: 0,
+    is_active: true
+  });
+
   const tabs = [
     { label: "General", icon: <Store size={18} /> },
     { label: "Shipping & Delivery", icon: <Truck size={18} /> },
+    { label: "Delivery Areas", icon: <MapPin size={18} /> },
     { label: "Coupons & Discounts", icon: <Tag size={18} /> },
     { label: "Payments", icon: <CreditCard size={18} /> },
     { label: "Emails & Marketing", icon: <Mail size={18} /> },
@@ -36,6 +48,8 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     if (activeTab === "Shipping & Delivery") {
       fetchShippingRules();
+    } else if (activeTab === "Delivery Areas") {
+      fetchDeliveryAreas();
     }
   }, [activeTab]);
 
@@ -152,6 +166,68 @@ export default function AdminSettingsPage() {
     });
     setEditingRule(rule);
     setShowAddRuleModal(true);
+  };
+
+  const fetchDeliveryAreas = async () => {
+    setLoadingAreas(true);
+    try {
+      const { data, error } = await supabase
+        .from("delivery_areas")
+        .select("*")
+        .order("distance", { ascending: true });
+
+      if (!error && data) {
+        setDeliveryAreas(data);
+      }
+    } catch (err) {
+      console.error("Error loading areas:", err);
+    } finally {
+      setLoadingAreas(false);
+    }
+  };
+
+  const handleSaveArea = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      name: areaForm.name,
+      distance: Number(areaForm.distance),
+      is_active: areaForm.is_active
+    };
+
+    if (editingArea) {
+      const { error } = await supabase.from("delivery_areas").update(payload).eq("id", editingArea.id);
+      if (!error) {
+        setEditingArea(null);
+        setShowAddAreaModal(false);
+        fetchDeliveryAreas();
+      } else alert("Failed to update: " + error.message);
+    } else {
+      const { error } = await supabase.from("delivery_areas").insert(payload);
+      if (!error) {
+        setShowAddAreaModal(false);
+        fetchDeliveryAreas();
+      } else alert("Failed to insert: " + error.message);
+    }
+  };
+
+  const handleDeleteArea = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this area?")) return;
+    const { error } = await supabase.from("delivery_areas").delete().eq("id", id);
+    if (!error) {
+      fetchDeliveryAreas();
+    } else alert("Failed to delete: " + error.message);
+  };
+
+  const openAddAreaModal = () => {
+    setAreaForm({ name: "", distance: 0, is_active: true });
+    setEditingArea(null);
+    setShowAddAreaModal(true);
+  };
+
+  const openEditAreaModal = (area: any) => {
+    setAreaForm({ name: area.name, distance: area.distance, is_active: area.is_active });
+    setEditingArea(area);
+    setShowAddAreaModal(true);
   };
 
   return (
@@ -279,7 +355,61 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
-          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && (
+          {activeTab === "Delivery Areas" && (
+            <div>
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Delivery Areas (Karachi)</h2>
+                  <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 4 }}>Manage areas and their estimated distance from the Model Colony Hub.</p>
+                </div>
+                <button onClick={openAddAreaModal} className="btn-red" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, padding: "8px 14px" }}>
+                  <Plus size={16} /> Add Area
+                </button>
+              </div>
+
+              <div style={{ padding: "24px 32px" }}>
+                {loadingAreas ? (
+                  <div style={{ padding: 40, textAlign: "center", color: "var(--gray-500)" }}>Loading areas...</div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)" }}>
+                          <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>AREA NAME</th>
+                          <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>DISTANCE (KM)</th>
+                          <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>STATUS</th>
+                          <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>ACTIONS</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deliveryAreas.map((area) => (
+                          <tr key={area.id} style={{ borderBottom: "1px solid var(--gray-150)", background: area.is_active ? "transparent" : "#f9fafb" }}>
+                            <td style={{ padding: "14px 16px", fontWeight: 700, color: "var(--gray-900)" }}>{area.name}</td>
+                            <td style={{ padding: "14px 16px" }}>{area.distance} km</td>
+                            <td style={{ padding: "14px 16px" }}>
+                              {area.is_active ? (
+                                <span style={{ background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: 12, fontSize: 11, fontWeight: 600 }}>Active</span>
+                              ) : (
+                                <span style={{ background: "#f3f4f6", color: "#4b5563", padding: "2px 8px", borderRadius: 12, fontSize: 11, fontWeight: 600 }}>Inactive</span>
+                              )}
+                            </td>
+                            <td style={{ padding: "14px 16px" }}>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <button onClick={() => openEditAreaModal(area)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--gray-600)" }}><Edit2 size={16} /></button>
+                                <button onClick={() => handleDeleteArea(area.id)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--red)" }}><Trash2 size={16} /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && activeTab !== "Delivery Areas" && (
             <div style={{ padding: 60, textAlign: "center", color: "var(--gray-500)" }}>
               <p>Settings for <strong>{activeTab}</strong> will appear here.</p>
             </div>
@@ -364,6 +494,47 @@ export default function AdminSettingsPage() {
               <div style={{ padding: "16px 24px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", gap: 12, borderTop: "1px solid var(--gray-200)" }}>
                 <button type="button" onClick={() => setShowAddRuleModal(false)} className="btn-ghost" style={{ border: "1px solid var(--gray-300)" }}>Cancel</button>
                 <button type="submit" className="btn-red">Save Shipping Rule</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Area Modal */}
+      {showAddAreaModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div onClick={() => setShowAddAreaModal(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} />
+          <div className="animate-scale-in" style={{
+            position: "relative", width: "100%", maxWidth: 440, background: "white", borderRadius: 16,
+            boxShadow: "var(--shadow-xl)", overflow: "hidden", display: "flex", flexDirection: "column"
+          }}>
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--gray-200)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>
+                {editingArea ? "Edit Delivery Area" : "Add New Delivery Area"}
+              </h3>
+              <button onClick={() => setShowAddAreaModal(false)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--gray-400)" }}>
+                <X size={18} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveArea}>
+              <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <label className="label">Area Name *</label>
+                  <input className="input" required placeholder="e.g. Gulshan-e-Iqbal" value={areaForm.name} onChange={e => setAreaForm({ ...areaForm, name: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">Distance from Model Colony Hub (km) *</label>
+                  <input className="input" type="number" required value={areaForm.distance} onChange={e => setAreaForm({ ...areaForm, distance: Number(e.target.value) })} />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                  <input type="checkbox" id="area-active" checked={areaForm.is_active} onChange={e => setAreaForm({ ...areaForm, is_active: e.target.checked })} style={{ cursor: "pointer", width: 16, height: 16 }} />
+                  <label htmlFor="area-active" style={{ fontSize: 14, fontWeight: 600, color: "var(--gray-700)", cursor: "pointer" }}>Is Area Active</label>
+                </div>
+              </div>
+              <div style={{ padding: "16px 24px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", gap: 12, borderTop: "1px solid var(--gray-200)" }}>
+                <button type="button" onClick={() => setShowAddAreaModal(false)} className="btn-ghost" style={{ border: "1px solid var(--gray-300)" }}>Cancel</button>
+                <button type="submit" className="btn-red">Save Area</button>
               </div>
             </form>
           </div>
