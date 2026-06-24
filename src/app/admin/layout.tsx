@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
@@ -9,11 +10,43 @@ import {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    const sessionStr = localStorage.getItem("customer_session");
+    let isUserAdmin = false;
+
+    if (sessionStr) {
+      try {
+        const user = JSON.parse(sessionStr);
+        if (user.role === "ADMIN" || user.email === "admin@dastiyab.com") {
+          isUserAdmin = true;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      // Fallback check for manual admin cookie
+      if (document.cookie.includes("admin_session=true")) {
+        isUserAdmin = true;
+      }
+    }
+
+    if (!isUserAdmin) {
+      // Not an admin, but trying to access admin panel
+      document.cookie = "admin_session=; path=/; max-age=0";
+      window.location.href = "/";
+    } else {
+      setIsAuthorized(true);
+    }
+  }, []);
 
   const handleSignOut = () => {
     document.cookie = "admin_session=; path=/; max-age=0";
     router.push("/login");
   };
+
+  if (!isAuthorized) return null; // Or a loading spinner
 
   const menuItems = [
     { label: "Dashboard", href: "/admin", icon: <LayoutDashboard size={20} /> },

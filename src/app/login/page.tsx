@@ -3,12 +3,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, ShoppingBag, ArrowRight, User, Phone, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/Toast";
 
 export default function LoginPage() {
   const [show, setShow] = useState(false);
   const [tab, setTab] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { showToast } = useToast();
 
   // Register state variables
   const [regName, setRegName] = useState("");
@@ -55,33 +57,34 @@ export default function LoginPage() {
         if (user.role === "ADMIN") {
           document.cookie = "admin_session=true; path=/";
           window.dispatchEvent(new Event("storage"));
-          alert("Logged in as Administrator successfully!");
-          window.location.href = "/admin";
+          showToast("Logged in as Administrator successfully!", "success");
+          setTimeout(() => { window.location.href = "/admin"; }, 1000);
         } else {
+          document.cookie = "admin_session=; path=/; max-age=0";
           window.dispatchEvent(new Event("storage"));
-          alert("Logged in successfully!");
-          window.location.href = "/account/orders";
+          showToast("Logged in successfully!", "success");
+          setTimeout(() => { window.location.href = "/account/orders"; }, 1000);
         }
       } else {
         // Fallback to hardcoded admin login
         if (cleanEmail === "admin@dastiyab.com" && cleanPassword === "dastiyab@123") {
           document.cookie = "admin_session=true; path=/";
-          alert("Logged in as Administrator successfully!");
-          window.location.href = "/admin";
+          showToast("Logged in as Administrator successfully!", "success");
+          setTimeout(() => { window.location.href = "/admin"; }, 1000);
           return;
         }
-        alert("Invalid email/phone or password. Please try again.");
+        showToast("Invalid email/phone or password. Please try again.", "error");
       }
     } catch (err: any) {
       console.error("Login failed, trying local fallback:", err);
       // Fallback to hardcoded admin login on network failure
       if (cleanEmail === "admin@dastiyab.com" && cleanPassword === "dastiyab@123") {
         document.cookie = "admin_session=true; path=/";
-        alert("Logged in as Administrator (Offline Fallback) successfully!");
-        window.location.href = "/admin";
+        showToast("Logged in as Administrator (Offline) successfully!", "success");
+        setTimeout(() => { window.location.href = "/admin"; }, 1000);
         return;
       }
-      alert("Login failed: " + err.message);
+      showToast("Login failed: " + err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -90,7 +93,7 @@ export default function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim() || !regPhone.trim() || !regEmail.trim() || !regPassword.trim()) {
-      alert("All fields are required!");
+      showToast("All fields are required!", "error");
       return;
     }
 
@@ -104,7 +107,7 @@ export default function LoginPage() {
         .eq('email', regEmail.trim().toLowerCase());
 
       if (existing && existing.length > 0) {
-        alert("An account with this email already exists.");
+        showToast("An account with this email already exists.", "error");
         setLoading(false);
         return;
       }
@@ -128,15 +131,16 @@ export default function LoginPage() {
       // 3. Save session in localStorage
       localStorage.setItem("customer_session", JSON.stringify(newCustomer));
       document.cookie = "customer_session=true; path=/";
+      document.cookie = "admin_session=; path=/; max-age=0";
       
       // Trigger storage event to update other components
       window.dispatchEvent(new Event("storage"));
       
-      alert("Account created successfully!");
-      window.location.href = "/account/orders";
+      showToast("Account created successfully!", "success");
+      setTimeout(() => { window.location.href = "/account/orders"; }, 1000);
     } catch (err: any) {
       console.error("Registration failed:", err);
-      alert("Registration failed: " + err.message);
+      showToast("Registration failed: " + err.message, "error");
     } finally {
       setLoading(false);
     }

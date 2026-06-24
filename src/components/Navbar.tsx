@@ -112,7 +112,7 @@ export default function Navbar() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
-  if (pathname.startsWith("/admin")) return null;
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +136,8 @@ export default function Navbar() {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
+
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <>
