@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import QRCode from "react-qr-code";
 import { Search, Phone, Eye, Download, Trash2, Printer, X, CreditCard, Calendar, User, MapPin } from "lucide-react";
 
 const statusOptions = ["Pending", "Processing", "Shipped", "Completed", "Cancelled"];
@@ -225,11 +226,9 @@ export default function AdminOrdersPage() {
                     <h3 style={{ fontSize: 14, fontWeight: 700, marginTop: 14, color: "var(--gray-700)", textTransform: "uppercase", letterSpacing: "1px" }}>PACKING / INVOICE SLIP</h3>
                   </div>
                   <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                    <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrUrl)}`} 
-                      alt="Digital Receipt QR" 
-                      style={{ width: 100, height: 100, border: "1px solid var(--gray-200)", padding: 4, borderRadius: 6 }} 
-                    />
+                    <div style={{ padding: 4, background: "white", border: "1px solid var(--gray-200)", borderRadius: 6 }}>
+                      <QRCode value={qrUrl} size={100} />
+                    </div>
                     <span style={{ fontSize: 9, color: "var(--gray-400)", marginTop: 6, maxWidth: 120 }}>Scan to Save Digital Copy</span>
                   </div>
                 </div>
