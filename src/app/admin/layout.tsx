@@ -61,6 +61,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             if (AudioContextClass) {
               const ctx = new AudioContextClass();
+              if (ctx.state === "suspended") {
+                ctx.resume();
+              }
               const now = ctx.currentTime;
               
               const osc1 = ctx.createOscillator();
