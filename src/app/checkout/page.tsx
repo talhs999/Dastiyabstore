@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { CheckCircle, User, MapPin, Phone, Mail, Zap, Truck, Shield, ChevronRight, Loader2 } from "lucide-react";
+import { CheckCircle, User, MapPin, Phone, Mail, Zap, Truck, Shield, ChevronRight, Loader2, Landmark } from "lucide-react";
 import { useCart } from "@/store/cartStore";
 import { supabase } from "@/lib/supabase";
 
@@ -118,6 +118,16 @@ export default function CheckoutPage() {
   const [verifyingCoupon, setVerifyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState("");
 
+  // Payment states
+  const [paymentSettings, setPaymentSettings] = useState<any>({
+    cod: { enabled: true },
+    bank: { enabled: false, details: {} },
+    jazzcash: { enabled: false, details: {} },
+    easypaisa: { enabled: false, details: {} }
+  });
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("COD");
+
+
   const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
 
   // Load customer session details for checkout pre-filling
@@ -186,6 +196,28 @@ export default function CheckoutPage() {
       } catch (err) {
         console.error("Failed to fetch shipping data:", err);
         setShippingRules(DEFAULT_SHIPPING_RULES);
+      }
+
+      try {
+        // Fetch Payment Settings
+        const { data: paymentData } = await supabase
+          .from("store_settings")
+          .select("value")
+          .eq("key", "payment_settings")
+          .single();
+
+        if (paymentData && paymentData.value) {
+          const settings = typeof paymentData.value === "string" ? JSON.parse(paymentData.value) : paymentData.value;
+          setPaymentSettings(settings);
+          
+          // Set default selected method
+          if (settings.cod?.enabled) setSelectedPaymentMethod("COD");
+          else if (settings.bank?.enabled) setSelectedPaymentMethod("Bank Transfer");
+          else if (settings.jazzcash?.enabled) setSelectedPaymentMethod("JazzCash");
+          else if (settings.easypaisa?.enabled) setSelectedPaymentMethod("EasyPaisa");
+        }
+      } catch (err) {
+        console.error("Failed to fetch payment settings:", err);
       }
     }
     loadData();
@@ -343,7 +375,7 @@ export default function CheckoutPage() {
           coupon_code: appliedCoupon ? appliedCoupon.code : null,
           discount_amount: discountAmount,
           total_amount: (totalPrice - discountAmount) + shippingFee,
-          payment_method: 'COD',
+          payment_method: selectedPaymentMethod,
           status: 'Pending'
         })
         .select()
@@ -394,8 +426,34 @@ export default function CheckoutPage() {
               Order Number: <strong style={{ color: "var(--gray-900)", userSelect: "all" }}>{orderId ? orderId.split("-")[0].toUpperCase() : ""}</strong>
             </p>
             <p style={{ fontSize: 14, color: "var(--gray-600)" }}>
-              Payment Method: <strong style={{ color: "var(--red)" }}>Cash on Delivery</strong>
+              Payment Method: <strong style={{ color: "var(--red)" }}>{selectedPaymentMethod}</strong>
             </p>
+            {selectedPaymentMethod === "Bank Transfer" && paymentSettings?.bank?.details && (
+              <div style={{ marginTop: 12, padding: 12, background: "white", borderRadius: 8, border: "1px solid var(--gray-200)" }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-900)", marginBottom: 4 }}>Bank Transfer Details</p>
+                <p style={{ fontSize: 12, color: "var(--gray-600)" }}>Bank: {paymentSettings.bank.details.bankName}</p>
+                <p style={{ fontSize: 12, color: "var(--gray-600)" }}>Account Name: {paymentSettings.bank.details.accountName}</p>
+                <p style={{ fontSize: 12, color: "var(--gray-600)", fontWeight: 600 }}>Account No: {paymentSettings.bank.details.accountNumber}</p>
+                {paymentSettings.bank.details.iban && <p style={{ fontSize: 12, color: "var(--gray-600)" }}>IBAN: {paymentSettings.bank.details.iban}</p>}
+                {paymentSettings.bank.details.instructions && <p style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 6, fontStyle: "italic" }}>{paymentSettings.bank.details.instructions}</p>}
+              </div>
+            )}
+            {selectedPaymentMethod === "JazzCash" && paymentSettings?.jazzcash?.details && (
+              <div style={{ marginTop: 12, padding: 12, background: "white", borderRadius: 8, border: "1px solid var(--gray-200)" }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-900)", marginBottom: 4 }}>JazzCash Details</p>
+                <p style={{ fontSize: 12, color: "var(--gray-600)" }}>Account Name: {paymentSettings.jazzcash.details.accountName}</p>
+                <p style={{ fontSize: 12, color: "var(--gray-600)", fontWeight: 600 }}>Mobile No: {paymentSettings.jazzcash.details.accountNumber}</p>
+                {paymentSettings.jazzcash.details.instructions && <p style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 6, fontStyle: "italic" }}>{paymentSettings.jazzcash.details.instructions}</p>}
+              </div>
+            )}
+            {selectedPaymentMethod === "EasyPaisa" && paymentSettings?.easypaisa?.details && (
+              <div style={{ marginTop: 12, padding: 12, background: "white", borderRadius: 8, border: "1px solid var(--gray-200)" }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-900)", marginBottom: 4 }}>EasyPaisa Details</p>
+                <p style={{ fontSize: 12, color: "var(--gray-600)" }}>Account Name: {paymentSettings.easypaisa.details.accountName}</p>
+                <p style={{ fontSize: 12, color: "var(--gray-600)", fontWeight: 600 }}>Mobile No: {paymentSettings.easypaisa.details.accountNumber}</p>
+                {paymentSettings.easypaisa.details.instructions && <p style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 6, fontStyle: "italic" }}>{paymentSettings.easypaisa.details.instructions}</p>}
+              </div>
+            )}
             <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 12 }}>Please save your order number to track your order status.</p>
           </div>
           <a href="/" className="btn-red" style={{ textDecoration: "none", display: "inline-flex" }}>
@@ -537,14 +595,132 @@ export default function CheckoutPage() {
                 )}
               </div>
               {/* Payment Method */}
-              <div style={{ border: "2px solid var(--yellow)", borderRadius: "var(--radius)", padding: 20, marginBottom: 20, background: "#fffbeb" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Zap size={20} fill="var(--yellow)" color="var(--yellow-dark)" />
-                  <div>
-                    <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>Cash on Delivery (COD)</div>
-                    <div style={{ fontSize: 13, color: "var(--gray-600)" }}>Pay when your order arrives at your doorstep</div>
+              <h3 style={{ fontWeight: 800, fontSize: 16, marginBottom: 12 }}>Payment Method</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+                {paymentSettings?.cod?.enabled && (
+                  <div 
+                    onClick={() => setSelectedPaymentMethod("COD")}
+                    style={{ border: selectedPaymentMethod === "COD" ? "2px solid var(--red)" : "1px solid var(--gray-200)", borderRadius: "var(--radius)", padding: 16, background: selectedPaymentMethod === "COD" ? "#fef2f2" : "white", cursor: "pointer", transition: "all 0.2s" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid", borderColor: selectedPaymentMethod === "COD" ? "var(--red)" : "var(--gray-300)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {selectedPaymentMethod === "COD" && <div style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--red)" }} />}
+                      </div>
+                      <div style={{ width: 40, height: 28, background: "#111827", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10, fontWeight: 800, flexShrink: 0 }}>COD</div>
+                      <div>
+                        <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>Cash on Delivery (COD)</div>
+                        <div style={{ fontSize: 12, color: "var(--gray-500)" }}>Pay when your order arrives at your doorstep</div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+                {paymentSettings?.bank?.enabled && (
+                  <div 
+                    onClick={() => setSelectedPaymentMethod("Bank Transfer")}
+                    style={{ border: selectedPaymentMethod === "Bank Transfer" ? "1px solid #059669" : "1px solid var(--gray-200)", borderRadius: "var(--radius)", padding: 16, background: selectedPaymentMethod === "Bank Transfer" ? "#f0fdf4" : "white", cursor: "pointer", transition: "all 0.2s" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid", borderColor: selectedPaymentMethod === "Bank Transfer" ? "#059669" : "var(--gray-300)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {selectedPaymentMethod === "Bank Transfer" && <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#059669" }} />}
+                        </div>
+                        <div style={{ width: 40, height: 28, background: "#059669", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}><Landmark size={14} /></div>
+                        <div>
+                          <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>Bank Transfer</div>
+                          {selectedPaymentMethod !== "Bank Transfer" && <div style={{ fontSize: 12, color: "var(--gray-500)" }}>Transfer amount directly to our bank account</div>}
+                        </div>
+                      </div>
+                      {selectedPaymentMethod === "Bank Transfer" && (
+                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, padding: "4px 8px", background: "#d1fae5", color: "#065f46", border: "1px solid #a7f3d0", borderRadius: 4 }}>
+                          SECURE
+                        </div>
+                      )}
+                    </div>
+                    {selectedPaymentMethod === "Bank Transfer" && paymentSettings.bank?.details && (
+                      <div className="animate-fade-up" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #86efac", display: "flex", flexDirection: "column", gap: 12 }}>
+                        <p style={{ fontSize: 11, fontWeight: 800, color: "#065f46", letterSpacing: 1, textTransform: "uppercase" }}>Bank Details</p>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                          <span style={{ color: "var(--gray-500)" }}>Bank</span>
+                          <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>{paymentSettings.bank.details.bankName}</span>
+                        </div>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                          <span style={{ color: "var(--gray-500)" }}>Account Name</span>
+                          <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>{paymentSettings.bank.details.accountName}</span>
+                        </div>
+                        
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                          <span style={{ color: "var(--gray-500)" }}>Account Number</span>
+                          <span style={{ fontWeight: 600, color: "var(--gray-900)", userSelect: "all" }}>{paymentSettings.bank.details.accountNumber}</span>
+                        </div>
+
+                        {paymentSettings.bank.details.iban && (
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                            <span style={{ color: "var(--gray-500)" }}>IBAN</span>
+                            <span style={{ fontWeight: 600, color: "var(--gray-900)", userSelect: "all" }}>{paymentSettings.bank.details.iban}</span>
+                          </div>
+                        )}
+                        
+                        {paymentSettings.bank.details.instructions && (
+                          <p style={{ fontSize: 12, color: "#065f46", fontStyle: "italic", marginTop: 4 }}>{paymentSettings.bank.details.instructions}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {paymentSettings?.jazzcash?.enabled && (
+                  <div 
+                    onClick={() => setSelectedPaymentMethod("JazzCash")}
+                    style={{ border: selectedPaymentMethod === "JazzCash" ? "1px solid #dc2626" : "1px solid var(--gray-200)", borderRadius: "var(--radius)", padding: 16, background: selectedPaymentMethod === "JazzCash" ? "#fef2f2" : "white", cursor: "pointer", transition: "all 0.2s" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid", borderColor: selectedPaymentMethod === "JazzCash" ? "#dc2626" : "var(--gray-300)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {selectedPaymentMethod === "JazzCash" && <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#dc2626" }} />}
+                      </div>
+                      <div style={{ width: 40, height: 28, borderRadius: 4, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "white", border: "1px solid var(--gray-200)", flexShrink: 0 }}>
+                        <img src="/jazzcash.png" alt="JazzCash" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 2 }} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>JazzCash</div>
+                        <div style={{ fontSize: 12, color: "var(--gray-500)" }}>Transfer to our JazzCash mobile account</div>
+                      </div>
+                    </div>
+                    {selectedPaymentMethod === "JazzCash" && paymentSettings.jazzcash?.details && (
+                      <div className="animate-fade-up" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #fca5a5", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                        <div><span style={{ color: "var(--gray-500)" }}>Account Name:</span> <strong style={{ color: "var(--gray-900)" }}>{paymentSettings.jazzcash.details.accountName}</strong></div>
+                        <div><span style={{ color: "var(--gray-500)" }}>Mobile Number:</span> <strong style={{ color: "var(--gray-900)", userSelect: "all" }}>{paymentSettings.jazzcash.details.accountNumber}</strong></div>
+                      </div>
+                    )}
+                    {selectedPaymentMethod === "JazzCash" && paymentSettings.jazzcash?.details?.instructions && (
+                      <p className="animate-fade-up" style={{ fontSize: 12, color: "#991b1b", fontStyle: "italic", marginTop: 12 }}>{paymentSettings.jazzcash.details.instructions}</p>
+                    )}
+                  </div>
+                )}
+                {paymentSettings?.easypaisa?.enabled && (
+                  <div 
+                    onClick={() => setSelectedPaymentMethod("EasyPaisa")}
+                    style={{ border: selectedPaymentMethod === "EasyPaisa" ? "1px solid #16a34a" : "1px solid var(--gray-200)", borderRadius: "var(--radius)", padding: 16, background: selectedPaymentMethod === "EasyPaisa" ? "#f0fdf4" : "white", cursor: "pointer", transition: "all 0.2s" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid", borderColor: selectedPaymentMethod === "EasyPaisa" ? "#16a34a" : "var(--gray-300)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {selectedPaymentMethod === "EasyPaisa" && <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#16a34a" }} />}
+                      </div>
+                      <div style={{ width: 40, height: 28, borderRadius: 4, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "white", border: "1px solid var(--gray-200)", flexShrink: 0 }}>
+                        <img src="/easypaisa.png" alt="EasyPaisa" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 2 }} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>EasyPaisa</div>
+                        <div style={{ fontSize: 12, color: "var(--gray-500)" }}>Transfer to our EasyPaisa mobile account</div>
+                      </div>
+                    </div>
+                    {selectedPaymentMethod === "EasyPaisa" && paymentSettings.easypaisa?.details && (
+                      <div className="animate-fade-up" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #86efac", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14 }}>
+                        <div><span style={{ color: "var(--gray-500)" }}>Account Name:</span> <strong style={{ color: "var(--gray-900)" }}>{paymentSettings.easypaisa.details.accountName}</strong></div>
+                        <div><span style={{ color: "var(--gray-500)" }}>Mobile Number:</span> <strong style={{ color: "var(--gray-900)", userSelect: "all" }}>{paymentSettings.easypaisa.details.accountNumber}</strong></div>
+                      </div>
+                    )}
+                    {selectedPaymentMethod === "EasyPaisa" && paymentSettings.easypaisa?.details?.instructions && (
+                      <p className="animate-fade-up" style={{ fontSize: 12, color: "#166534", fontStyle: "italic", marginTop: 12 }}>{paymentSettings.easypaisa.details.instructions}</p>
+                    )}
+                  </div>
+                )}
               </div>
               <div style={{ display: "flex", gap: 12 }}>
                 <button onClick={() => setStep(0)} className="btn-ghost" style={{ border: "2px solid var(--gray-200)" }}>Back</button>
