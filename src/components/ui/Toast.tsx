@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { CheckCircle, X, AlertCircle, Info } from "lucide-react";
 
 type ToastType = "success" | "error" | "info";
@@ -24,6 +24,34 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.alert = (message: any) => {
+        const msgStr = String(message);
+        const msgLower = msgStr.toLowerCase();
+        let type: ToastType = "info";
+        if (
+          msgLower.includes("success") || 
+          msgLower.includes("saved") || 
+          msgLower.includes("updated") || 
+          msgLower.includes("created") ||
+          msgLower.includes("deleted")
+        ) {
+          type = "success";
+        } else if (
+          msgLower.includes("fail") || 
+          msgLower.includes("error") || 
+          msgLower.includes("cannot") || 
+          msgLower.includes("invalid") || 
+          msgLower.includes("unable")
+        ) {
+          type = "error";
+        }
+        showToast(msgStr, type);
+      };
+    }
+  }, [showToast]);
 
   const icons = {
     success: <CheckCircle size={20} color="var(--red)" />,
