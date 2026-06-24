@@ -63,6 +63,21 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  const toggleInHeader = async (id: string, current: boolean) => {
+    const newVal = !current;
+    const { error } = await supabase.from("categories").update({ is_in_header: newVal }).eq("id", id);
+    if (!error) {
+      setCategories(categories.map(c => c.id === id ? { ...c, is_in_header: newVal } : c));
+    }
+  };
+
+  const updateBadge = async (id: string, badge: string) => {
+    const { error } = await supabase.from("categories").update({ header_badge: badge || null }).eq("id", id);
+    if (!error) {
+      setCategories(categories.map(c => c.id === id ? { ...c, header_badge: badge } : c));
+    }
+  };
+
   const filtered = categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -90,7 +105,9 @@ export default function AdminCategoriesPage() {
             <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)" }}>
               <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Category Name</th>
               <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Slug</th>
-              <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Products Count</th>
+              <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Products</th>
+              <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Show in Header?</th>
+              <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Header Badge</th>
               <th style={{ padding: "16px 24px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>Actions</th>
             </tr>
           </thead>
@@ -112,6 +129,28 @@ export default function AdminCategoriesPage() {
                 </td>
                 <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--gray-700)", fontWeight: 600 }}>
                   {c.productCount} Products
+                </td>
+                <td style={{ padding: "16px 24px" }}>
+                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                    <div style={{ position: "relative" }}>
+                      <input type="checkbox" className="sr-only" checked={c.is_in_header} onChange={() => toggleInHeader(c.id, c.is_in_header)} style={{ opacity: 0, width: 0, height: 0 }} />
+                      <div style={{ width: 44, height: 24, background: c.is_in_header ? "var(--red)" : "var(--gray-300)", borderRadius: 999, transition: "background 0.2s" }}></div>
+                      <div style={{ position: "absolute", top: 2, left: c.is_in_header ? 22 : 2, width: 20, height: 20, background: "white", borderRadius: "50%", transition: "all 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}></div>
+                    </div>
+                  </label>
+                </td>
+                <td style={{ padding: "16px 24px" }}>
+                  <input 
+                    type="text" 
+                    defaultValue={c.header_badge || ""}
+                    placeholder="e.g. HOT"
+                    onBlur={(e) => {
+                      if (e.target.value !== (c.header_badge || "")) {
+                        updateBadge(c.id, e.target.value);
+                      }
+                    }}
+                    style={{ padding: "6px 12px", border: "1px solid var(--gray-200)", borderRadius: "var(--radius)", fontSize: 12, width: 90 }}
+                  />
                 </td>
                 <td style={{ padding: "16px 24px" }}>
                   <div style={{ display: "flex", gap: 8 }}>

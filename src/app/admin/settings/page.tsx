@@ -34,6 +34,22 @@ export default function AdminSettingsPage() {
     is_active: true
   });
 
+  // Coupons states
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(true);
+  const [showAddCouponModal, setShowAddCouponModal] = useState(false);
+  const [couponForm, setCouponForm] = useState({
+    code: "",
+    discount_type: "percentage",
+    discount_value: 10,
+    is_newsletter_coupon: false,
+    is_active: true
+  });
+
+  // Marketing states
+  const [newsletterEnabled, setNewsletterEnabled] = useState(true);
+  const [savingMarketing, setSavingMarketing] = useState(false);
+
   const tabs = [
     { label: "General", icon: <Store size={18} /> },
     { label: "Shipping & Delivery", icon: <Truck size={18} /> },
@@ -51,7 +67,34 @@ export default function AdminSettingsPage() {
     } else if (activeTab === "Delivery Areas") {
       fetchDeliveryAreas();
     }
+    if (activeTab === "Coupons & Discounts") {
+      fetchCoupons();
+    }
+    if (activeTab === "Emails & Marketing") {
+      fetchMarketingSettings();
+    }
   }, [activeTab]);
+
+  const fetchMarketingSettings = async () => {
+    const { data } = await supabase.from("store_settings").select("value").eq("key", "newsletter_enabled").single();
+    if (data) {
+      setNewsletterEnabled(data.value === true || data.value === 'true');
+    }
+  };
+
+  const saveMarketingSettings = async () => {
+    setSavingMarketing(true);
+    await supabase.from("store_settings").upsert({ key: "newsletter_enabled", value: newsletterEnabled });
+    setSavingMarketing(false);
+    alert("Marketing settings saved!");
+  };
+
+  const fetchCoupons = async () => {
+    setLoadingCoupons(true);
+    const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
+    if (data) setCoupons(data);
+    setLoadingCoupons(false);
+  };
 
   const fetchShippingRules = async () => {
     setLoadingRules(true);
@@ -230,6 +273,42 @@ export default function AdminSettingsPage() {
     setShowAddAreaModal(true);
   };
 
+  const handleSaveCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      code: couponForm.code.toUpperCase().trim(),
+      discount_type: couponForm.discount_type,
+      discount_value: Number(couponForm.discount_value),
+      is_newsletter_coupon: couponForm.is_newsletter_coupon,
+      is_active: couponForm.is_active
+    };
+
+    if (payload.is_newsletter_coupon) {
+      // Unmark any existing newsletter coupon first (simplistic approach: set all to false)
+      await supabase.from("coupons").update({ is_newsletter_coupon: false }).neq("id", "00000000-0000-0000-0000-000000000000");
+    }
+
+    const { error } = await supabase.from("coupons").insert(payload);
+    if (!error) {
+      alert("Coupon created successfully!");
+      setShowAddCouponModal(false);
+      fetchCoupons();
+    } else {
+      alert("Failed to insert: " + error.message);
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this coupon?")) return;
+    const { error } = await supabase.from("coupons").delete().eq("id", id);
+    if (!error) {
+      alert("Deleted coupon.");
+      fetchCoupons();
+    } else {
+      alert("Failed to delete: " + error.message);
+    }
+  };
+
   return (
     <div style={{ padding: "32px 40px" }}>
       <div style={{ marginBottom: 32 }}>
@@ -364,12 +443,23 @@ export default function AdminSettingsPage() {
                 </div>
                 <button onClick={openAddAreaModal} className="btn-red" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, padding: "8px 14px" }}>
                   <Plus size={16} /> Add Area
+          {activeTab === "Coupons & Discounts" && (
+            <div>
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Coupons & Discounts</h2>
+                  <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 4 }}>Manage active coupons and your special Newsletter Welcome Coupon.</p>
+                </div>
+                <button onClick={() => { setCouponForm({ code: "", discount_type: "percentage", discount_value: 10, is_newsletter_coupon: false, is_active: true }); setShowAddCouponModal(true); }} className="btn-red" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, padding: "8px 14px" }}>
+                  <Plus size={16} /> Add Coupon
                 </button>
               </div>
 
               <div style={{ padding: "24px 32px" }}>
                 {loadingAreas ? (
                   <div style={{ padding: 40, textAlign: "center", color: "var(--gray-500)" }}>Loading areas...</div>
+                {loadingCoupons ? (
+                  <div style={{ padding: 40, textAlign: "center", color: "var(--gray-500)" }}>Loading coupons...</div>
                 ) : (
                   <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
@@ -378,6 +468,9 @@ export default function AdminSettingsPage() {
                           <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>AREA NAME</th>
                           <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>DISTANCE (KM)</th>
                           <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>STATUS</th>
+                          <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>CODE</th>
+                          <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>DISCOUNT</th>
+                          <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>NEWSLETTER COUPON?</th>
                           <th style={{ padding: "12px 16px", color: "var(--gray-500)", fontWeight: 700 }}>ACTIONS</th>
                         </tr>
                       </thead>
@@ -398,6 +491,24 @@ export default function AdminSettingsPage() {
                                 <button onClick={() => openEditAreaModal(area)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--gray-600)" }}><Edit2 size={16} /></button>
                                 <button onClick={() => handleDeleteArea(area.id)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--red)" }}><Trash2 size={16} /></button>
                               </div>
+                        {coupons.length === 0 ? (
+                          <tr><td colSpan={4} style={{ textAlign: "center", padding: 30, color: "var(--gray-500)" }}>No coupons found. Create one!</td></tr>
+                        ) : coupons.map((c) => (
+                          <tr key={c.id} style={{ borderBottom: "1px solid var(--gray-150)", background: c.is_active ? "transparent" : "#f9fafb" }}>
+                            <td style={{ padding: "14px 16px", fontWeight: 800, color: "var(--red)" }}>
+                              {c.code}
+                              {!c.is_active && <span style={{ marginLeft: 6, fontSize: 10, background: "var(--gray-200)", padding: "2px 6px", borderRadius: 4, color: "var(--gray-600)" }}>INACTIVE</span>}
+                            </td>
+                            <td style={{ padding: "14px 16px", fontWeight: 600 }}>
+                              {c.discount_type === "percentage" ? `${c.discount_value}% OFF` : `Rs ${c.discount_value} OFF`}
+                            </td>
+                            <td style={{ padding: "14px 16px" }}>
+                              {c.is_newsletter_coupon ? <span style={{ color: "#22c55e", fontWeight: 700 }}>YES</span> : <span style={{ color: "var(--gray-400)" }}>NO</span>}
+                            </td>
+                            <td style={{ padding: "14px 16px" }}>
+                              <button onClick={() => handleDeleteCoupon(c.id)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--red)" }}>
+                                <Trash2 size={16} />
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -409,7 +520,40 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
-          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && activeTab !== "Delivery Areas" && (
+          {activeTab === "Emails & Marketing" && (
+            <div>
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)" }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Emails & Marketing</h2>
+                <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 4 }}>Manage newsletter visibility and email preferences.</p>
+              </div>
+
+              <div style={{ padding: "24px 32px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 16, background: "var(--gray-50)", padding: 20, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)" }}>Enable Newsletter Section</h3>
+                    <p style={{ fontSize: 13, color: "var(--gray-600)", marginTop: 4, lineHeight: 1.5 }}>
+                      Show the "Get Exclusive Deals" newsletter signup form in the footer of your website. If disabled, the section will be completely hidden from customers.
+                    </p>
+                  </div>
+                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                    <div style={{ position: "relative" }}>
+                      <input type="checkbox" className="sr-only" checked={newsletterEnabled} onChange={e => setNewsletterEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
+                      <div style={{ width: 44, height: 24, background: newsletterEnabled ? "var(--red)" : "var(--gray-300)", borderRadius: 999, transition: "background 0.2s" }}></div>
+                      <div style={{ position: "absolute", top: 2, left: newsletterEnabled ? 22 : 2, width: 20, height: 20, background: "white", borderRadius: "50%", transition: "all 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}></div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--gray-200)" }}>
+                <button onClick={saveMarketingSettings} disabled={savingMarketing} className="btn-red">
+                  {savingMarketing ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && activeTab !== "Coupons & Discounts" && activeTab !== "Emails & Marketing" && (
             <div style={{ padding: 60, textAlign: "center", color: "var(--gray-500)" }}>
               <p>Settings for <strong>{activeTab}</strong> will appear here.</p>
             </div>
@@ -513,6 +657,17 @@ export default function AdminSettingsPage() {
                 {editingArea ? "Edit Delivery Area" : "Add New Delivery Area"}
               </h3>
               <button onClick={() => setShowAddAreaModal(false)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--gray-400)" }}>
+      {/* Add Coupon Modal */}
+      {showAddCouponModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div onClick={() => setShowAddCouponModal(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} />
+          <div className="animate-scale-in" style={{
+            position: "relative", width: "100%", maxWidth: 400, background: "white", borderRadius: 16,
+            boxShadow: "var(--shadow-xl)", overflow: "hidden", display: "flex", flexDirection: "column"
+          }}>
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--gray-200)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Add New Coupon</h3>
+              <button onClick={() => setShowAddCouponModal(false)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--gray-400)" }}>
                 <X size={18} />
               </button>
             </div>
@@ -535,6 +690,40 @@ export default function AdminSettingsPage() {
               <div style={{ padding: "16px 24px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", gap: 12, borderTop: "1px solid var(--gray-200)" }}>
                 <button type="button" onClick={() => setShowAddAreaModal(false)} className="btn-ghost" style={{ border: "1px solid var(--gray-300)" }}>Cancel</button>
                 <button type="submit" className="btn-red">Save Area</button>
+            <form onSubmit={handleSaveCoupon}>
+              <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <label className="label">Coupon Code *</label>
+                  <input className="input" required placeholder="e.g. WELCOME10" value={couponForm.code} onChange={e => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })} />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div>
+                    <label className="label">Discount Type *</label>
+                    <select className="input" value={couponForm.discount_type} onChange={e => setCouponForm({ ...couponForm, discount_type: e.target.value })}>
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Amount (Rs)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Value *</label>
+                    <input className="input" type="number" required value={couponForm.discount_value} onChange={e => setCouponForm({ ...couponForm, discount_value: Number(e.target.value) })} />
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, background: "var(--gray-50)", padding: 12, borderRadius: 8, border: "1px solid var(--gray-200)" }}>
+                  <input type="checkbox" id="newsletter-coupon" checked={couponForm.is_newsletter_coupon} onChange={e => setCouponForm({ ...couponForm, is_newsletter_coupon: e.target.checked })} style={{ cursor: "pointer", width: 16, height: 16 }} />
+                  <label htmlFor="newsletter-coupon" style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-700)", cursor: "pointer", lineHeight: 1.4 }}>
+                    Set as Newsletter Welcome Coupon
+                    <span style={{ display: "block", fontSize: 11, color: "var(--gray-500)", fontWeight: 400 }}>This code will be shown to users when they subscribe via the footer.</span>
+                  </label>
+                </div>
+
+              </div>
+
+              <div style={{ padding: "16px 24px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", gap: 12, borderTop: "1px solid var(--gray-200)" }}>
+                <button type="button" onClick={() => setShowAddCouponModal(false)} className="btn-ghost" style={{ border: "1px solid var(--gray-300)" }}>Cancel</button>
+                <button type="submit" className="btn-red">Save Coupon</button>
               </div>
             </form>
           </div>

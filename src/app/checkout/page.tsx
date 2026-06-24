@@ -112,6 +112,12 @@ export default function CheckoutPage() {
   const [dropdownCity, setDropdownCity] = useState<string>("");
   const [customCity, setCustomCity] = useState<string>("");
 
+  // Coupon states
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [verifyingCoupon, setVerifyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState("");
+
   const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
 
   // Load customer session details for checkout pre-filling
@@ -275,6 +281,41 @@ export default function CheckoutPage() {
     }
   }, [form.city, selectedArea, customDistance, totalPrice, shippingRules]);
 
+  // Handle Coupon Application
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setVerifyingCoupon(true);
+    setCouponError("");
+
+    const { data, error } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("code", couponCode.toUpperCase().trim())
+      .eq("is_active", true)
+      .single();
+
+    if (error || !data) {
+      setCouponError("Invalid or expired coupon code.");
+      setAppliedCoupon(null);
+    } else {
+      setAppliedCoupon(data);
+      setCouponError("");
+    }
+    setVerifyingCoupon(false);
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+  };
+
+  // Calculate discount
+  const discountAmount = appliedCoupon 
+    ? (appliedCoupon.discount_type === "percentage" 
+        ? Math.round(totalPrice * (appliedCoupon.discount_value / 100))
+        : appliedCoupon.discount_value)
+    : 0;
+
   const handleOrder = async () => {
     if (items.length === 0) return;
     setLoading(true);
@@ -299,7 +340,9 @@ export default function CheckoutPage() {
           order_notes: form.notes,
           subtotal: totalPrice,
           shipping_fee: shippingFee,
-          total_amount: totalPrice + shippingFee,
+          coupon_code: appliedCoupon ? appliedCoupon.code : null,
+          discount_amount: discountAmount,
+          total_amount: (totalPrice - discountAmount) + shippingFee,
           payment_method: 'COD',
           status: 'Pending'
         })
@@ -520,8 +563,11 @@ export default function CheckoutPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
             {items.map(item => (
               <div key={item.id} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <div style={{ position: "relative", width: 48, height: 48, flexShrink: 0, borderRadius: 8, overflow: "hidden" }}>
-                  <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />
+                <div style={{ width: 64, height: 64, borderRadius: "var(--radius)", background: "var(--gray-50)", border: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+                  <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/64x64?text=Invalid+Image'; }} />
+                  <div style={{ position: "absolute", top: -8, right: -8, background: "var(--gray-500)", color: "white", width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600 }}>
+                    {item.quantity}
+                  </div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)" }}>{item.name}</p>
@@ -532,11 +578,56 @@ export default function CheckoutPage() {
             ))}
           </div>
           <div className="divider" style={{ margin: "16px 0" }} />
+          
+          {/* Coupon Section */}
+          <div style={{ marginBottom: 16 }}>
+            {!appliedCoupon ? (
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-700)", display: "block", marginBottom: 8 }}>Have a coupon code?</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input 
+                    className="input" 
+                    placeholder="Enter code" 
+                    value={couponCode} 
+                    onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                    style={{ flex: 1, textTransform: "uppercase" }}
+                  />
+                  <button 
+                    onClick={handleApplyCoupon} 
+                    disabled={verifyingCoupon || !couponCode}
+                    style={{ background: "var(--gray-900)", color: "white", padding: "0 16px", borderRadius: "var(--radius)", fontWeight: 700, border: "none", cursor: (verifyingCoupon || !couponCode) ? "not-allowed" : "pointer", display: "flex", alignItems: "center" }}
+                  >
+                    {verifyingCoupon ? <Loader2 size={16} className="animate-spin" /> : "Apply"}
+                  </button>
+                </div>
+                {couponError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 6 }}>{couponError}</p>}
+              </div>
+            ) : (
+              <div style={{ background: "#dcfce7", border: "1px solid #86efac", borderRadius: "var(--radius)", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ color: "#166534", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                    <CheckCircle size={14} /> Coupon Applied!
+                  </div>
+                  <div style={{ color: "#15803d", fontSize: 12, marginTop: 2 }}>{appliedCoupon.code} ({appliedCoupon.discount_type === "percentage" ? `${appliedCoupon.discount_value}%` : `Rs ${appliedCoupon.discount_value}`} OFF)</div>
+                </div>
+                <button onClick={handleRemoveCoupon} style={{ background: "none", border: "none", color: "#166534", fontSize: 12, fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}>Remove</button>
+              </div>
+            )}
+          </div>
+
+          <div className="divider" style={{ margin: "16px 0" }} />
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
               <span style={{ color: "var(--gray-500)" }}>Subtotal</span>
               <span style={{ fontWeight: 600 }}>Rs. {totalPrice.toLocaleString()}</span>
             </div>
+            
+            {appliedCoupon && (
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#16a34a" }}>
+                <span>Discount ({appliedCoupon.code})</span>
+                <span style={{ fontWeight: 600 }}>- Rs. {discountAmount.toLocaleString()}</span>
+              </div>
+            )}
             
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
@@ -555,7 +646,7 @@ export default function CheckoutPage() {
             <div className="divider" style={{ margin: "8px 0" }} />
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ fontWeight: 800, fontSize: 16 }}>Grand Total</span>
-              <span style={{ fontWeight: 900, fontSize: 22, color: "var(--red)" }}>Rs. {(totalPrice + shippingFee).toLocaleString()}</span>
+              <span style={{ fontWeight: 900, fontSize: 22, color: "var(--red)" }}>Rs. {((totalPrice - discountAmount) + shippingFee).toLocaleString()}</span>
             </div>
           </div>
         </div>

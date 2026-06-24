@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "smjlxepnenrcjlokpdhp.supabase.co",
+      },
     ],
   },
   // Headers removed to allow Google Maps and other external resources without strict CSP

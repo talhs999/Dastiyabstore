@@ -39,6 +39,15 @@ export default function Navbar() {
 
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [accountHref, setAccountHref] = useState("/login");
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from("categories").select("*").order("created_at", { ascending: true });
+      if (data) setDbCategories(data);
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const checkSessions = () => {
@@ -385,12 +394,14 @@ export default function Navbar() {
             {[
               { label: "Home", href: "/" },
               { label: "Shop", href: "/shop" },
-              { label: "Neck Fan", href: "/shop/neck-fan", badge: "Hot" },
-              { label: "Laptop Stand", href: "/shop/laptop-stand" },
-              { label: "AirPods", href: "/shop/airpods" },
+              ...dbCategories.filter(c => c.is_in_header).map(c => ({
+                label: c.name,
+                href: `/shop/${c.slug}`,
+                badge: c.header_badge
+              })),
               { label: "About Us", href: "/about" },
               { label: "Contact", href: "/contact" },
-            ].map(link => (
+            ].map((link: any) => (
               <Link key={link.label} href={link.href} style={{
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "6px 14px", borderRadius: 8,
@@ -515,10 +526,11 @@ export default function Navbar() {
               ))}
               <div className="divider" style={{ margin: "12px 0" }} />
               <p style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: 1, padding: "8px 12px", marginBottom: 4 }}>Categories</p>
-              {categories.map(cat => (
-                <Link key={cat.name} href={cat.href} onClick={() => setMobileOpen(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderRadius: "var(--radius)", textDecoration: "none", color: "var(--gray-600)", fontSize: 14, fontWeight: 500, transition: "all var(--transition)", marginBottom: 2 }}>
-                  <span style={{ color: "var(--red)" }}>{cat.icon}</span>
+              {(dbCategories.length > 0 ? dbCategories : categories.map(c => ({ name: c.name, slug: c.href.split("/shop/")[1] }))).map(cat => (
+                <Link key={cat.name} href={`/shop/${cat.slug}`} onClick={() => setMobileOpen(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderRadius: "var(--radius)", textDecoration: "none", color: "var(--gray-600)", fontSize: 14, fontWeight: 500, transition: "all var(--transition)", marginBottom: 2 }}>
+                  <span style={{ color: "var(--red)" }}><Package size={16} /></span>
                   {cat.name}
+                  {cat.header_badge && <span className="badge badge-red" style={{ fontSize: 9, padding: "2px 6px", marginLeft: "auto" }}>{cat.header_badge}</span>}
                 </Link>
               ))}
             </nav>

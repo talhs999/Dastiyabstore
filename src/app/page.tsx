@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import * as Icons from "lucide-react";
 import {
   ArrowRight, ChevronRight, ChevronLeft, Truck, RotateCcw, Shield, Headphones,
   Star, Zap, Package, Wind, Laptop, Monitor, Home, ShoppingCart,
@@ -10,6 +11,11 @@ import {
 import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
 import { supabase } from "@/lib/supabase";
+
+function DynamicIcon({ name, size = 20 }: { name: string, size?: number }) {
+  const Icon = (Icons as any)[name] || Icons.Package;
+  return <Icon size={size} />;
+}
 
 /* ─── DATA ─── */
 const heroSlides = [
@@ -34,17 +40,6 @@ const heroSlides = [
     bg: "linear-gradient(135deg, #f0fff4 0%, #fff5f5 100%)", accent: "var(--red)",
     image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=700&q=80",
   },
-];
-
-const sidebarCategories = [
-  { name: "Neckband Earphones", iconEl: <Headphones size={20} />, iconSm: <Headphones size={16} />, href: "/shop/neckband", count: 12, badge: null, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&q=80", desc: "Wireless neckband earphones with super bass & mic", products: ["DastiyabSound X1", "Bass Pro X2", "Sport Flex"] },
-  { name: "AirPods / TWS Earbuds", iconEl: <Music size={20} />, iconSm: <Music size={16} />, href: "/shop/airpods", count: 10, badge: null, image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=300&q=80", desc: "True wireless earbuds with ANC & long battery life", products: ["DastiyabBuds Pro", "DastiyabBuds Lite", "AirMax"] },
-  { name: "Neck Fan", iconEl: <Wind size={20} />, iconSm: <Wind size={16} />, href: "/shop/neck-fan", count: 8, badge: "Hot", image: "https://images.unsplash.com/photo-1625765503151-c1a10cc57b44?w=300&q=80", desc: "Bladeless wearable neck fans for summer cooling", products: ["NeckCool Pro", "360° AirWrap", "SlimFan Mini"] },
-  { name: "Portable Fan", iconEl: <Fan size={20} />, iconSm: <Fan size={16} />, href: "/shop/portable-fan", count: 6, badge: null, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80", desc: "USB & rechargeable portable desk fans", products: ["USB Desk Fan", "Handheld Mini Fan", "Tower Fan"] },
-  { name: "Laptop Stand", iconEl: <Laptop size={20} />, iconSm: <Laptop size={16} />, href: "/shop/laptop-stand", count: 7, badge: null, image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&q=80", desc: "Adjustable aluminum stands for all laptop sizes", products: ["Aluminum Pro Stand", "Foldable Lite", "XL Stand"] },
-  { name: "Mobile Accessories", iconEl: <Smartphone size={20} />, iconSm: <Smartphone size={16} />, href: "/shop/mobile-accessories", count: 3, badge: null, image: "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=300&q=80", desc: "Cables, cases, chargers and more", products: ["Type-C Cable", "Fast Charger", "Phone Stand"] },
-  { name: "Home Gadgets", iconEl: <Cpu size={20} />, iconSm: <Cpu size={16} />, href: "/shop/home-gadgets", count: 2, badge: null, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80", desc: "Smart home gadgets for everyday life", products: ["Smart Plug", "LED Strip"] },
-  { name: "All Products", iconEl: <LayoutGrid size={20} />, iconSm: <LayoutGrid size={16} />, href: "/shop", count: 48, badge: null, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&q=80", desc: "Browse the full DastiyabStore catalog", products: [] },
 ];
 
 const stats = [
@@ -80,10 +75,10 @@ function AnimatedCounter({ target, suffix = "", decimals = 0 }: { target: number
 }
 
 /* ─── FIXED OVERLAY SIDEBAR ─── */
-function CategorySidebar() {
+function CategorySidebar({ categories }: { categories: any[] }) {
   const [expanded, setExpanded] = useState(false);
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
-  const activeCat = sidebarCategories.find(c => c.name === hoveredCat);
+  const activeCat = categories.find(c => c.name === hoveredCat);
 
   // Position at the very top of the page
   const TOP = 0;
@@ -115,7 +110,7 @@ function CategorySidebar() {
             overflowY: "auto",
           }}
         >
-          {sidebarCategories.map(cat => (
+          {categories.map(cat => (
             <div
               key={cat.name}
               title={cat.name}
@@ -128,8 +123,8 @@ function CategorySidebar() {
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--red)"; (e.currentTarget as HTMLElement).style.background = "#fff0f0"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--gray-500)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
-              {cat.iconEl}
-              {cat.badge && (
+              <DynamicIcon name={cat.sidebar_icon} size={20} />
+              {cat.header_badge && (
                 <span style={{ position: "absolute", top: 4, right: 4, width: 7, height: 7, borderRadius: "50%", background: "var(--red)" }} />
               )}
             </div>
@@ -184,10 +179,10 @@ function CategorySidebar() {
 
               {/* Category rows */}
               <div onMouseEnter={() => { }} style={{ paddingTop: 4, paddingBottom: 4 }}>
-                {sidebarCategories.map(cat => (
+                {categories.map(cat => (
                   <Link
                     key={cat.name}
-                    href={cat.href}
+                    href={`/shop/${cat.slug}`}
                     onMouseEnter={() => setHoveredCat(cat.name)}
                     style={{
                       display: "flex", alignItems: "center", gap: 12,
@@ -204,7 +199,7 @@ function CategorySidebar() {
                       color: hoveredCat === cat.name ? "var(--red)" : "var(--gray-500)",
                       transition: "all 0.12s",
                     }}>
-                      {cat.iconSm}
+                      <DynamicIcon name={cat.sidebar_icon} size={16} />
                     </span>
                     <span style={{
                       fontSize: 13, fontWeight: 600, flex: 1,
@@ -214,9 +209,9 @@ function CategorySidebar() {
                       {cat.name}
                     </span>
                     <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      {cat.badge && (
+                      {cat.header_badge && (
                         <span style={{ fontSize: 9, fontWeight: 800, background: "var(--red)", color: "white", padding: "2px 5px", borderRadius: 3, textTransform: "uppercase" }}>
-                          {cat.badge}
+                          {cat.header_badge}
                         </span>
                       )}
                       <ChevronRight size={13} color={hoveredCat === cat.name ? "var(--red)" : "var(--gray-400)"} />
@@ -240,14 +235,14 @@ function CategorySidebar() {
               }}>
                 {/* Image */}
                 <div style={{ height: 115, overflow: "hidden", position: "relative", flexShrink: 0 }}>
-                  <Image src={activeCat.image} alt={activeCat.name} fill sizes="300px" style={{ objectFit: "cover" }} />
+                  {activeCat.sidebar_image && <Image src={activeCat.sidebar_image} alt={activeCat.name} fill sizes="300px" style={{ objectFit: "cover" }} />}
                   <div style={{
                     position: "absolute", inset: 0,
                     background: "linear-gradient(135deg, rgba(0,0,0,0.65) 0%, transparent 100%)",
                     padding: "10px 14px", display: "flex", flexDirection: "column", justifyContent: "flex-end",
                   }}>
                     <div style={{ fontSize: 14, fontWeight: 900, color: "white", marginBottom: 2 }}>{activeCat.name}</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>{activeCat.desc}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>{activeCat.sidebar_desc}</div>
                   </div>
                 </div>
                 {/* Products */}
@@ -256,9 +251,9 @@ function CategorySidebar() {
                     Popular Items
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 11 }}>
-                    {activeCat.products.length > 0
-                      ? activeCat.products.map((p, i) => (
-                        <Link key={i} href={activeCat.href} style={{
+                    {(activeCat.sidebar_popular_items || []).length > 0
+                      ? (activeCat.sidebar_popular_items || []).map((p: string, i: number) => (
+                        <Link key={i} href={`/shop/${activeCat.slug}`} style={{
                           display: "flex", alignItems: "center", gap: 8, padding: "7px 10px",
                           borderRadius: 7, textDecoration: "none", color: "var(--gray-700)",
                           fontSize: 12, fontWeight: 500,
@@ -273,10 +268,10 @@ function CategorySidebar() {
                           <ChevronRight size={11} style={{ marginLeft: "auto", opacity: 0.4 }} />
                         </Link>
                       ))
-                      : <p style={{ fontSize: 12, color: "var(--gray-400)" }}>Browse all {activeCat.count} products</p>
+                      : <p style={{ fontSize: 12, color: "var(--gray-400)" }}>Browse all products</p>
                     }
                   </div>
-                  <Link href={activeCat.href} style={{
+                  <Link href={`/shop/${activeCat.slug}`} style={{
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                     padding: "9px", borderRadius: 8, textDecoration: "none",
                     background: "var(--red)", color: "white", fontWeight: 700, fontSize: 12,
@@ -299,6 +294,7 @@ export default function HomePage() {
   const reviewsRef = useRef<HTMLDivElement>(null);
   const [featured, setFeatured] = useState<any[]>([]);
   const [bestSellers, setBestSellers] = useState<any[]>([]);
+  const [sidebarCategories, setSidebarCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   const scrollReviews = (dir: "left" | "right") => {
@@ -319,6 +315,20 @@ export default function HomePage() {
           .from("products")
           .select("*")
           .eq("is_best_seller", true);
+
+        const { data: sidebarData } = await supabase
+          .from("categories")
+          .select("*")
+          .eq("is_in_sidebar", true)
+          .order("created_at", { ascending: true });
+
+        if (sidebarData) {
+          // Add "All Products" dynamically at the end if desired, or just use what's in DB
+          setSidebarCategories([
+            ...sidebarData,
+            { name: "All Products", slug: "", sidebar_icon: "LayoutGrid", is_in_sidebar: true, sidebar_popular_items: [], sidebar_desc: "Browse the full catalog" }
+          ]);
+        }
 
         if (featuredData && featuredData.length > 0) {
           setFeatured(featuredData);
@@ -355,7 +365,7 @@ export default function HomePage() {
     <div style={{ overflowX: "hidden" }}>
 
       {/* ── FIXED CATEGORY SIDEBAR (overlay, not in layout) ── */}
-      <CategorySidebar />
+      <CategorySidebar categories={sidebarCategories} />
 
       {/* ── HERO ── */}
       <section style={{ background: slide.bg, transition: "background 0.8s ease", minHeight: 520 }}>

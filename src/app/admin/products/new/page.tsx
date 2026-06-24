@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase, uploadProductImage } from "@/lib/supabase";
 import { ArrowLeft, Save, Loader2, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 
@@ -10,6 +10,8 @@ export default function AddProductPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [specs, setSpecs] = useState<{ label: string; value: string }[]>([]);
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   
   const [badges, setBadges] = useState<{ text: string; type: string }[]>([
     { text: "", type: "yellow" }
@@ -115,42 +117,61 @@ export default function AddProductPage() {
     e.preventDefault();
     setLoading(true);
 
-    const activeBadges = badges.filter(b => b.text.trim() !== "");
+    try {
+      let mainImageUrl = formData.image;
+      if (mainImageFile) {
+        const url = await uploadProductImage(mainImageFile);
+        if (url) mainImageUrl = url;
+      }
 
-    const qtyVal = parseInt(formData.stock_quantity, 10);
-    const calculatedQty = isNaN(qtyVal) ? 0 : qtyVal;
+      let additionalImageUrls: string[] = [];
+      if (formData.images) {
+        additionalImageUrls = formData.images.split(",").map(s => s.trim()).filter(s => s);
+      }
+      if (galleryFiles.length > 0) {
+        const uploadedUrls = await Promise.all(galleryFiles.map(f => uploadProductImage(f)));
+        const validUrls = uploadedUrls.filter(url => url !== null) as string[];
+        additionalImageUrls = [...additionalImageUrls, ...validUrls];
+      }
 
-    // Prepare payload
-    const product = {
-      name: formData.name,
-      slug: formData.slug,
-      price: parseFloat(formData.price),
-      original_price: formData.original_price ? parseFloat(formData.original_price) : null,
-      image: formData.image,
-      images: formData.images.split(",").map(s => s.trim()).filter(Boolean),
-      rating: parseFloat(formData.rating),
-      reviews: parseInt(formData.reviews, 10),
-      badge: activeBadges.length > 0 ? activeBadges[0].text : null,
-      badge_type: activeBadges.length > 0 ? activeBadges[0].type : null,
-      badges: activeBadges,
-      category_id: formData.category_id || null,
-      description: formData.description,
-      in_stock: calculatedQty > 0 ? formData.in_stock : false,
-      stock_quantity: calculatedQty,
-      is_featured: formData.is_featured,
-      is_best_seller: formData.is_best_seller,
-      specs: specs.filter(s => s.label.trim() !== "" || s.value.trim() !== ""),
-      features: features.filter(f => f.trim() !== ""),
-      trust_points: trustPoints.filter(tp => tp.text.trim() !== "")
-    };
+      const activeBadges = badges.filter(b => b.text.trim() !== "");
+      const qtyVal = parseInt(formData.stock_quantity, 10);
+      const calculatedQty = isNaN(qtyVal) ? 0 : qtyVal;
 
-    const { error } = await supabase.from("products").insert([product]);
+      const product = {
+        name: formData.name,
+        slug: formData.slug,
+        price: parseFloat(formData.price),
+        original_price: formData.original_price ? parseFloat(formData.original_price) : null,
+        image: mainImageUrl,
+        images: additionalImageUrls,
+        rating: parseFloat(formData.rating),
+        reviews: parseInt(formData.reviews, 10),
+        badge: activeBadges.length > 0 ? activeBadges[0].text : null,
+        badge_type: activeBadges.length > 0 ? activeBadges[0].type : null,
+        badges: activeBadges,
+        category_id: formData.category_id || null,
+        description: formData.description,
+        in_stock: calculatedQty > 0 ? formData.in_stock : false,
+        stock_quantity: calculatedQty,
+        is_featured: formData.is_featured,
+        is_best_seller: formData.is_best_seller,
+        specs: specs.filter(s => s.label.trim() !== "" || s.value.trim() !== ""),
+        features: features.filter(f => f.trim() !== ""),
+        trust_points: trustPoints.filter(tp => tp.text.trim() !== "")
+      };
 
-    if (error) {
-      alert("Error saving product: " + error.message);
+      const { error } = await supabase.from("products").insert([product]);
+
+      if (error) {
+        alert("Error saving product: " + error.message);
+        setLoading(false);
+      } else {
+        router.push("/admin/products");
+      }
+    } catch (err: any) {
+      alert("Unexpected error: " + err.message);
       setLoading(false);
-    } else {
-      router.push("/admin/products");
     }
   };
 
@@ -198,12 +219,68 @@ export default function AddProductPage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
           <div>
-            <label className="label">Main Image URL *</label>
-            <input className="input" required style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="https://..." />
+            <label className="label">Main Image *</label>
+            <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+              <input type="file" accept="image/*" onChange={e => {
+                if (e.target.files && e.target.files[0]) {
+                  setMainImageFile(e.target.files[0]);
+                  // Clear string input if file selected
+                  setFormData(prev => ({...prev, image: ""}));
+                }
+              }} />
+              <span style={{ fontSize: 13, color: "var(--gray-500)" }}>OR provide URL:</span>
+              <input className="input" style={{ flex: 1, background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} value={formData.image} onChange={e => {
+                setFormData({ ...formData, image: e.target.value });
+                if (e.target.value) setMainImageFile(null); // Clear file if URL provided
+              }} placeholder="https://..." disabled={!!mainImageFile} />
+            </div>
+            
+            {(mainImageFile || formData.image) && (
+              <div style={{ marginTop: 12, display: "flex", gap: 12, alignItems: "center" }}>
+                <img 
+                  src={mainImageFile ? URL.createObjectURL(mainImageFile) : formData.image} 
+                  alt="Main Preview" 
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--gray-200)" }} 
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x80?text=Invalid+URL'; }}
+                />
+                <div style={{ fontSize: 13, color: "var(--gray-600)" }}>
+                  {mainImageFile ? mainImageFile.name : "From URL"}
+                </div>
+              </div>
+            )}
           </div>
+
           <div>
-            <label className="label">Additional Images (comma separated URLs)</label>
-            <input className="input" style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} value={formData.images} onChange={e => setFormData({ ...formData, images: e.target.value })} />
+            <label className="label">Gallery Images (Multiple)</label>
+            <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+              <input type="file" accept="image/*" multiple onChange={e => {
+                if (e.target.files) {
+                  setGalleryFiles(Array.from(e.target.files));
+                }
+              }} />
+              <span style={{ fontSize: 13, color: "var(--gray-500)" }}>AND/OR provide comma separated URLs:</span>
+              <input className="input" style={{ flex: 1, background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} value={formData.images} onChange={e => setFormData({ ...formData, images: e.target.value })} placeholder="URL1, URL2..." />
+            </div>
+            
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 12 }}>
+              {formData.images.split(",").map(url => url.trim()).filter(Boolean).map((url, i) => (
+                <img 
+                  key={`url-${i}`} 
+                  src={url} 
+                  alt="Gallery Preview" 
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--gray-200)" }} 
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x80?text=Invalid+URL'; }}
+                />
+              ))}
+              {galleryFiles.map((file, i) => (
+                <img 
+                  key={`file-${i}`} 
+                  src={URL.createObjectURL(file)} 
+                  alt="Gallery Upload Preview" 
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid var(--blue)", position: "relative" }} 
+                />
+              ))}
+            </div>
           </div>
           <div>
             <label className="label">Description *</label>

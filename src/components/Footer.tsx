@@ -1,10 +1,12 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import {
   ShoppingBag,
   MapPin, Phone, Mail, Truck, RotateCcw, Shield, Headphones,
-  CreditCard, ChevronRight, Send
+  CreditCard, ChevronRight, Send, Loader2, CheckCircle
 } from "lucide-react";
 
 // Inline SVG social icons (lucide-react dropped platform-specific icons)
@@ -43,8 +45,48 @@ const trustFeatures = [
 
 export default function Footer() {
   const pathname = usePathname();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [couponMessage, setCouponMessage] = useState("");
+  const [newsletterEnabled, setNewsletterEnabled] = useState(true); // Default true
   
   if (pathname.startsWith("/admin")) return null;
+
+  useEffect(() => {
+    const fetchSetting = async () => {
+      const { data } = await supabase.from("store_settings").select("value").eq("key", "newsletter_enabled").single();
+      if (data) setNewsletterEnabled(data.value === true || data.value === 'true');
+    };
+    fetchSetting();
+  }, []);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) return;
+    
+    setLoading(true);
+    
+    // Attempt to insert email (ignore error if already exists, they might just want the code again)
+    await supabase.from("newsletter_subscribers").insert({ email });
+    
+    // Fetch active newsletter coupon
+    const { data } = await supabase.from("coupons")
+      .select("*")
+      .eq("is_newsletter_coupon", true)
+      .eq("is_active", true)
+      .single();
+    
+    setSubscribed(true);
+    if (data) {
+      const discountText = data.discount_type === "percentage" ? `${data.discount_value}%` : `Rs ${data.discount_value}`;
+      setCouponMessage(`Use code **${data.code}** for ${discountText} off your first order!`);
+    } else {
+      setCouponMessage("Thanks for subscribing! Keep an eye on your inbox for future deals.");
+    }
+    
+    setLoading(false);
+  };
 
   return (
     <footer>
@@ -66,33 +108,59 @@ export default function Footer() {
       </div>
 
       {/* Newsletter */}
-      <div style={{
-        background: "linear-gradient(135deg, var(--red) 0%, #c62333 50%, #9b1526 100%)",
-        padding: "60px 24px",
-      }}>
-        <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-            <Mail size={28} color="white" />
-          </div>
-          <h3 style={{ fontSize: 28, fontWeight: 800, color: "white", marginBottom: 8 }}>
-            Get Exclusive Deals
-          </h3>
-          <p style={{ color: "rgba(255,255,255,0.8)", marginBottom: 28, fontSize: 15 }}>
-            Subscribe to our newsletter for latest products & special offers.
-          </p>
-          <div style={{ display: "flex", gap: 0, maxWidth: 440, margin: "0 auto", borderRadius: "var(--radius-full)", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}>
-            <input
-              type="email"
-              placeholder="Enter your email address"
-              style={{ flex: 1, padding: "14px 20px", border: "none", fontSize: 14, fontFamily: "inherit", outline: "none", background: "white" }}
-            />
-            <button style={{ padding: "14px 24px", background: "var(--yellow)", border: "none", cursor: "pointer", color: "var(--black)", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 8, transition: "background 0.2s" }}>
-              <Send size={16} />
-              Subscribe
-            </button>
+      {newsletterEnabled && (
+        <div style={{
+          background: "linear-gradient(135deg, var(--red) 0%, #c62333 50%, #9b1526 100%)",
+          padding: "60px 24px",
+        }}>
+          <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Mail size={28} color="white" />
+            </div>
+            <h3 style={{ fontSize: 28, fontWeight: 800, color: "white", marginBottom: 8 }}>
+              Get Exclusive Deals
+            </h3>
+            <p style={{ color: "rgba(255,255,255,0.8)", marginBottom: 28, fontSize: 15 }}>
+              Subscribe to our newsletter for latest products & special offers.
+            </p>
+
+            {subscribed ? (
+              <div className="animate-scale-in" style={{ maxWidth: 440, margin: "0 auto", background: "white", borderRadius: 16, padding: "24px 32px", boxShadow: "0 12px 40px rgba(0,0,0,0.2)" }}>
+                <div style={{ color: "#22c55e", display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                  <CheckCircle size={48} />
+                </div>
+                <h4 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 8 }}>You're In!</h4>
+                <p style={{ color: "var(--gray-600)", fontSize: 15, lineHeight: 1.5 }}>
+                  {couponMessage.includes("**") ? (
+                    <>
+                      Use code <strong style={{ color: "var(--red)", background: "var(--gray-100)", padding: "4px 8px", borderRadius: 6, fontSize: 18, margin: "0 4px" }}>{couponMessage.split("**")[1]}</strong> {couponMessage.split("**")[2]}
+                    </>
+                  ) : (
+                    couponMessage
+                  )}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} style={{ display: "flex", gap: 0, maxWidth: 440, margin: "0 auto", borderRadius: "var(--radius-full)", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  style={{ flex: 1, padding: "14px 20px", border: "none", fontSize: 14, fontFamily: "inherit", outline: "none", background: "white" }}
+                  disabled={loading}
+                />
+                <button disabled={loading} style={{ padding: "14px 24px", background: "var(--yellow)", border: "none", cursor: loading ? "not-allowed" : "pointer", color: "var(--black)", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 8, transition: "background 0.2s" }}>
+                  {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                  Subscribe
+                </button>
+              </form>
+            )}
+
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Footer */}
       <div style={{ background: "white", padding: "80px 24px 32px" }}>

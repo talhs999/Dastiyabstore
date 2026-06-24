@@ -2,7 +2,7 @@
 import { use, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { notFound, useRouter } from "next/navigation";
-import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, Link as LinkIcon, Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
+import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, Link as LinkIcon, Maximize2, X, ZoomIn, ZoomOut, MessageCircle } from "lucide-react";
 import { FaWhatsapp, FaFacebook } from "react-icons/fa";
 import ProductCard from "@/components/ProductCard";
 import { products, getProductBySlug } from "@/data/products";
@@ -43,6 +43,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [showZoom, setShowZoom] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [showStickyCart, setShowStickyCart] = useState(false);
+  const router = useRouter();
   
   // Reviews state
   const [reviews, setReviews] = useState<any[]>([]);
@@ -51,6 +52,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+
+  // QnA state
+  const [qnaList, setQnaList] = useState<any[]>([]);
+  const [loadingQna, setLoadingQna] = useState(true);
+  const [qnaName, setQnaName] = useState("");
+  const [qnaQuestion, setQnaQuestion] = useState("");
+  const [submittingQna, setSubmittingQna] = useState(false);
 
   const { addToCart } = useCart();
   const { showToast } = useToast();
@@ -93,34 +101,52 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             stockQuantity: data.stock_quantity,
           };
           setProduct(mapped);
+          return mapped;
         } else {
           const staticProd = getProductBySlug(cleanSlug) || products.find(p => p.id === cleanSlug);
-          if (staticProd) setProduct(staticProd);
+          if (staticProd) {
+            setProduct(staticProd);
+            return staticProd;
+          }
         }
       } catch (err) {
         console.error("Error fetching product:", err);
         const staticProd = getProductBySlug(slug) || products.find(p => p.id === slug);
-        if (staticProd) setProduct(staticProd);
+        if (staticProd) {
+          setProduct(staticProd);
+          return staticProd;
+        }
       } finally {
         setLoadingProduct(false);
       }
     }
-    fetchProduct();
-  }, [slug]);
 
-  useEffect(() => {
-    async function fetchReviews() {
-      if (!product) return;
-      const { data } = await supabase
+    const fetchData = async () => {
+      const p = await fetchProduct();
+      if (!p) {
+        setLoadingReviews(false);
+        setLoadingQna(false);
+        return;
+      }
+
+      const { data: reviewsData } = await supabase
         .from('product_reviews')
         .select('*')
-        .eq('product_id', product.id)
+        .eq('product_id', p.id)
         .order('created_at', { ascending: false });
-      if (data) setReviews(data);
+      if (reviewsData) setReviews(reviewsData);
       setLoadingReviews(false);
-    }
-    fetchReviews();
-  }, [product]);
+
+      const { data: qnaData } = await supabase
+        .from('product_qna')
+        .select('*')
+        .eq('product_id', p.id)
+        .order('created_at', { ascending: false });
+      if (qnaData) setQnaList(qnaData);
+      setLoadingQna(false);
+    };
+    fetchData();
+  }, [slug]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -172,15 +198,52 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
     setSubmittingReview(false);
   };
+
+  const handleSubmitQna = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!qnaName.trim() || !qnaQuestion.trim()) {
+      showToast("Please fill all fields");
+      return;
+    }
+    
+    setSubmittingQna(true);
+    
+    const sessionStr = localStorage.getItem("customer_session");
+    let nameToUse = qnaName;
+    if (sessionStr) {
+      try {
+        const user = JSON.parse(sessionStr);
+        if (user.name) nameToUse = user.name;
+      } catch (e) {}
+    }
+
+    const newQna = {
+      product_id: product.id,
+      customer_name: nameToUse,
+      question: qnaQuestion
+    };
+
+    const { data, error } = await supabase.from("product_qna").insert([newQna]).select();
+    
+    if (error) {
+      showToast("Failed to submit question", "error");
+      console.error(error);
+    } else if (data && data.length > 0) {
+      setQnaList([data[0], ...qnaList]);
+      setQnaQuestion("");
+      showToast("Question submitted successfully!", "success");
+    }
+    setSubmittingQna(false);
+  };
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : null;
   const isProductInStock = product.in_stock !== undefined ? product.in_stock : (product.inStock !== undefined ? product.inStock : true);
   const stockQty = product.stock_quantity !== undefined ? product.stock_quantity : (product.stockQuantity !== undefined ? product.stockQuantity : 10);
   const isOutOfStock = !isProductInStock || stockQty <= 0;
   
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
-  const images = (product.images && product.images.length > 0) ? product.images : [product.image];
-
-  const router = useRouter();
+  const validImages = (product.images || []).filter((img: string) => img && img.trim() !== "");
+  const images = [product.image, ...validImages].filter((img: string) => img && img.trim() !== "");
+  if (images.length === 0) images.push("https://placehold.co/800x800?text=No+Image");
 
   const handleAdd = () => {
     for (let i = 0; i < qty; i++) addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
@@ -231,7 +294,15 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         {/* Images */}
         <div>
           <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "var(--gray-50)", marginBottom: 12, position: "relative" }}>
-            <img src={images[activeImg]} alt={product.name} onClick={() => { setShowZoom(true); setZoomLevel(1); }} style={{ width: "100%", height: "auto", display: "block", cursor: "zoom-in" }} />
+            <img 
+              key={activeImg}
+              src={images[activeImg]} 
+              alt={product.name} 
+              onClick={() => { setShowZoom(true); setZoomLevel(1); }} 
+              style={{ width: "100%", height: "auto", display: "block", cursor: "zoom-in" }} 
+              fetchPriority="high"
+              onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x800?text=Invalid+Image'; }} 
+            />
             {discount && (
               <div style={{ position: "absolute", top: 16, left: 16 }}>
                 <span className="badge badge-red">{discount}% OFF</span>
@@ -250,7 +321,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   cursor: "pointer", padding: 0, background: "var(--gray-50)",
                   transition: "border-color 0.2s",
                 }}>
-                  <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Invalid'; }} />
                 </button>
               ))}
             </div>
@@ -416,16 +487,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
       {/* Tabs */}
       <div style={{ marginBottom: 64 }}>
-        <div style={{ display: "flex", gap: 0, borderBottom: "2px solid var(--gray-200)", marginBottom: 32 }}>
-          {["description", "specs", "reviews"].map(tab => (
+        <div style={{ display: "flex", gap: 0, borderBottom: "2px solid var(--gray-200)", marginBottom: 32, overflowX: "auto" }}>
+          {["description", "specs", "reviews", "qna"].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
               padding: "12px 24px", border: "none", background: "none", cursor: "pointer",
               fontWeight: 700, fontSize: 15, textTransform: "capitalize",
               color: activeTab === tab ? "var(--red)" : "var(--gray-500)",
               borderBottom: `2px solid ${activeTab === tab ? "var(--red)" : "transparent"}`,
-              marginBottom: -2, transition: "all 0.2s",
+              marginBottom: -2, transition: "all 0.2s", whiteSpace: "nowrap"
             }}>
-              {tab}
+              {tab === "qna" ? "Q&A" : tab}
             </button>
           ))}
         </div>
@@ -517,6 +588,65 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--red)", display: "block", marginBottom: 4 }}>DastiyabStore replied:</span>
                           <p style={{ fontSize: 13, color: "var(--gray-600)", margin: 0 }}>{r.reply_text}</p>
                         </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "qna" && (
+          <div className="animate-fade-up">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 32 }}>
+              
+              {/* Form */}
+              <div style={{ background: "white", padding: 24, borderRadius: "var(--radius-lg)", border: "1px solid var(--gray-200)", boxShadow: "var(--shadow-sm)" }}>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)", marginBottom: 16 }}>Ask a Question</h3>
+                <form onSubmit={handleSubmitQna} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div>
+                    <label className="label">Your Name</label>
+                    <input className="input" type="text" placeholder="Ali Khan" value={qnaName} onChange={e => setQnaName(e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="label">Your Question</label>
+                    <textarea className="input" rows={3} placeholder="Ask about the product, delivery, etc." value={qnaQuestion} onChange={e => setQnaQuestion(e.target.value)} required></textarea>
+                  </div>
+                  <button type="submit" disabled={submittingQna} className="btn-red" style={{ justifyContent: "center" }}>
+                    {submittingQna ? "Submitting..." : "Submit Question"}
+                  </button>
+                </form>
+              </div>
+
+              {/* List */}
+              <div style={{ display: "grid", gap: 16 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Questions & Answers ({qnaList.length})</h3>
+                {loadingQna ? (
+                  <p style={{ color: "var(--gray-500)" }}>Loading questions...</p>
+                ) : qnaList.length === 0 ? (
+                  <p style={{ color: "var(--gray-500)", background: "var(--gray-50)", padding: 20, borderRadius: "var(--radius)", textAlign: "center" }}>No questions asked yet. Be the first to ask!</p>
+                ) : (
+                  qnaList.map((q: any, i: number) => (
+                    <div key={i} style={{ background: "var(--gray-50)", borderRadius: "var(--radius)", padding: 20, border: "1px solid var(--gray-200)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                        <div>
+                          <span style={{ fontWeight: 700, color: "var(--gray-900)" }}>{q.customer_name}</span>
+                          <span style={{ fontSize: 12, color: "var(--gray-500)", marginLeft: 12 }}>{new Date(q.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div style={{ color: "var(--gray-500)" }}>
+                          <MessageCircle size={16} />
+                        </div>
+                      </div>
+                      <p style={{ color: "var(--gray-700)", fontSize: 14, lineHeight: 1.6, margin: 0, fontWeight: 600 }}>Q: {q.question}</p>
+                      {q.answer && (
+                        <div style={{ marginTop: 12, padding: "12px 16px", background: "white", borderLeft: "3px solid #22c55e", borderRadius: "0 8px 8px 0" }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "#16a34a", display: "block", marginBottom: 4 }}>DastiyabStore replied:</span>
+                          <p style={{ fontSize: 13, color: "var(--gray-600)", margin: 0 }}>{q.answer}</p>
+                        </div>
+                      )}
+                      {!q.answer && (
+                        <div style={{ marginTop: 8, fontSize: 12, color: "var(--gray-500)", fontStyle: "italic" }}>Awaiting answer...</div>
                       )}
                     </div>
                   ))
