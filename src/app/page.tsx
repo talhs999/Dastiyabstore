@@ -440,7 +440,13 @@ export default function HomePage() {
 
       {/* ── STATS BAR ── */}
       <section style={{ background: "var(--red)", padding: "28px 24px" }}>
-        <div className="stats-grid" style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <div className="stats-grid" style={{ 
+          maxWidth: 1280, 
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: "24px"
+        }}>
           {stats.map((s, i) => (
             <div key={i} style={{ textAlign: "center", color: "white" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 6, opacity: 0.8 }}>{s.icon}</div>
