@@ -46,6 +46,11 @@ export default function AdminSettingsPage() {
   // Marketing states
   const [newsletterEnabled, setNewsletterEnabled] = useState(true);
   const [savingMarketing, setSavingMarketing] = useState(false);
+  const [newsletterCouponId, setNewsletterCouponId] = useState<string | null>(null);
+  const [newsletterDiscount, setNewsletterDiscount] = useState(10);
+  const [newsletterCode, setNewsletterCode] = useState("WELCOME10");
+  const [newsletterMaxUses, setNewsletterMaxUses] = useState(0);
+  const [newsletterUsedCount, setNewsletterUsedCount] = useState(0);
 
   // Payment states
   const [loadingPayments, setLoadingPayments] = useState(true);
@@ -119,13 +124,58 @@ export default function AdminSettingsPage() {
   const fetchMarketingSettings = async () => {
     const { data } = await supabase.from("store_settings").select("value").eq("key", "newsletter_enabled").single();
     if (data) setNewsletterEnabled(data.value === true || data.value === 'true');
+    
+    const { data: couponData } = await supabase.from("coupons").select("*").eq("is_newsletter_coupon", true).single();
+    if (couponData) {
+      setNewsletterCouponId(couponData.id);
+      setNewsletterDiscount(couponData.discount_value);
+      setNewsletterCode(couponData.code);
+      setNewsletterMaxUses(couponData.max_uses || 0);
+      setNewsletterUsedCount(couponData.used_count || 0);
+    }
   };
 
   const saveMarketingSettings = async () => {
     setSavingMarketing(true);
-    await supabase.from("store_settings").upsert({ key: "newsletter_enabled", value: newsletterEnabled });
+    const { error: settingsError } = await supabase
+      .from("store_settings")
+      .upsert({ key: "newsletter_enabled", value: newsletterEnabled }, { onConflict: 'key' });
+    
+    if (settingsError) {
+      console.error("Error saving settings:", settingsError);
+      alert("Failed to save settings: " + settingsError.message);
+      setSavingMarketing(false);
+      return;
+    }
+    
+    const couponPayload = {
+      code: newsletterCode.toUpperCase().trim(),
+      discount_type: "percentage",
+      discount_value: newsletterDiscount,
+      is_newsletter_coupon: true,
+      is_active: true,
+      max_uses: newsletterMaxUses
+    };
+    
+    if (newsletterCouponId) {
+      const { error: couponError } = await supabase.from("coupons").update(couponPayload).eq("id", newsletterCouponId);
+      if (couponError) {
+        alert("Failed to update coupon: " + couponError.message);
+        setSavingMarketing(false);
+        return;
+      }
+    } else {
+      const { data, error: couponError } = await supabase.from("coupons").insert(couponPayload).select().single();
+      if (couponError) {
+        alert("Failed to create coupon: " + couponError.message);
+        setSavingMarketing(false);
+        return;
+      }
+      if (data) setNewsletterCouponId(data.id);
+    }
+    
     setSavingMarketing(false);
-    alert("Marketing settings saved!");
+    alert("Marketing settings saved successfully!");
   };
 
   const fetchCoupons = async () => {
@@ -579,22 +629,58 @@ export default function AdminSettingsPage() {
                 <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 4 }}>Manage newsletter visibility and email preferences.</p>
               </div>
 
-              <div style={{ padding: "24px 32px" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 16, background: "var(--gray-50)", padding: 20, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)" }}>Enable Newsletter Section</h3>
-                    <p style={{ fontSize: 13, color: "var(--gray-600)", marginTop: 4, lineHeight: 1.5 }}>
-                      Show the "Get Exclusive Deals" newsletter signup form in the footer of your website. If disabled, the section will be completely hidden from customers.
-                    </p>
-                  </div>
-                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
-                    <div style={{ position: "relative" }}>
-                      <input type="checkbox" className="sr-only" checked={newsletterEnabled} onChange={e => setNewsletterEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
-                      <div style={{ width: 44, height: 24, background: newsletterEnabled ? "var(--red)" : "var(--gray-300)", borderRadius: 999, transition: "background 0.2s" }}></div>
-                      <div style={{ position: "absolute", top: 2, left: newsletterEnabled ? 22 : 2, width: 20, height: 20, background: "white", borderRadius: "50%", transition: "all 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}></div>
+              <div style={{ padding: "24px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
+                
+                {/* Newsletter & Homepage CTA block */}
+                <div style={{ background: "white", padding: 24, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
+                  
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+                    <div>
+                      <h3 style={{ fontSize: 18, fontWeight: 700, color: "var(--gray-900)" }}>Newsletter & Homepage CTA</h3>
+                      <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 4 }}>Control the discount offer section on the homepage.</p>
                     </div>
-                  </label>
+                    <label style={{ display: "flex", alignItems: "center", cursor: "pointer", gap: 8 }}>
+                      <div style={{ position: "relative" }}>
+                        <input type="checkbox" className="sr-only" checked={newsletterEnabled} onChange={e => setNewsletterEnabled(e.target.checked)} style={{ opacity: 0, width: 0, height: 0, position: "absolute" }} />
+                        <div style={{ width: 44, height: 24, background: newsletterEnabled ? "var(--gray-900)" : "var(--gray-300)", borderRadius: 999, transition: "background 0.2s" }}></div>
+                        <div style={{ position: "absolute", top: 2, left: newsletterEnabled ? 22 : 2, width: 20, height: 20, background: "white", borderRadius: "50%", transition: "all 0.2s", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}></div>
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-900)" }}>Visible on Homepage</span>
+                    </label>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--gray-500)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Discount Percentage (%)</label>
+                      <input type="number" className="input" value={newsletterDiscount} onChange={e => setNewsletterDiscount(Number(e.target.value))} style={{ padding: "12px 16px", background: "white" }} />
+                      <p style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 8 }}>Shows as "Get {newsletterDiscount}% off" on the homepage.</p>
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--gray-500)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Discount Code</label>
+                      <input type="text" className="input" value={newsletterCode} onChange={e => setNewsletterCode(e.target.value.toUpperCase())} style={{ padding: "12px 16px", background: "white" }} />
+                      <p style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 8 }}>This code is sent to subscribers via email.</p>
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--gray-500)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Max Uses (0 = Unlimited)</label>
+                      <input type="number" className="input" value={newsletterMaxUses} onChange={e => setNewsletterMaxUses(Number(e.target.value))} style={{ padding: "12px 16px", background: "white" }} />
+                      <p style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 8 }}>Used so far: {newsletterUsedCount}</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 12, background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: 16, borderRadius: 8 }}>
+                    <div style={{ width: 32, height: 32, background: "var(--gray-900)", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Mail size={16} color="white" />
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-900)", marginBottom: 4 }}>How it works</h4>
+                      <p style={{ fontSize: 12, color: "var(--gray-600)", lineHeight: 1.5 }}>
+                        When a user enters their email on the homepage and clicks "Claim Discount", they instantly receive an email containing the <strong>{newsletterCode}</strong> code. The same code works on the checkout page.
+                      </p>
+                    </div>
+                  </div>
+
                 </div>
+
               </div>
 
               <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--gray-200)" }}>

@@ -294,8 +294,8 @@ export default function HomePage() {
   const reviewsRef = useRef<HTMLDivElement>(null);
   const [featured, setFeatured] = useState<any[]>([]);
   const [bestSellers, setBestSellers] = useState<any[]>([]);
-  const [sidebarCategories, setSidebarCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sidebarCategories, setSidebarCategories] = useState<any[]>([]);
   
   const scrollReviews = (dir: "left" | "right") => {
     if (reviewsRef.current) {
@@ -341,6 +341,7 @@ export default function HomePage() {
         } else {
           setBestSellers(getBestSellers());
         }
+
       } catch (err) {
         console.error("Error fetching homepage products:", err);
         setFeatured(getFeaturedProducts());
