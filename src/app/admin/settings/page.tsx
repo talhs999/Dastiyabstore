@@ -55,10 +55,10 @@ export default function AdminSettingsPage() {
   // SMTP Email Configuration states
   const [smtpHost, setSmtpHost] = useState("smtp.gmail.com");
   const [smtpPort, setSmtpPort] = useState(465);
-  const [smtpUser, setSmtpUser] = useState("muddassirr067@gmail.com");
-  const [smtpPassword, setSmtpPassword] = useState("mhhf fkoj ibuu iycq");
+  const [smtpUser, setSmtpUser] = useState("");
+  const [smtpPassword, setSmtpPassword] = useState("");
   const [smtpSenderName, setSmtpSenderName] = useState("Dastiyab Store");
-  const [adminEmail, setAdminEmail] = useState("muddassirr067@gmail.com");
+  const [adminEmail, setAdminEmail] = useState("");
 
   // Payment states
   const [loadingPayments, setLoadingPayments] = useState(true);

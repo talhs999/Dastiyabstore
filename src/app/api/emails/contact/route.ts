@@ -18,12 +18,12 @@ export async function POST(req: Request) {
       .single();
 
     let smtpSettings = {
-      host: "smtp.gmail.com",
-      port: 465,
-      user: "muddassirr067@gmail.com",
-      password: "mhhf fkoj ibuu iycq",
-      senderName: "Dastiyab Store",
-      adminEmail: "muddassirr067@gmail.com"
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465,
+      user: process.env.SMTP_USER || "",
+      password: process.env.SMTP_PASSWORD || "",
+      senderName: process.env.SMTP_SENDER_NAME || "Dastiyab Store",
+      adminEmail: process.env.SMTP_ADMIN_EMAIL || ""
     };
 
     if (!smtpError && smtpData && smtpData.value) {
