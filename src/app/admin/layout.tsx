@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Package, FolderTree, ShoppingCart, 
-  Users, Star, Settings, LogOut, MessageSquare, LayoutList
+  Users, Star, Settings, LogOut, MessageSquare, LayoutList, Activity
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/Toast";
@@ -128,6 +128,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "Reviews", href: "/admin/reviews", icon: <Star size={20} /> },
     { label: "Q&A", href: "/admin/qna", icon: <MessageSquare size={20} /> },
     { label: "Homepage Sidebar", href: "/admin/sidebar", icon: <LayoutList size={20} /> },
+    { label: "Live Tracking", href: "/admin/live", icon: <Activity size={20} /> },
     { label: "Settings", href: "/admin/settings", icon: <Settings size={20} /> },
   ];
 

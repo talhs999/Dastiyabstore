@@ -52,6 +52,14 @@ export default function AdminSettingsPage() {
   const [newsletterMaxUses, setNewsletterMaxUses] = useState(0);
   const [newsletterUsedCount, setNewsletterUsedCount] = useState(0);
 
+  // SMTP Email Configuration states
+  const [smtpHost, setSmtpHost] = useState("smtp.gmail.com");
+  const [smtpPort, setSmtpPort] = useState(465);
+  const [smtpUser, setSmtpUser] = useState("muddassirr067@gmail.com");
+  const [smtpPassword, setSmtpPassword] = useState("mhhf fkoj ibuu iycq");
+  const [smtpSenderName, setSmtpSenderName] = useState("Dastiyab Store");
+  const [adminEmail, setAdminEmail] = useState("muddassirr067@gmail.com");
+
   // Payment states
   const [loadingPayments, setLoadingPayments] = useState(true);
   const [savingPayments, setSavingPayments] = useState(false);
@@ -300,6 +308,22 @@ export default function AdminSettingsPage() {
       setNewsletterMaxUses(couponData.max_uses || 0);
       setNewsletterUsedCount(couponData.used_count || 0);
     }
+
+    // Load SMTP Settings
+    const { data: smtpData } = await supabase.from("store_settings").select("value").eq("key", "smtp_settings").single();
+    if (smtpData && smtpData.value) {
+      try {
+        const settings = typeof smtpData.value === "string" ? JSON.parse(smtpData.value) : smtpData.value;
+        if (settings.host) setSmtpHost(settings.host);
+        if (settings.port) setSmtpPort(Number(settings.port));
+        if (settings.user) setSmtpUser(settings.user);
+        if (settings.password) setSmtpPassword(settings.password);
+        if (settings.senderName) setSmtpSenderName(settings.senderName);
+        if (settings.adminEmail) setAdminEmail(settings.adminEmail);
+      } catch (e) {
+        console.error("Failed to parse smtp settings:", e);
+      }
+    }
   };
 
   const saveMarketingSettings = async () => {
@@ -340,9 +364,26 @@ export default function AdminSettingsPage() {
       }
       if (data) setNewsletterCouponId(data.id);
     }
-    
+
+    // Save SMTP Settings
+    const smtpPayload = {
+      host: smtpHost,
+      port: Number(smtpPort),
+      user: smtpUser,
+      password: smtpPassword,
+      senderName: smtpSenderName,
+      adminEmail: adminEmail
+    };
+    const { error: smtpError } = await supabase
+      .from("store_settings")
+      .upsert({ key: "smtp_settings", value: JSON.stringify(smtpPayload) }, { onConflict: 'key' });
+
     setSavingMarketing(false);
-    alert("Marketing settings saved successfully!");
+    if (smtpError) {
+      alert("Failed to save SMTP settings: " + smtpError.message);
+    } else {
+      alert("Marketing & SMTP settings saved successfully!");
+    }
   };
 
   const fetchCoupons = async () => {
@@ -842,6 +883,63 @@ export default function AdminSettingsPage() {
                       <h4 style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-900)", marginBottom: 4 }}>How it works</h4>
                       <p style={{ fontSize: 12, color: "var(--gray-600)", lineHeight: 1.5 }}>
                         When a user enters their email on the homepage and clicks "Claim Discount", they instantly receive an email containing the <strong>{newsletterCode}</strong> code. The same code works on the checkout page.
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* SMTP Configuration block */}
+                <div style={{ background: "white", padding: 24, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
+                  
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+                    <div>
+                      <h3 style={{ fontSize: 18, fontWeight: 700, color: "var(--gray-900)" }}>SMTP Email Configuration</h3>
+                      <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 4 }}>Configure the mail server settings used to send orders and support emails.</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--gray-500)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>SMTP Host</label>
+                      <input type="text" className="input" value={smtpHost} onChange={e => setSmtpHost(e.target.value)} style={{ padding: "12px 16px", background: "white" }} placeholder="e.g. smtp.gmail.com" />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--gray-500)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>SMTP Port</label>
+                      <input type="number" className="input" value={smtpPort} onChange={e => setSmtpPort(Number(e.target.value))} style={{ padding: "12px 16px", background: "white" }} placeholder="e.g. 465 or 587" />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--gray-500)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>SMTP Username / Email</label>
+                      <input type="email" className="input" value={smtpUser} onChange={e => setSmtpUser(e.target.value)} style={{ padding: "12px 16px", background: "white" }} placeholder="e.g. user@gmail.com" />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--gray-500)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>SMTP Password / App Password</label>
+                      <input type="password" className="input" value={smtpPassword} onChange={e => setSmtpPassword(e.target.value)} style={{ padding: "12px 16px", background: "white" }} placeholder="App Password" />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--gray-500)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Sender Name</label>
+                      <input type="text" className="input" value={smtpSenderName} onChange={e => setSmtpSenderName(e.target.value)} style={{ padding: "12px 16px", background: "white" }} placeholder="e.g. Dastiyab Store" />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--gray-500)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Admin Notification Email</label>
+                      <input type="email" className="input" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} style={{ padding: "12px 16px", background: "white" }} placeholder="inbox to receive customer inquiries" />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 12, background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: 16, borderRadius: 8 }}>
+                    <div style={{ width: 32, height: 32, background: "var(--gray-900)", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Shield size={16} color="white" />
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-900)", marginBottom: 4 }}>Gmail App Password Notice</h4>
+                      <p style={{ fontSize: 12, color: "var(--gray-600)", lineHeight: 1.5 }}>
+                        If you are using Gmail, generate an <strong>App Password</strong> in your Google Account. Pre-filled with your provided test app password.
                       </p>
                     </div>
                   </div>

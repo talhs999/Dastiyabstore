@@ -399,6 +399,15 @@ export default function CheckoutPage() {
 
       if (itemsError) throw itemsError;
 
+      // 4. Send order confirmation email asynchronously
+      fetch("/api/emails/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ order, items: orderItems })
+      }).catch(err => console.error("Failed to trigger order confirmation email:", err));
+
       setOrderId(order.id);
       setPlaced(true);
       clearCart();

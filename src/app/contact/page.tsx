@@ -1,13 +1,43 @@
 "use client";
 import { useState } from "react";
-import { Phone, Mail, MapPin, Clock, MessageCircle, Send, CheckCircle } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, MessageCircle, Send, CheckCircle, Loader2 } from "lucide-react";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    subject: "General Inquiry",
+    message: ""
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/emails/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Failed to send message.");
+      }
+
+      setSubmitted(true);
+    } catch (err: any) {
+      console.error("Failed to submit contact form:", err);
+      setError(err.message || "An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,37 +101,43 @@ export default function ContactPage() {
             ) : (
               <>
                 <h2 style={{ fontWeight: 800, fontSize: 22, marginBottom: 24 }}>Send a Message</h2>
+                {error && (
+                  <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: 12, marginBottom: 20, color: "#b91c1c", fontSize: 14 }}>
+                    {error}
+                  </div>
+                )}
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                     <div>
                       <label className="label">Your Name</label>
-                      <input className="input" placeholder="Muhammad Ali" required />
+                      <input className="input" placeholder="Muhammad Ali" required value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} />
                     </div>
                     <div>
                       <label className="label">Phone / WhatsApp</label>
-                      <input className="input" placeholder="0300-1234567" />
+                      <input className="input" placeholder="0300-1234567" value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} />
                     </div>
                   </div>
                   <div>
                     <label className="label">Email Address</label>
-                    <input className="input" type="email" placeholder="you@email.com" required />
+                    <input className="input" type="email" placeholder="you@email.com" required value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} />
                   </div>
                   <div>
                     <label className="label">Subject</label>
-                    <select className="input">
-                      <option>General Inquiry</option>
-                      <option>Order Issue</option>
-                      <option>Return Request</option>
-                      <option>Product Question</option>
-                      <option>Other</option>
+                    <select className="input" value={formData.subject} onChange={e => setFormData(p => ({ ...p, subject: e.target.value }))}>
+                      <option value="General Inquiry">General Inquiry</option>
+                      <option value="Order Issue">Order Issue</option>
+                      <option value="Return Request">Return Request</option>
+                      <option value="Product Question">Product Question</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                   <div>
                     <label className="label">Message</label>
-                    <textarea className="input" rows={5} placeholder="Tell us how we can help you..." required style={{ resize: "vertical" }} />
+                    <textarea className="input" rows={5} placeholder="Tell us how we can help you..." required style={{ resize: "vertical" }} value={formData.message} onChange={e => setFormData(p => ({ ...p, message: e.target.value }))} />
                   </div>
-                  <button type="submit" className="btn-red" style={{ justifyContent: "center", padding: "14px" }}>
-                    <Send size={16} /> Send Message
+                  <button type="submit" className="btn-red" style={{ justifyContent: "center", padding: "14px" }} disabled={loading}>
+                    {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                    {loading ? "Sending Message..." : "Send Message"}
                   </button>
                 </form>
               </>

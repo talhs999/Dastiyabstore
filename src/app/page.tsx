@@ -443,8 +443,6 @@ export default function HomePage() {
         <div className="stats-grid" style={{ 
           maxWidth: 1280, 
           margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
           gap: "24px"
         }}>
           {stats.map((s, i) => (

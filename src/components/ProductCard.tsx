@@ -23,7 +23,7 @@ interface Product {
   [key: string]: any;
 }
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({ product, view = "grid" }: { product: Product; view?: "grid" | "list" }) {
   const { addToCart } = useCart();
   const { showToast } = useToast();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -41,6 +41,7 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <Link href={`/product/${product.slug || product.id}`} style={{ textDecoration: "none", display: "block" }}>
       <div
+        className={`product-card ${view === "list" ? "list-view" : ""}`}
         style={{
           background: "var(--white)", borderRadius: "var(--radius-lg)",
           overflow: "hidden", boxShadow: "var(--shadow-md)",
@@ -102,7 +103,11 @@ export default function ProductCard({ product }: { product: Product }) {
         </button>
 
         {/* Image */}
-        <div className="product-image-wrap" style={{ position: "relative", paddingBottom: "100%", background: "var(--gray-50)", overflow: "hidden" }}>
+        <div className="product-image-wrap" style={{ 
+          position: "relative", 
+          background: "var(--gray-50)", 
+          overflow: "hidden",
+        }}>
           <img
             src={product.image || "https://placehold.co/400x400?text=No+Image"}
             alt={product.name}
@@ -142,8 +147,8 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* Info */}
-        <div style={{ padding: 16 }}>
+        {/* Content */}
+        <div style={{ padding: "16px", flex: 1 }}>
           <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--gray-900)", marginBottom: 6, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {product.name}
           </h3>

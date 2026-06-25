@@ -164,9 +164,9 @@ function CategoryContent({ params }: { params: Promise<{ category: string }> }) 
 
           {/* Products Grid */}
           {filteredProducts.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: view === "grid" ? "repeat(auto-fill, minmax(240px, 1fr))" : "1fr", gap: 20 }}>
+            <div className={view === "grid" ? "shop-product-grid" : ""} style={view === "list" ? { display: "grid", gridTemplateColumns: "1fr", gap: 20 } : {}}>
               {filteredProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} view={view as "grid" | "list"} />
               ))}
             </div>
           ) : (
@@ -180,9 +180,23 @@ function CategoryContent({ params }: { params: Promise<{ category: string }> }) 
         </div>
       </div>
       <style>{`
+        .shop-product-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+        }
+        @media (max-width: 1024px) {
+          .shop-product-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
         @media (max-width: 768px) {
           .mobile-only { display: flex !important; }
           .desktop-only { display: none !important; }
+          .shop-product-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+          }
         }
       `}</style>
     </div>
