@@ -215,7 +215,7 @@ export default function AdminLiveTrackingPage() {
                 height: 34,
                 display: "flex",
                 alignItems: "center",
-                justify: "center",
+                justifyContent: "center",
                 cursor: "pointer",
                 transition: "all 0.2s"
               }}
@@ -289,7 +289,7 @@ export default function AdminLiveTrackingPage() {
         </div>
 
         {/* Devices Summary */}
-        <div style={{ background: "white", padding: 24, borderRadius: "var(--radius-lg)", border: "1px solid var(--gray-200)", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", justify: "space-between" }}>
+        <div style={{ background: "white", padding: 24, borderRadius: "var(--radius-lg)", border: "1px solid var(--gray-200)", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Devices Breakdown</span>
           <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -366,11 +366,11 @@ export default function AdminLiveTrackingPage() {
                       <td style={{ padding: "16px 24px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           {v.device_type === "Mobile" ? (
-                            <Smartphone size={16} color="var(--gray-600)" title="Mobile Device" />
+                            <Smartphone size={16} color="var(--gray-600)" />
                           ) : v.device_type === "Tablet" ? (
-                            <Smartphone size={16} color="var(--gray-600)" title="Tablet Device" />
+                            <Smartphone size={16} color="var(--gray-600)" />
                           ) : (
-                            <Monitor size={16} color="var(--gray-600)" title="Desktop Device" />
+                            <Monitor size={16} color="var(--gray-600)" />
                           )}
                           <span style={{ fontWeight: 600, color: "var(--gray-700)" }}>{v.browser}</span>
                         </div>
