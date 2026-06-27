@@ -169,7 +169,7 @@ export default function Footer() {
 
             {/* Column 1: Brand */}
             <div style={{ maxWidth: 320 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 20 }}>
                 <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 56, width: 56, objectFit: "contain", flexShrink: 0 }} />
                 <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
                   <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
