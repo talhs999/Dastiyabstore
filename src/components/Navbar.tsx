@@ -188,8 +188,10 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" style={{ textDecoration: "none", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
-              <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 40, width: 40, objectFit: "contain" }} />
-              <span style={{ fontSize: 22, fontWeight: 800, color: "var(--red)", letterSpacing: "-0.5px" }}>Dastiyab Store</span>
+              <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 48, width: 48, objectFit: "contain" }} />
+              <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.5px" }}>
+                <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#d97706" }}>Store</span>
+              </span>
             </Link>
 
             {/* Categories Dropdown removed — see Home Page sidebar and Shop sidebar */}

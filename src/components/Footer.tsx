@@ -170,8 +170,10 @@ export default function Footer() {
             {/* Column 1: Brand */}
             <div style={{ maxWidth: 320 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 48, width: 48, objectFit: "contain" }} />
-                <span style={{ fontSize: 26, fontWeight: 800, color: "var(--red)", letterSpacing: "-0.5px" }}>Dastiyab Store</span>
+                <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 56, width: 56, objectFit: "contain" }} />
+                <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.5px" }}>
+                  <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#d97706" }}>Store</span>
+                </span>
               </div>
               <p style={{ color: "var(--gray-600)", fontSize: 14, lineHeight: 1.8, marginBottom: 32 }}>
                 Jo Chahiye, Wahi Dastiyab — Your trusted destination for tech gadgets and accessories in Pakistan. We build trust through quality products and fast delivery.
