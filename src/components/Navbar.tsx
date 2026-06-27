@@ -187,8 +187,8 @@ export default function Navbar() {
             </button>
 
             {/* Logo */}
-            <Link href="/" style={{ textDecoration: "none", flexShrink: 0, display: "flex", alignItems: "center", gap: 4 }}>
-              <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 48, width: 48, objectFit: "contain", flexShrink: 0 }} />
+            <Link href="/" style={{ textDecoration: "none", flexShrink: 0, display: "flex", alignItems: "center", gap: 0 }}>
+              <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 48, width: 48, objectFit: "contain", flexShrink: 0, marginLeft: -6 }} />
               <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
                 <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
               </span>
