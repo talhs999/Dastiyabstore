@@ -259,8 +259,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button onClick={() => setMobileMenuOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center" }}>
             <Menu size={24} />
           </button>
-          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", gap: 0 }}>
-            <img src="/icon.png" alt="Dastiyab Admin Logo" style={{ height: 32, width: 32, objectFit: "contain", flexShrink: 0, marginLeft: -6 }} />
+          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", gap: 4 }}>
+            <img src="/icon.png" alt="Dastiyab Admin Logo" style={{ height: 32, width: 32, objectFit: "contain", flexShrink: 0 }} />
             <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
               <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "#FFB703" }}>Admin</span>
             </span>
