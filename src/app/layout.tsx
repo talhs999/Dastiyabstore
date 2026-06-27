@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   title: "DastiyabStore — Jo Chahiye, Wahi Dastiyab",
   description: "Pakistan's premium online store for tech gadgets, home accessories & more. Cash on Delivery available. Neck fans, AirPods, laptop stands & more.",
   keywords: "dastiyab store, pakistan online shopping, neck fan, airpods, laptop stand, earphones, COD",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
   openGraph: {
     title: "DastiyabStore — Jo Chahiye, Wahi Dastiyab",
     description: "Premium gadgets & accessories. Fast delivery across Pakistan. COD available.",

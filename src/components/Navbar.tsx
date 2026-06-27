@@ -187,21 +187,8 @@ export default function Navbar() {
             </button>
 
             {/* Logo */}
-            <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10,
-                  background: "linear-gradient(135deg, var(--red), var(--yellow))",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 4px 12px rgba(230,57,70,0.35)",
-                }}>
-                  <ShoppingBag size={22} color="white" strokeWidth={2.5} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: "var(--red)", lineHeight: 1, letterSpacing: "-0.5px" }}>Dastiyab</div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--yellow-dark)", letterSpacing: "1.5px", textTransform: "uppercase" }}>Store</div>
-                </div>
-              </div>
+            <Link href="/" style={{ textDecoration: "none", flexShrink: 0, display: "flex", alignItems: "center" }}>
+              <img src="/logo.png" alt="Dastiyab Store" style={{ height: 50, objectFit: "contain" }} />
             </Link>
 
             {/* Categories Dropdown removed — see Home Page sidebar and Shop sidebar */}

@@ -88,11 +88,8 @@ export default function OrderReceiptPage({ params }: { params: Promise<{ id: str
           
           {/* Logo Header */}
           <div style={{ background: "linear-gradient(135deg, var(--red) 0%, #a81c2b 100%)", padding: "32px 24px", color: "white", textAlign: "center" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <ShoppingBag size={20} color="var(--red)" strokeWidth={2.5} />
-              </div>
-              <span style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.5px" }}>DastiyabStore</span>
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+              <img src="/logo.png" alt="Dastiyab Store Logo" style={{ height: 80, objectFit: "contain", background: "white", borderRadius: "50%", padding: 4 }} />
             </div>
             <h2 style={{ fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "var(--yellow)", opacity: 0.9 }}>Digital Invoice</h2>
           </div>
