@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Package, FolderTree, ShoppingCart, 
-  Users, Star, Settings, LogOut, MessageSquare, LayoutList, Activity
+  Users, Star, Settings, LogOut, MessageSquare, LayoutList, Activity,
+  Menu, X
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/Toast";
@@ -47,6 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -174,29 +176,49 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--gray-50)", fontFamily: "Inter, sans-serif" }}>
       
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          onClick={() => setMobileMenuOpen(false)}
+          className="admin-mobile-overlay"
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40
+          }}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside style={{ 
+      <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ 
         width: 260, 
         background: "white", 
         borderRight: "1px solid var(--gray-200)",
         display: "flex", 
         flexDirection: "column",
-        position: "sticky",
-        top: 0,
         height: "100vh",
-        overflowY: "auto"
+        overflowY: "auto",
+        zIndex: 50,
       }}>
-        <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)" }}>
-          <h2 style={{ fontSize: 24, fontWeight: 900, color: "var(--gray-900)", margin: 0, letterSpacing: "-0.5px" }}>
-            Dastiyab<span style={{ color: "var(--red)" }}>Admin</span>
-          </h2>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--gray-100)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+            <img src="/icon.png" alt="Dastiyab Admin Logo" style={{ height: 40, width: 40, objectFit: "contain", flexShrink: 0, marginLeft: -6 }} />
+            <span style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
+              <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "#FFB703" }}>Admin</span>
+            </span>
+          </div>
+          <button 
+            className="admin-mobile-close"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{ background: "none", border: "none", cursor: "pointer", display: "none" }}
+          >
+            <X size={24} />
+          </button>
         </div>
 
         <nav style={{ padding: "24px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
           {menuItems.map(item => {
             const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
             return (
-              <Link key={item.href} href={item.href} style={{
+              <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)} style={{
                 display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
                 borderRadius: "var(--radius)", textDecoration: "none",
                 fontWeight: isActive ? 700 : 500,
@@ -224,10 +246,58 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, overflowX: "hidden" }}>
-        {children}
-      </main>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflowX: "hidden" }}>
+        {/* Mobile Header */}
+        <div className="admin-mobile-header" style={{ 
+          display: "none", 
+          alignItems: "center", 
+          padding: "16px 20px", 
+          background: "white", 
+          borderBottom: "1px solid var(--gray-200)",
+          position: "sticky", top: 0, zIndex: 30
+        }}>
+          <button onClick={() => setMobileMenuOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center" }}>
+            <Menu size={24} />
+          </button>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", gap: 0 }}>
+            <img src="/icon.png" alt="Dastiyab Admin Logo" style={{ height: 32, width: 32, objectFit: "contain", flexShrink: 0, marginLeft: -6 }} />
+            <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
+              <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "#FFB703" }}>Admin</span>
+            </span>
+          </div>
+          <div style={{ width: 24 }} /> {/* placeholder for balance */}
+        </div>
 
+        <main style={{ flex: 1, overflowX: "hidden" }}>
+          {children}
+        </main>
+      </div>
+
+      <style>{`
+        .admin-sidebar {
+          position: sticky;
+          top: 0;
+          transition: transform 0.3s ease;
+        }
+        @media (max-width: 1024px) {
+          .admin-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            transform: translateX(-100%);
+          }
+          .admin-sidebar.open {
+            transform: translateX(0);
+          }
+          .admin-mobile-header {
+            display: flex !important;
+          }
+          .admin-mobile-close {
+            display: block !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
