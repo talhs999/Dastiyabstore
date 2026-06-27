@@ -9,6 +9,40 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/Toast";
 
+let globalAudioCtx: any = null;
+let audioInitialized = false;
+
+const initAudio = () => {
+  if (typeof window === 'undefined') return;
+  if (audioInitialized) return;
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContextClass) {
+      if (!globalAudioCtx) {
+        globalAudioCtx = new AudioContextClass();
+      }
+      if (globalAudioCtx && globalAudioCtx.state === "suspended") {
+        globalAudioCtx.resume().then(() => {
+          audioInitialized = true;
+          document.removeEventListener('click', initAudio);
+          document.removeEventListener('keydown', initAudio);
+        }).catch((e: any) => console.error("Audio resume error", e));
+      } else {
+        audioInitialized = true;
+        document.removeEventListener('click', initAudio);
+        document.removeEventListener('keydown', initAudio);
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+if (typeof window !== 'undefined') {
+  document.addEventListener('click', initAudio);
+  document.addEventListener('keydown', initAudio);
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -16,6 +50,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { showToast } = useToast();
 
   useEffect(() => {
+    // Attempt to init audio if user interacted before this mounted
+    initAudio();
+    
     const sessionStr = localStorage.getItem("customer_session");
     let isUserAdmin = false;
 
@@ -58,33 +95,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const soundVal = localStorage.getItem("admin_sound_notifications") !== "false";
         if (soundVal) {
           try {
-            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-            if (AudioContextClass) {
-              const ctx = new AudioContextClass();
-              if (ctx.state === "suspended") {
-                ctx.resume();
+            if (!globalAudioCtx) {
+              const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+              if (AudioContextClass) globalAudioCtx = new AudioContextClass();
+            }
+            if (globalAudioCtx) {
+              if (globalAudioCtx.state === "suspended") {
+                globalAudioCtx.resume();
               }
-              const now = ctx.currentTime;
+              const now = globalAudioCtx.currentTime;
               
-              const osc1 = ctx.createOscillator();
-              const gain1 = ctx.createGain();
+              const osc1 = globalAudioCtx.createOscillator();
+              const gain1 = globalAudioCtx.createGain();
               osc1.type = "sine";
               osc1.frequency.setValueAtTime(880, now);
               gain1.gain.setValueAtTime(0.3, now);
               gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
               osc1.connect(gain1);
-              gain1.connect(ctx.destination);
+              gain1.connect(globalAudioCtx.destination);
               osc1.start(now);
               osc1.stop(now + 0.6);
 
-              const osc2 = ctx.createOscillator();
-              const gain2 = ctx.createGain();
+              const osc2 = globalAudioCtx.createOscillator();
+              const gain2 = globalAudioCtx.createGain();
               osc2.type = "sine";
               osc2.frequency.setValueAtTime(659.25, now + 0.15);
               gain2.gain.setValueAtTime(0.3, now + 0.15);
               gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
               osc2.connect(gain2);
-              gain2.connect(ctx.destination);
+              gain2.connect(globalAudioCtx.destination);
               osc2.start(now + 0.15);
               osc2.stop(now + 0.8);
             }
