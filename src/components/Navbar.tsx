@@ -496,11 +496,11 @@ export default function Navbar() {
             display: "flex", flexDirection: "column",
           }}>
             <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, var(--red), var(--yellow))", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <ShoppingBag size={18} color="white" />
-                </div>
-                <span style={{ fontWeight: 800, color: "var(--red)" }}>DastiyabStore</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 40, width: 40, objectFit: "contain", flexShrink: 0, marginLeft: -6 }} />
+                <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
+                  <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
+                </span>
               </div>
               <button onClick={() => setMobileOpen(false)} style={{ background: "var(--gray-100)", border: "none", cursor: "pointer", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <X size={18} />
