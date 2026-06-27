@@ -297,6 +297,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             display: block !important;
           }
         }
+        @media print {
+          .admin-sidebar, .admin-mobile-header {
+            display: none !important;
+          }
+        }
       `}</style>
     </div>
   );

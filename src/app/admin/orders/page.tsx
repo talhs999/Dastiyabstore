@@ -221,7 +221,12 @@ export default function AdminOrdersPage() {
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 30 }}>
                   <div>
-                    <h2 style={{ fontSize: 24, fontWeight: 900, color: "var(--red)" }}>DASTIYAB STORE</h2>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 56, width: 56, objectFit: "contain", flexShrink: 0, marginLeft: -8 }} />
+                      <span style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
+                        <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "#FFB703" }}>Store</span>
+                      </span>
+                    </div>
                     <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 4 }}>Karachi, Pakistan | Support: 0300-1234567</p>
                     <h3 style={{ fontSize: 14, fontWeight: 700, marginTop: 14, color: "var(--gray-700)", textTransform: "uppercase", letterSpacing: "1px" }}>PACKING / INVOICE SLIP</h3>
                   </div>
