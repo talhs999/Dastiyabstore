@@ -40,8 +40,8 @@ function InstagramCarousel() {
   return (
     <div className="insta-carousel hide-scroll" style={{ 
       display: "flex", gap: 24, overflowX: "auto", paddingBottom: 20, marginTop: 40, 
-      scrollSnapType: "x mandatory", paddingLeft: "max(16px, calc((100vw - 1200px) / 2))", paddingRight: "max(16px, calc((100vw - 1200px) / 2))",
-      margin: "40px -16px 0 -16px" // Negate parent padding for full bleed on mobile
+      scrollSnapType: "x mandatory", padding: "0 8px",
+      justifyContent: posts.length >= 3 ? "flex-start" : "center"
     }}>
       {posts.map((post) => (
         <div key={post.id} style={{ 
