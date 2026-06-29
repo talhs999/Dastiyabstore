@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import * as Icons from "lucide-react";
 import {
   ArrowRight, ChevronRight, ChevronLeft, Truck, RotateCcw, Shield, Headphones,
@@ -762,22 +763,10 @@ export default function HomePage() {
             Follow <a href="https://www.instagram.com/dastiyabstore/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--red)", fontWeight: 700, textDecoration: "none" }}>@dastiyabstore</a>
           </p>
           
-          {/* Instagram Iframe Carousel */}
-          <div className="insta-carousel hide-scroll" style={{ display: "flex", gap: 24, overflowX: "auto", paddingBottom: 20, marginTop: 40, scrollSnapType: "x mandatory" }}>
-            {/* Replace these Shortcodes with your actual Instagram post shortcodes */}
-            {["C5O9_XXXXXX", "C5O9_YYYYYY", "C5O9_ZZZZZZ", "C5O9_AAAAAA"].map((shortcode, index) => (
-              <div key={index} style={{ flexShrink: 0, scrollSnapAlign: "start", width: 320, borderRadius: 12, overflow: "hidden", border: "1px solid var(--gray-200)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
-                <iframe
-                  src={`https://www.instagram.com/p/${shortcode}/embed`}
-                  width="320"
-                  height="440"
-                  frameBorder="0"
-                  scrolling="no"
-                  allowTransparency={true}
-                  style={{ border: "none", background: "white" }}
-                />
-              </div>
-            ))}
+          {/* Elfsight Instagram Widget */}
+          <div className="instagram-feed-container" style={{ minHeight: 200, marginTop: 40, width: "100%", overflow: "hidden" }}>
+             <Script src="https://elfsightcdn.com/platform.js" strategy="lazyOnload" />
+             <div className="elfsight-app-2563a2e4-048f-4b12-8cd1-3719aa036021" data-elfsight-app-lazy></div>
           </div>
         </div>
       </section>
