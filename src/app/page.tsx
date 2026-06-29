@@ -18,6 +18,21 @@ function DynamicIcon({ name, size = 20 }: { name: string, size?: number }) {
   return <Icon size={size} />;
 }
 
+function ElfsightWidget() {
+  useEffect(() => {
+    // Ensure the script is only added once
+    if (!document.getElementById("elfsight-script")) {
+      const script = document.createElement("script");
+      script.id = "elfsight-script";
+      script.src = "https://elfsightcdn.com/platform.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  return <div className="elfsight-app-2563a2e4-048f-4b12-8cd1-3719aa036021" data-elfsight-app-lazy></div>;
+}
+
 /* ─── DATA ─── */
 const heroSlides = [
   {
@@ -765,8 +780,7 @@ export default function HomePage() {
           
           {/* Elfsight Instagram Widget */}
           <div className="instagram-feed-container" style={{ minHeight: 200, marginTop: 40, width: "100%", overflow: "hidden" }}>
-             <Script src="https://elfsightcdn.com/platform.js" strategy="lazyOnload" />
-             <div className="elfsight-app-2563a2e4-048f-4b12-8cd1-3719aa036021" data-elfsight-app-lazy></div>
+             <ElfsightWidget />
           </div>
         </div>
       </section>
