@@ -762,16 +762,22 @@ export default function HomePage() {
             Follow <a href="https://www.instagram.com/dastiyabstore/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--red)", fontWeight: 700, textDecoration: "none" }}>@dastiyabstore</a>
           </p>
           
-          {/* Elfsight Widget Container */}
-          <div className="instagram-feed-container" style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-             <p style={{ color: "var(--gray-500)", fontWeight: 600, border: "1px dashed var(--gray-300)", padding: 40, borderRadius: 12, width: "100%" }}>
-                [ Instagram Carousel Widget will load here ]
-             </p>
-             {/* 
-                // TODO: Replace the p tag above with your Elfsight code below:
-                // <script src="https://static.elfsight.com/p/platform.js" async></script>
-                // <div className="elfsight-app-YOUR-WIDGET-ID"></div> 
-             */}
+          {/* Instagram Iframe Carousel */}
+          <div className="insta-carousel hide-scroll" style={{ display: "flex", gap: 24, overflowX: "auto", paddingBottom: 20, marginTop: 40, scrollSnapType: "x mandatory" }}>
+            {/* Replace these Shortcodes with your actual Instagram post shortcodes */}
+            {["C5O9_XXXXXX", "C5O9_YYYYYY", "C5O9_ZZZZZZ", "C5O9_AAAAAA"].map((shortcode, index) => (
+              <div key={index} style={{ flexShrink: 0, scrollSnapAlign: "start", width: 320, borderRadius: 12, overflow: "hidden", border: "1px solid var(--gray-200)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+                <iframe
+                  src={`https://www.instagram.com/p/${shortcode}/embed`}
+                  width="320"
+                  height="440"
+                  frameBorder="0"
+                  scrolling="no"
+                  allowTransparency={true}
+                  style={{ border: "none", background: "white" }}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -789,6 +795,15 @@ export default function HomePage() {
           div[style*="grid-template-columns: repeat(4, 1fr)"] { grid-template-columns: repeat(2,1fr) !important; }
           div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
         }
+        
+        .hide-scroll::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scroll {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
         /* Hide fixed sidebar on mobile */
         @media (max-width: 900px) {
           #cat-sidebar-fixed { display: none !important; }
