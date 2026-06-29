@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/Toast";
-import { Plus, Trash2, Instagram } from "lucide-react";
+import { Plus, Trash2, Link } from "lucide-react";
 
 export default function InstagramFeedAdmin() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -104,7 +104,7 @@ export default function InstagramFeedAdmin() {
         <form onSubmit={handleAdd} style={{ display: "flex", gap: 12 }}>
           <div style={{ flex: 1, position: "relative" }}>
             <div style={{ position: "absolute", left: 14, top: 10, color: "var(--gray-400)" }}>
-              <Instagram size={20} />
+              <Link size={20} />
             </div>
             <input 
               type="text" 
