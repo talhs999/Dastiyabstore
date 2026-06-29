@@ -38,17 +38,25 @@ function InstagramCarousel() {
   if (posts.length === 0) return null;
 
   return (
-    <div className="insta-carousel hide-scroll" style={{ display: "flex", gap: 24, overflowX: "auto", paddingBottom: 20, marginTop: 40, scrollSnapType: "x mandatory" }}>
+    <div className="insta-carousel hide-scroll" style={{ 
+      display: "flex", gap: 24, overflowX: "auto", paddingBottom: 20, marginTop: 40, 
+      scrollSnapType: "x mandatory", paddingLeft: "max(16px, calc((100vw - 1200px) / 2))", paddingRight: "max(16px, calc((100vw - 1200px) / 2))",
+      margin: "40px -16px 0 -16px" // Negate parent padding for full bleed on mobile
+    }}>
       {posts.map((post) => (
-        <div key={post.id} style={{ flexShrink: 0, scrollSnapAlign: "start", width: 320, borderRadius: 12, overflow: "hidden", border: "1px solid var(--gray-200)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+        <div key={post.id} style={{ 
+          flexShrink: 0, scrollSnapAlign: "center", width: 326, borderRadius: 12, 
+          overflow: "hidden", border: "1px solid var(--gray-200)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+          background: "white"
+        }}>
           <iframe
             src={`https://www.instagram.com/p/${post.shortcode}/embed/captioned`}
-            width="320"
-            height="440"
+            width="100%"
+            height="520"
             frameBorder="0"
             scrolling="no"
             allowTransparency={true}
-            style={{ border: "none", background: "white" }}
+            style={{ border: "none", background: "white", display: "block" }}
           />
         </div>
       ))}
