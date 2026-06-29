@@ -18,19 +18,42 @@ function DynamicIcon({ name, size = 20 }: { name: string, size?: number }) {
   return <Icon size={size} />;
 }
 
-function ElfsightWidget() {
+function InstagramCarousel() {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    // Ensure the script is only added once
-    if (!document.getElementById("elfsight-script")) {
-      const script = document.createElement("script");
-      script.id = "elfsight-script";
-      script.src = "https://elfsightcdn.com/platform.js";
-      script.async = true;
-      document.body.appendChild(script);
+    async function load() {
+      const { data } = await supabase
+        .from('instagram_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+      setPosts(data || []);
+      setLoading(false);
     }
+    load();
   }, []);
 
-  return <div className="elfsight-app-2563a2e4-048f-4b12-8cd1-3719aa036021" data-elfsight-app-lazy></div>;
+  if (loading) return null;
+  if (posts.length === 0) return null;
+
+  return (
+    <div className="insta-carousel hide-scroll" style={{ display: "flex", gap: 24, overflowX: "auto", paddingBottom: 20, marginTop: 40, scrollSnapType: "x mandatory" }}>
+      {posts.map((post) => (
+        <div key={post.id} style={{ flexShrink: 0, scrollSnapAlign: "start", width: 320, borderRadius: 12, overflow: "hidden", border: "1px solid var(--gray-200)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+          <iframe
+            src={`https://www.instagram.com/p/${post.shortcode}/embed/captioned`}
+            width="320"
+            height="440"
+            frameBorder="0"
+            scrolling="no"
+            allowTransparency={true}
+            style={{ border: "none", background: "white" }}
+          />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 /* ─── DATA ─── */
@@ -778,9 +801,9 @@ export default function HomePage() {
             Follow <a href="https://www.instagram.com/dastiyabstore/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--red)", fontWeight: 700, textDecoration: "none" }}>@dastiyabstore</a>
           </p>
           
-          {/* Elfsight Instagram Widget */}
+          {/* Instagram Carousel Widget */}
           <div className="instagram-feed-container" style={{ minHeight: 200, marginTop: 40, width: "100%", overflow: "hidden" }}>
-             <ElfsightWidget />
+             <InstagramCarousel />
           </div>
         </div>
       </section>
