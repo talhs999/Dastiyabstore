@@ -99,9 +99,9 @@ function InstagramCarousel() {
             background: "white"
           }}>
             <iframe
-              src={`https://www.instagram.com/p/${post.shortcode}/embed/captioned`}
+              src={`https://www.instagram.com/p/${post.shortcode}/embed`}
               width="100%"
-              height="680"
+              height="540"
               frameBorder="0"
               scrolling="no"
               allowTransparency={true}
