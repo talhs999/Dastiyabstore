@@ -21,6 +21,7 @@ function DynamicIcon({ name, size = 20 }: { name: string, size?: number }) {
 function InstagramCarousel() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -34,32 +35,90 @@ function InstagramCarousel() {
     load();
   }, []);
 
+  // Auto-scroll logic (Loop)
+  useEffect(() => {
+    if (!scrollRef.current || posts.length <= 1) return;
+    const interval = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' }); // Loop back
+        } else {
+          scrollRef.current.scrollBy({ left: 350, behavior: 'smooth' });
+        }
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [posts]);
+
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      if (scrollLeft <= 0) {
+        scrollRef.current.scrollTo({ left: scrollWidth, behavior: 'smooth' });
+      } else {
+        scrollRef.current.scrollBy({ left: -350, behavior: 'smooth' });
+      }
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      if (scrollLeft + clientWidth >= scrollWidth - 10) {
+        scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        scrollRef.current.scrollBy({ left: 350, behavior: 'smooth' });
+      }
+    }
+  };
+
   if (loading) return null;
   if (posts.length === 0) return null;
 
   return (
-    <div className="insta-carousel hide-scroll" style={{ 
-      display: "flex", gap: 24, overflowX: "auto", paddingBottom: 20, marginTop: 40, 
-      scrollSnapType: "x mandatory", padding: "0 8px",
-      justifyContent: posts.length >= 3 ? "flex-start" : "center"
-    }}>
-      {posts.map((post) => (
-        <div key={post.id} style={{ 
-          flexShrink: 0, scrollSnapAlign: "center", width: 326, borderRadius: 12, 
-          overflow: "hidden", border: "1px solid var(--gray-200)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-          background: "white"
-        }}>
-          <iframe
-            src={`https://www.instagram.com/p/${post.shortcode}/embed/captioned`}
-            width="100%"
-            height="520"
-            frameBorder="0"
-            scrolling="no"
-            allowTransparency={true}
-            style={{ border: "none", background: "white", display: "block" }}
-          />
-        </div>
-      ))}
+    <div style={{ position: "relative", padding: "0 10px" }}>
+      {posts.length > 1 && (
+        <button 
+          onClick={scrollLeft}
+          style={{ position: "absolute", left: -10, top: "50%", transform: "translateY(-50%)", zIndex: 10, background: "white", border: "1px solid var(--gray-200)", borderRadius: "50%", width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+        >
+          <Icons.ChevronLeft size={24} color="var(--gray-700)" />
+        </button>
+      )}
+
+      <div ref={scrollRef} className="insta-carousel hide-scroll" style={{ 
+        display: "flex", gap: 24, overflowX: "auto", paddingBottom: 20, marginTop: 40, 
+        scrollSnapType: "x mandatory", padding: "0 8px", scrollBehavior: "smooth",
+        justifyContent: posts.length >= 3 ? "flex-start" : "center"
+      }}>
+        {posts.map((post) => (
+          <div key={post.id} style={{ 
+            flexShrink: 0, scrollSnapAlign: "center", width: 326, borderRadius: 12, 
+            overflow: "hidden", border: "1px solid var(--gray-200)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+            background: "white"
+          }}>
+            <iframe
+              src={`https://www.instagram.com/p/${post.shortcode}/embed/captioned`}
+              width="100%"
+              height="680"
+              frameBorder="0"
+              scrolling="no"
+              allowTransparency={true}
+              style={{ border: "none", background: "white", display: "block" }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {posts.length > 1 && (
+        <button 
+          onClick={scrollRight}
+          style={{ position: "absolute", right: -10, top: "50%", transform: "translateY(-50%)", zIndex: 10, background: "white", border: "1px solid var(--gray-200)", borderRadius: "50%", width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+        >
+          <Icons.ChevronRight size={24} color="var(--gray-700)" />
+        </button>
+      )}
     </div>
   );
 }
