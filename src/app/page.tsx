@@ -751,6 +751,31 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── INSTAGRAM FEED SECTION ── */}
+      <section style={{ padding: "80px 5%", background: "white", borderTop: "1px solid var(--gray-100)" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
+          <h2 style={{ fontSize: 36, fontWeight: 900, color: "var(--gray-900)", marginBottom: 12, letterSpacing: "-1px" }}>
+            Follow Us on <span style={{ color: "var(--red)" }}>Instagram</span>
+          </h2>
+          <p style={{ fontSize: 16, color: "var(--gray-600)", marginBottom: 40, maxWidth: 600, margin: "0 auto 40px" }}>
+            Stay updated with our latest gadgets, exclusive offers, and tech tips. 
+            Follow <a href="https://www.instagram.com/dastiyabstore/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--red)", fontWeight: 700, textDecoration: "none" }}>@dastiyabstore</a>
+          </p>
+          
+          {/* Elfsight Widget Container */}
+          <div className="instagram-feed-container" style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+             <p style={{ color: "var(--gray-500)", fontWeight: 600, border: "1px dashed var(--gray-300)", padding: 40, borderRadius: 12, width: "100%" }}>
+                [ Instagram Carousel Widget will load here ]
+             </p>
+             {/* 
+                // TODO: Replace the p tag above with your Elfsight code below:
+                // <script src="https://static.elfsight.com/p/platform.js" async></script>
+                // <div className="elfsight-app-YOUR-WIDGET-ID"></div> 
+             */}
+          </div>
+        </div>
+      </section>
+
       {/* ── BACK TO TOP ── */}
       <button className="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Back to top">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
