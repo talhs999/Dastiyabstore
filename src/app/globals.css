@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
 @import "tailwindcss";
 
 
@@ -45,7 +45,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', 'Poppins', sans-serif;
+  font-family: var(--font-inter), var(--font-poppins), sans-serif;
   background: var(--white);
   color: var(--gray-900);
   line-height: 1.6;

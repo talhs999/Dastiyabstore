@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   ShoppingBag,
@@ -180,7 +181,9 @@ export default function Footer() {
             {/* Column 1: Brand */}
             <div style={{ maxWidth: 320 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 20 }}>
-                <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 56, width: 56, objectFit: "contain", flexShrink: 0, marginLeft: -8 }} />
+                <div style={{ position: "relative", height: 56, width: 56, flexShrink: 0, marginLeft: -8 }}>
+                <Image src="/icon.png" alt="Dastiyab Store Logo" fill sizes="56px" style={{ objectFit: "contain" }} />
+              </div>
                 <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
                   <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
                 </span>
@@ -283,11 +286,13 @@ export default function Footer() {
               <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ fontSize: 11, fontWeight: 800, color: "var(--gray-800)" }}>COD</span>
               </div>
-              <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center" }}>
-                <img src="/easypaisa.png" alt="Easypaisa" style={{ height: 16, objectFit: "contain" }} />
-              </div>
-              <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center" }}>
-                <img src="/jazzcash.png" alt="JazzCash" style={{ height: 16, objectFit: "contain" }} />
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <div style={{ position: "relative", height: 16, width: 50 }}>
+                  <Image src="/easypaisa.png" alt="Easypaisa" fill sizes="50px" style={{ objectFit: "contain" }} />
+                </div>
+                <div style={{ position: "relative", height: 16, width: 50 }}>
+                  <Image src="/jazzcash.png" alt="JazzCash" fill sizes="50px" style={{ objectFit: "contain" }} />
+                </div>
               </div>
               <div style={{ background: "var(--gray-100)", padding: "4px 8px", borderRadius: 4, display: "flex", alignItems: "center" }}>
                 <CreditCard size={16} color="var(--gray-600)" />

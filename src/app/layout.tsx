@@ -1,9 +1,23 @@
+import { Inter, Poppins } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ToastProvider } from "@/components/ui/Toast";
 import VisitorTracker from "@/components/VisitorTracker";
+
+const inter = Inter({ 
+  subsets: ["latin"], 
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const poppins = Poppins({ 
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  subsets: ["latin"], 
+  variable: '--font-poppins',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: "DastiyabStore — Jo Chahiye, Wahi Dastiyab",
@@ -23,12 +37,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body>
+    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+      <body className="font-sans">
         <ToastProvider>
           <VisitorTracker />
           <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>

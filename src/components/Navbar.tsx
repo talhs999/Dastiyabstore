@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ShoppingCart, Heart, User, Search, Menu, X, ChevronDown,
   Phone, MapPin, Truck, Star, Bell, Headphones, Monitor,
@@ -184,7 +185,9 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" style={{ textDecoration: "none", flexShrink: 0, display: "flex", alignItems: "center", gap: 0 }}>
-              <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 48, width: 48, objectFit: "contain", flexShrink: 0, marginLeft: -6 }} />
+              <div style={{ position: "relative", height: 48, width: 48, flexShrink: 0, marginLeft: -6 }}>
+                <Image src="/icon.png" alt="Dastiyab Store Logo" fill sizes="48px" style={{ objectFit: "contain" }} />
+              </div>
               <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
                 <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
               </span>
@@ -238,7 +241,9 @@ export default function Navbar() {
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--gray-50)"}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                     >
-                      <img src={p.image} alt={p.name} style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6 }} />
+                      <div style={{ position: "relative", width: 40, height: 40 }}>
+                        <Image src={p.image} alt={p.name} fill sizes="40px" style={{ objectFit: "cover", borderRadius: 6 }} />
+                      </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)" }}>{p.name}</div>
                         <div style={{ fontSize: 11, color: "var(--gray-500)" }}>{p.category}</div>
@@ -353,7 +358,9 @@ export default function Navbar() {
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--gray-50)"}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                     >
-                      <img src={p.image} alt={p.name} style={{ width: 40, height: 40, objectFit: "contain", borderRadius: 6, background: "var(--gray-50)" }} />
+                      <div style={{ position: "relative", width: 40, height: 40, borderRadius: 6, background: "var(--gray-50)", overflow: "hidden" }}>
+                        <Image src={p.image} alt={p.name} fill sizes="40px" style={{ objectFit: "contain" }} />
+                      </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 200 }}>{p.name}</div>
                         <div style={{ fontSize: 11, color: "var(--gray-500)" }}>{p.category}</div>
@@ -446,7 +453,9 @@ export default function Navbar() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {items.map(item => (
                     <div key={item.id} style={{ display: "flex", gap: 12, padding: 12, background: "var(--gray-50)", borderRadius: "var(--radius)" }}>
-                      <img src={item.image} alt={item.name} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8 }} />
+                      <div style={{ position: "relative", width: 64, height: 64 }}>
+                        <Image src={item.image} alt={item.name} fill sizes="64px" style={{ objectFit: "cover", borderRadius: 8 }} />
+                      </div>
                       <div style={{ flex: 1 }}>
                         <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{item.name}</p>
                         <p style={{ color: "var(--red)", fontWeight: 700, fontSize: 15 }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
@@ -493,7 +502,9 @@ export default function Navbar() {
           }}>
             <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-                <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 40, width: 40, objectFit: "contain", flexShrink: 0, marginLeft: -6 }} />
+                <div style={{ position: "relative", height: 40, width: 40, flexShrink: 0, marginLeft: -6 }}>
+                  <Image src="/icon.png" alt="Dastiyab Store Logo" fill sizes="40px" style={{ objectFit: "contain" }} />
+                </div>
                 <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
                   <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
                 </span>

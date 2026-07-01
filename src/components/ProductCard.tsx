@@ -108,19 +108,15 @@ export default function ProductCard({ product, view = "grid" }: { product: Produ
           background: "var(--gray-50)", 
           overflow: "hidden",
         }}>
-          <img
+          <Image
             src={product.image || "https://placehold.co/400x400?text=No+Image"}
             alt={product.name}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
               objectFit: "cover",
               transition: "transform 0.5s ease"
             }}
-            onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Invalid+Image'; }}
           />
           {!(product.in_stock !== undefined ? product.in_stock : product.inStock) && (
             <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
