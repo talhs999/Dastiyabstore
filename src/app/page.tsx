@@ -88,7 +88,6 @@ function InstagramCarousel({ posts }: { posts: any[] }) {
               height="540"
               frameBorder="0"
               scrolling="no"
-              allowtransparency="true"
               style={{ border: "none", background: "white", display: "block" }}
             />
           </div>
