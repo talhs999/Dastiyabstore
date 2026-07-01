@@ -8,13 +8,19 @@ datasource db {
 }
 
 model Category {
-  id            String    @id @default(uuid())
-  name          String
-  slug          String    @unique
-  image         String?
-  is_in_sidebar Boolean   @default(false)
-  created_at    DateTime  @default(now())
-  products      Product[]
+  id                    String    @id @default(uuid())
+  name                  String
+  slug                  String    @unique
+  image                 String?
+  is_in_sidebar         Boolean   @default(false)
+  sidebar_icon          String?
+  sidebar_popular_items Json?     @default("[]")
+  sidebar_desc          String?
+  icon                  String?   @default("Package")
+  is_in_header          Boolean   @default(false)
+  header_badge          String?
+  created_at            DateTime  @default(now())
+  products              Product[]
 
   @@map("categories")
 }

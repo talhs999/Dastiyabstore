@@ -3,11 +3,25 @@ import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 export async function POST(req: Request) {
   try {
-    const { order, items } = await req.json();
+    const { order: rawOrder, items } = await req.json();
 
-    if (!order) {
+    if (!rawOrder) {
       return NextResponse.json({ error: "Missing order details" }, { status: 400 });
     }
+
+    const order = {
+      ...rawOrder,
+      customer_name: rawOrder.customer_name || rawOrder.first_name || 'Customer',
+      customer_email: rawOrder.customer_email || rawOrder.email || '',
+      customer_phone: rawOrder.customer_phone || rawOrder.phone || '',
+      total_amount: rawOrder.total_amount || rawOrder.total || 0,
+      shipping_address: rawOrder.shipping_address || rawOrder.address || '',
+      subtotal: rawOrder.subtotal || rawOrder.total || 0,
+      discount_amount: rawOrder.discount_amount || 0,
+      shipping_fee: rawOrder.shipping_fee || 0,
+      coupon_code: rawOrder.coupon_code || '',
+      order_notes: rawOrder.order_notes || ''
+    };
 
     // 1. Fetch SMTP settings from Prisma
     const smtpSetting = await prisma.storeSetting.findUnique({
