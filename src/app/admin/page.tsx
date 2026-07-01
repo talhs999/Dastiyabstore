@@ -41,10 +41,10 @@ export default function AdminDashboard() {
     if (ordersData) {
       setOrders(ordersData);
       
-      const rev = ordersData.reduce((acc: any, order: any) => acc + order.total_amount, 0);
+      const rev = ordersData.reduce((acc: any, order: any) => acc + (order.total || 0), 0);
       setTotalRevenue(rev);
       
-      const uniqueEmails = new Set(ordersData.map((o: any) => o.customer_email));
+      const uniqueEmails = new Set(ordersData.map((o: any) => o.email).filter(Boolean));
       setTotalCustomers(uniqueEmails.size);
 
       // Percentage Change Calculations:
@@ -55,18 +55,18 @@ export default function AdminDashboard() {
       });
 
       // Revenue Change
-      const revCurrent = currentPeriodOrders.reduce((acc: any, order: any) => acc + order.total_amount, 0);
-      const revPrevious = previousPeriodOrders.reduce((acc: any, order: any) => acc + order.total_amount, 0);
+      const revCurrent = currentPeriodOrders.reduce((acc: any, order: any) => acc + (order.total || 0), 0);
+      const revPrevious = previousPeriodOrders.reduce((acc: any, order: any) => acc + (order.total || 0), 0);
       setRevenueChange(calculatePercentageChange(revCurrent, revPrevious));
 
       // Active Orders Change
-      const activeCurrent = currentPeriodOrders.filter((o: any) => ['Pending', 'Processing'].includes(o.status)).length;
-      const activePrevious = previousPeriodOrders.filter((o: any) => ['Pending', 'Processing'].includes(o.status)).length;
+      const activeCurrent = currentPeriodOrders.filter((o: any) => o.status !== "delivered" && o.status !== "cancelled").length;
+      const activePrevious = previousPeriodOrders.filter((o: any) => o.status !== "delivered" && o.status !== "cancelled").length;
       setActiveChange(calculatePercentageChange(activeCurrent, activePrevious));
 
       // Customers Change
-      const custCurrent = new Set(currentPeriodOrders.map((o: any) => o.customer_email)).size;
-      const custPrevious = new Set(previousPeriodOrders.map((o: any) => o.customer_email)).size;
+      const custCurrent = new Set(currentPeriodOrders.map((o: any) => o.email).filter(Boolean)).size;
+      const custPrevious = new Set(previousPeriodOrders.map((o: any) => o.email).filter(Boolean)).size;
       setCustomersChange(calculatePercentageChange(custCurrent, custPrevious));
     }
 
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
               ) : orders.slice(0, 5).map(o => (
                 <tr key={o.id} style={{ borderBottom: "1px solid var(--gray-100)" }}>
                   <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 600, color: "var(--gray-900)" }}>...{o.id.split("-")[0]}</td>
-                  <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--gray-700)" }}>{o.customer_name}</td>
+                  <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--gray-700)" }}>{o.first_name} {o.last_name || ''}</td>
                   <td style={{ padding: "16px 24px" }}>
                     <span style={{ 
                       padding: "4px 10px", borderRadius: 12, fontSize: 12, fontWeight: 700, textTransform: "uppercase",
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
                       {o.status}
                     </span>
                   </td>
-                  <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 700, color: "var(--gray-900)" }}>Rs {o.total_amount.toLocaleString()}</td>
+                  <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 700, color: "var(--gray-900)" }}>Rs {(o.total || 0).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
