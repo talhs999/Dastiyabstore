@@ -384,7 +384,7 @@ export default function CheckoutPage() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ order: savedOrder, items: savedOrder.items })
+        body: JSON.stringify({ order: { ...orderPayload.order, ...savedOrder }, items: savedOrder.items })
       }).catch(err => console.error("Failed to trigger order confirmation email:", err));
 
       setOrderId(savedOrder.id);

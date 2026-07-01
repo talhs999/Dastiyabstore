@@ -71,6 +71,11 @@ model Order {
   save_info        Boolean  @default(false)
   created_at       DateTime @default(now())
   items            Json?
+  subtotal         Float?
+  shipping_fee     Float?
+  discount_amount  Float?
+  coupon_code      String?
+  order_notes      String?  @db.Text
 
   @@map("orders")
 }

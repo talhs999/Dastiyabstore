@@ -16,6 +16,11 @@ export async function POST(request: Request) {
         total: orderData.total_amount,
         payment_method: orderData.payment_method,
         status: orderData.status,
+        subtotal: orderData.subtotal,
+        shipping_fee: orderData.shipping_fee,
+        discount_amount: orderData.discount_amount,
+        coupon_code: orderData.coupon_code,
+        order_notes: orderData.order_notes,
         items: items.map((item: any) => ({
           product_id: item.product_id,
           product_name: item.product_name,
