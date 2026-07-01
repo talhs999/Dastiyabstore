@@ -44,8 +44,7 @@ export default function VisitorTracker() {
           sessionStorage.setItem("visitor_geo_data", JSON.stringify(payload));
         })
         .catch(err => {
-          console.error("Geo-IP lookup failed:", err);
-          // Fallback to local default
+          // Silently fallback if ipapi fails (e.g. adblocker)
           const fallback = { ip: "127.0.0.1", city: "Local", country: "Pakistan" };
           setGeoData(fallback);
         });
@@ -99,7 +98,7 @@ export default function VisitorTracker() {
           })
         });
       } catch (e) {
-        console.error("Failed to send visitor heartbeat:", e);
+        // Silently fail if heartbeat fails (e.g. database unreachable locally)
       }
     };
 

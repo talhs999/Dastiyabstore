@@ -7,7 +7,20 @@ export async function GET() {
       orderBy: { created_at: 'desc' }
     });
 
-    return NextResponse.json(orders);
+    const formattedOrders = orders.map(o => ({
+      ...o,
+      customer_name: [o.first_name, o.last_name].filter(Boolean).join(' ') || 'Guest',
+      customer_email: o.email,
+      customer_phone: o.phone,
+      total_amount: o.total || 0,
+      subtotal: o.total || 0,
+      shipping_fee: 0,
+      shipping_address: o.address || '',
+      shipping_city: o.city || '',
+      order_items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || [])
+    }));
+
+    return NextResponse.json(formattedOrders);
   } catch (error: any) {
     console.error('API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
