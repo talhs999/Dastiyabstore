@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { CheckCircle, User, MapPin, Phone, Mail, Zap, Truck, Shield, ChevronRight, Loader2, Landmark } from "lucide-react";
 import { useCart } from "@/store/cartStore";
-import { supabase } from "@/lib/supabase";
 
 const steps = ["Shipping", "Review", "Confirm"];
 
@@ -171,53 +170,32 @@ export default function CheckoutPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Fetch Shipping Rules
-        const { data: rulesData, error: rulesError } = await supabase
-          .from("shipping_rules")
-          .select("*")
-          .eq("is_active", true);
+        const res = await fetch("/api/checkout/config");
+        if (!res.ok) throw new Error("Failed to load config");
+        const data = await res.json();
 
-        if (!rulesError && rulesData && rulesData.length > 0) {
-          setShippingRules(rulesData);
+        if (data.rules && data.rules.length > 0) {
+          setShippingRules(data.rules);
         } else {
           setShippingRules(DEFAULT_SHIPPING_RULES);
         }
 
-        // Fetch Delivery Areas
-        const { data: areasData, error: areasError } = await supabase
-          .from("delivery_areas")
-          .select("*")
-          .eq("is_active", true)
-          .order("distance", { ascending: true });
-
-        if (!areasError && areasData && areasData.length > 0) {
-          setKarachiAreas(areasData);
+        if (data.areas && data.areas.length > 0) {
+          setKarachiAreas(data.areas);
         }
-      } catch (err) {
-        console.error("Failed to fetch shipping data:", err);
-        setShippingRules(DEFAULT_SHIPPING_RULES);
-      }
 
-      try {
-        // Fetch Payment Settings
-        const { data: paymentData } = await supabase
-          .from("store_settings")
-          .select("value")
-          .eq("key", "payment_settings")
-          .single();
-
-        if (paymentData && paymentData.value) {
-          const settings = typeof paymentData.value === "string" ? JSON.parse(paymentData.value) : paymentData.value;
+        if (data.paymentSettings) {
+          const settings = data.paymentSettings;
           setPaymentSettings(settings);
           
-          // Set default selected method
           if (settings.cod?.enabled) setSelectedPaymentMethod("COD");
           else if (settings.bank?.enabled) setSelectedPaymentMethod("Bank Transfer");
           else if (settings.jazzcash?.enabled) setSelectedPaymentMethod("JazzCash");
           else if (settings.easypaisa?.enabled) setSelectedPaymentMethod("EasyPaisa");
         }
       } catch (err) {
-        console.error("Failed to fetch payment settings:", err);
+        console.error("Failed to fetch checkout config:", err);
+        setShippingRules(DEFAULT_SHIPPING_RULES);
       }
     }
     loadData();
@@ -319,19 +297,24 @@ export default function CheckoutPage() {
     setVerifyingCoupon(true);
     setCouponError("");
 
-    const { data, error } = await supabase
-      .from("coupons")
-      .select("*")
-      .eq("code", couponCode.toUpperCase().trim())
-      .eq("is_active", true)
-      .single();
-
-    if (error || !data) {
-      setCouponError("Invalid or expired coupon code.");
+    try {
+      const res = await fetch("/api/checkout/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode.toUpperCase().trim() })
+      });
+      
+      if (!res.ok) {
+        setCouponError("Invalid or expired coupon code.");
+        setAppliedCoupon(null);
+      } else {
+        const data = await res.json();
+        setAppliedCoupon(data);
+        setCouponError("");
+      }
+    } catch (err) {
+      setCouponError("Error validating coupon.");
       setAppliedCoupon(null);
-    } else {
-      setAppliedCoupon(data);
-      setCouponError("");
     }
     setVerifyingCoupon(false);
   };
@@ -361,9 +344,8 @@ export default function CheckoutPage() {
         : form.address;
 
       // 2. Create order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
+      const orderPayload = {
+        order: {
           customer_name: form.name,
           customer_email: form.email,
           customer_phone: form.phone,
@@ -377,27 +359,24 @@ export default function CheckoutPage() {
           total_amount: (totalPrice - discountAmount) + shippingFee,
           payment_method: selectedPaymentMethod,
           status: 'Pending'
-        })
-        .select()
-        .single();
+        },
+        items: items.map(item => ({
+          product_id: item.id,
+          product_name: item.name,
+          product_image: item.image,
+          price: item.price,
+          quantity: item.quantity
+        }))
+      };
 
-      if (orderError) throw orderError;
+      const res = await fetch("/api/checkout/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload)
+      });
 
-      // 3. Create order items
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        product_id: item.id,
-        product_name: item.name,
-        product_image: item.image,
-        price: item.price,
-        quantity: item.quantity
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
+      if (!res.ok) throw new Error("Failed to create order");
+      const savedOrder = await res.json();
 
       // 4. Send order confirmation email asynchronously
       fetch("/api/emails/order", {
@@ -405,10 +384,10 @@ export default function CheckoutPage() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ order, items: orderItems })
+        body: JSON.stringify({ order: savedOrder, items: savedOrder.items })
       }).catch(err => console.error("Failed to trigger order confirmation email:", err));
 
-      setOrderId(order.id);
+      setOrderId(savedOrder.id);
       setPlaced(true);
       clearCart();
     } catch (err) {

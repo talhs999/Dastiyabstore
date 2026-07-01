@@ -6,7 +6,6 @@ import { ChevronDown, ChevronRight, Headphones, Wind, Laptop, Monitor, Home, Pac
 
 import * as LucideIcons from "lucide-react";
 
-import { supabase } from "@/lib/supabase";
 
 interface Props {
   currentCategory?: string;
@@ -34,8 +33,9 @@ export default function ShopSidebar({ currentCategory }: Props) {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const { data, error } = await supabase.from("categories").select("*").order("name");
-        if (data && !error) {
+        const res = await fetch("/api/categories");
+        if (res.ok) {
+          const data = await res.json();
           const mapped = data.map((c: any) => {
             const IconComponent = (LucideIcons as any)[c.icon] || LucideIcons.Package;
             return {

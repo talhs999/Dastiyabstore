@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import {
   ShoppingBag,
   MapPin, Phone, Mail, Truck, RotateCcw, Shield, Headphones,
@@ -53,8 +52,15 @@ export default function Footer() {
   
   useEffect(() => {
     const fetchSetting = async () => {
-      const { data } = await supabase.from("store_settings").select("value").eq("key", "newsletter_enabled").single();
-      if (data) setNewsletterEnabled(data.value === true || data.value === 'true');
+      try {
+        const res = await fetch("/api/newsletter");
+        if (res.ok) {
+          const { enabled } = await res.json();
+          setNewsletterEnabled(enabled);
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings", err);
+      }
     };
     fetchSetting();
   }, []);
@@ -67,22 +73,26 @@ export default function Footer() {
     
     setLoading(true);
     
-    // Attempt to insert email (ignore error if already exists, they might just want the code again)
-    await supabase.from("newsletter_subscribers").insert({ email });
-    
-    // Fetch active newsletter coupon
-    const { data } = await supabase.from("coupons")
-      .select("*")
-      .eq("is_newsletter_coupon", true)
-      .eq("is_active", true)
-      .single();
-    
-    setSubscribed(true);
-    if (data) {
-      const discountText = data.discount_type === "percentage" ? `${data.discount_value}%` : `Rs ${data.discount_value}`;
-      setCouponMessage(`Use code **${data.code}** for ${discountText} off your first order!`);
-    } else {
-      setCouponMessage("Thanks for subscribing! Keep an eye on your inbox for future deals.");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+
+      if (res.ok) {
+        const { coupon } = await res.json();
+        setSubscribed(true);
+        
+        if (coupon) {
+          const discountText = coupon.discount_type === "percentage" ? `${coupon.discount_value}%` : `Rs ${coupon.discount_value}`;
+          setCouponMessage(`Use code **${coupon.code}** for ${discountText} off your first order!`);
+        } else {
+          setCouponMessage("Thanks for subscribing! Keep an eye on your inbox for future deals.");
+        }
+      }
+    } catch (err) {
+      console.error("Newsletter subscription failed", err);
     }
     
     setLoading(false);

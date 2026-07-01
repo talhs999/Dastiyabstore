@@ -5,7 +5,6 @@ import { Grid, List, SlidersHorizontal, ChevronDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ShopSidebar from "@/components/ShopSidebar";
 import { products } from "@/data/products";
-import { supabase } from "@/lib/supabase";
 
 const sortOptions = ["Newest First", "Price: Low to High", "Price: High to Low", "Most Popular", "Top Rated"];
 
@@ -20,9 +19,9 @@ function ShopContent() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const { data, error } = await supabase
-          .from("products")
-          .select("*, categories(name)");
+        const res = await fetch("/api/products");
+        if (!res.ok) throw new Error('Failed to fetch products');
+        const data = await res.json();
 
         if (data && data.length > 0) {
           const mapped = data.map((p: any) => ({
@@ -40,7 +39,7 @@ function ShopContent() {
             isNew: p.is_new,
             inStock: p.in_stock !== undefined ? p.in_stock : true,
             stock_quantity: p.stock_quantity,
-            category: p.categories?.name || "",
+            category: p.category?.name || "",
             description: p.description || "",
             specs: p.specs,
             features: p.features,

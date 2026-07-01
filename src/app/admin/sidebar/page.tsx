@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import * as Icons from "lucide-react";
 import { Search, Edit, X, Save, Eye } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+
 
 function DynamicIcon({ name, size = 20, color }: { name: string, size?: number, color?: string }) {
   const Icon = (Icons as any)[name] || Icons.Package;
@@ -29,8 +29,9 @@ export default function AdminSidebarPage() {
   }, []);
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from("categories").select("*").order("created_at", { ascending: true });
-    if (data) {
+    const res = await fetch("/api/admin/categories");
+    if (res.ok) {
+      const data = await res.json();
       setCategories(data);
     }
     setLoading(false);
@@ -38,8 +39,12 @@ export default function AdminSidebarPage() {
 
   const toggleInSidebar = async (id: string, current: boolean) => {
     const newVal = !current;
-    const { error } = await supabase.from("categories").update({ is_in_sidebar: newVal }).eq("id", id);
-    if (!error) {
+    const res = await fetch("/api/admin/categories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_in_sidebar: newVal })
+    });
+    if (res.ok) {
       setCategories(categories.map(c => c.id === id ? { ...c, is_in_sidebar: newVal } : c));
     }
   };
@@ -54,15 +59,21 @@ export default function AdminSidebarPage() {
       popularItemsArr = popularItemsArr.split(',').map((s: string) => s.trim()).filter((s: string) => s);
     }
 
-    const { error } = await supabase.from("categories").update({
-      sidebar_icon: editingCat.sidebar_icon,
-      sidebar_desc: editingCat.sidebar_desc,
-      sidebar_image: editingCat.sidebar_image,
-      sidebar_popular_items: popularItemsArr
-    }).eq("id", editingCat.id);
+    const res = await fetch("/api/admin/categories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: editingCat.id,
+        sidebar_icon: editingCat.sidebar_icon,
+        sidebar_desc: editingCat.sidebar_desc,
+        sidebar_image: editingCat.sidebar_image,
+        sidebar_popular_items: popularItemsArr
+      })
+    });
 
-    if (error) {
-      alert("Error updating category: " + error.message);
+    if (!res.ok) {
+      const data = await res.json();
+      alert("Error updating category: " + data.error);
     } else {
       setCategories(categories.map(c => c.id === editingCat.id ? { ...editingCat, sidebar_popular_items: popularItemsArr } : c));
       setEditingCat(null);

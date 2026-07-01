@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { supabase } from "@/lib/supabase";
-
+import { prisma } from "@/lib/prisma";
 export async function POST(req: Request) {
   try {
     const { order, items } = await req.json();
@@ -10,12 +9,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing order details" }, { status: 400 });
     }
 
-    // 1. Fetch SMTP settings from Supabase
-    const { data: smtpData, error: smtpError } = await supabase
-      .from("store_settings")
-      .select("value")
-      .eq("key", "smtp_settings")
-      .single();
+    // 1. Fetch SMTP settings from Prisma
+    const smtpSetting = await prisma.storeSetting.findUnique({
+      where: { key: "smtp_settings" }
+    });
 
     let smtpSettings = {
       host: process.env.SMTP_HOST || "smtp.gmail.com",
@@ -26,26 +23,24 @@ export async function POST(req: Request) {
       adminEmail: process.env.SMTP_ADMIN_EMAIL || ""
     };
 
-    if (!smtpError && smtpData && smtpData.value) {
+    if (smtpSetting && smtpSetting.value) {
       try {
-        const parsed = typeof smtpData.value === "string" ? JSON.parse(smtpData.value) : smtpData.value;
+        const parsed = typeof smtpSetting.value === "string" ? JSON.parse(smtpSetting.value) : smtpSetting.value;
         smtpSettings = { ...smtpSettings, ...parsed };
       } catch (e) {
         console.error("Error parsing SMTP settings from database:", e);
       }
     }
 
-    // 1b. Fetch Payment settings from Supabase to send details dynamically
-    const { data: paymentData } = await supabase
-      .from("store_settings")
-      .select("value")
-      .eq("key", "payment_settings")
-      .single();
+    // 1b. Fetch Payment settings from Prisma to send details dynamically
+    const paymentSetting = await prisma.storeSetting.findUnique({
+      where: { key: "payment_settings" }
+    });
 
     let paymentSettings: any = null;
-    if (paymentData && paymentData.value) {
+    if (paymentSetting && paymentSetting.value) {
       try {
-        paymentSettings = typeof paymentData.value === "string" ? JSON.parse(paymentData.value) : paymentData.value;
+        paymentSettings = typeof paymentSetting.value === "string" ? JSON.parse(paymentSetting.value) : paymentSetting.value;
       } catch (e) {
         console.error("Error parsing Payment settings from database:", e);
       }

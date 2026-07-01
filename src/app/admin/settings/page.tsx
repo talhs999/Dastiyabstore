@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import { Store, Truck, Tag, CreditCard, Mail, Bell, Shield, Plus, Edit2, Trash2, X, AlertCircle, MapPin, Landmark } from "lucide-react";
 
 export default function AdminSettingsPage() {
@@ -152,19 +151,22 @@ export default function AdminSettingsPage() {
 
   const fetchPaymentSettings = async () => {
     setLoadingPayments(true);
-    const { data } = await supabase.from("store_settings").select("value").eq("key", "payment_settings").single();
-    if (data && data.value) {
-      try {
-        const settings = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
-        setPaymentCODEnabled(settings.cod?.enabled ?? true);
-        setPaymentBankEnabled(settings.bank?.enabled ?? false);
-        if (settings.bank?.details) setPaymentBankDetails(settings.bank.details);
-        setPaymentJazzCashEnabled(settings.jazzcash?.enabled ?? false);
-        if (settings.jazzcash?.details) setPaymentJazzCashDetails(settings.jazzcash.details);
-        setPaymentEasyPaisaEnabled(settings.easypaisa?.enabled ?? false);
-        if (settings.easypaisa?.details) setPaymentEasyPaisaDetails(settings.easypaisa.details);
-      } catch (e) {
-        console.error("Failed to parse payment settings", e);
+    const res = await fetch("/api/admin/settings/store_settings?key=payment_settings");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.value) {
+        try {
+          const settings = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+          setPaymentCODEnabled(settings.cod?.enabled ?? true);
+          setPaymentBankEnabled(settings.bank?.enabled ?? false);
+          if (settings.bank?.details) setPaymentBankDetails(settings.bank.details);
+          setPaymentJazzCashEnabled(settings.jazzcash?.enabled ?? false);
+          if (settings.jazzcash?.details) setPaymentJazzCashDetails(settings.jazzcash.details);
+          setPaymentEasyPaisaEnabled(settings.easypaisa?.enabled ?? false);
+          if (settings.easypaisa?.details) setPaymentEasyPaisaDetails(settings.easypaisa.details);
+        } catch (e) {
+          console.error("Failed to parse payment settings", e);
+        }
       }
     }
     setLoadingPayments(false);
@@ -178,14 +180,17 @@ export default function AdminSettingsPage() {
       jazzcash: { enabled: paymentJazzCashEnabled, details: paymentJazzCashDetails },
       easypaisa: { enabled: paymentEasyPaisaEnabled, details: paymentEasyPaisaDetails }
     };
-    const { error } = await supabase
-      .from("store_settings")
-      .upsert({ key: "payment_settings", value: JSON.stringify(payload) }, { onConflict: 'key' });
+    const res = await fetch("/api/admin/settings/store_settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "payment_settings", value: payload })
+    });
     
     setSavingPayments(false);
-    if (error) {
-      console.error("Failed to save payment settings:", error);
-      alert("Failed to save payment settings: " + error.message);
+    if (!res.ok) {
+      const data = await res.json();
+      console.error("Failed to save payment settings:", data.error);
+      alert("Failed to save payment settings: " + data.error);
     } else {
       alert("Payment settings saved successfully!");
     }
@@ -193,14 +198,17 @@ export default function AdminSettingsPage() {
 
   const fetchSecuritySettings = async () => {
     setLoadingSecurity(true);
-    const { data } = await supabase.from("store_settings").select("value").eq("key", "security_settings").single();
-    if (data && data.value) {
-      try {
-        const settings = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
-        setTwoFactorEnabled(settings.twoFactorEnabled ?? false);
-        setSessionTimeout(settings.sessionTimeout ?? "24 Hours");
-      } catch (e) {
-        console.error("Failed to parse security settings", e);
+    const res = await fetch("/api/admin/settings/store_settings?key=security_settings");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.value) {
+        try {
+          const settings = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+          setTwoFactorEnabled(settings.twoFactorEnabled ?? false);
+          setSessionTimeout(settings.sessionTimeout ?? "24 Hours");
+        } catch (e) {
+          console.error("Failed to parse security settings", e);
+        }
       }
     }
     setLoadingSecurity(false);
@@ -212,7 +220,11 @@ export default function AdminSettingsPage() {
       twoFactorEnabled,
       sessionTimeout
     };
-    await supabase.from("store_settings").upsert({ key: "security_settings", value: JSON.stringify(payload) });
+    await fetch("/api/admin/settings/store_settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "security_settings", value: payload })
+    });
     setSavingSecurity(false);
     alert("Security settings saved!");
   };
@@ -238,56 +250,17 @@ export default function AdminSettingsPage() {
       }
     } catch(e) {}
     
-    // First verify current password exists
-    const { data: user, error: verifyError } = await supabase
-      .from("customers")
-      .select("*")
-      .eq("email", userEmail)
-      .eq("password", currentPassword)
-      .single();
-        
-    if (verifyError || !user) {
-      // If they are using the hardcoded credentials and it's not in DB yet
-      if (currentPassword === "dastiyab@123" && userEmail === "admin@dastiyab.com") {
-        const { data: existingAdmin } = await supabase.from("customers").select("*").eq("email", "admin@dastiyab.com").single();
-        if (existingAdmin) {
-           const { error: updateError } = await supabase.from("customers").update({ password: newPassword }).eq("id", existingAdmin.id);
-           if (updateError) {
-             alert("Failed to update password: " + updateError.message);
-             setPasswordLoading(false);
-             return;
-           }
-        } else {
-           const { error: insertError } = await supabase.from("customers").insert({
-             email: "admin@dastiyab.com",
-             password: newPassword,
-             name: "Administrator",
-             role: "ADMIN",
-             phone: "00000000000"
-           });
-           if (insertError) {
-             alert("Failed to create admin record: " + insertError.message);
-             setPasswordLoading(false);
-             return;
-           }
-        }
-      } else {
-        alert("Incorrect current password.");
-        setPasswordLoading(false);
-        return;
-      }
-    } else {
-      // Update the password in customers table
-      const { error: updateError } = await supabase
-        .from("customers")
-        .update({ password: newPassword })
-        .eq("id", user.id);
-          
-      if (updateError) {
-        alert("Failed to update password: " + updateError.message);
-        setPasswordLoading(false);
-        return;
-      }
+    const res = await fetch("/api/admin/settings/admin_user", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword, userEmail })
+    });
+    
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error || "Failed to update password");
+      setPasswordLoading(false);
+      return;
     }
     
     setPasswordLoading(false);
@@ -297,44 +270,55 @@ export default function AdminSettingsPage() {
   };
 
   const fetchMarketingSettings = async () => {
-    const { data } = await supabase.from("store_settings").select("value").eq("key", "newsletter_enabled").single();
-    if (data) setNewsletterEnabled(data.value === true || data.value === 'true');
+    const resSettings = await fetch("/api/admin/settings/store_settings?key=newsletter_enabled");
+    if (resSettings.ok) {
+      const data = await resSettings.json();
+      if (data) setNewsletterEnabled(data.value === true || data.value === 'true');
+    }
     
-    const { data: couponData } = await supabase.from("coupons").select("*").eq("is_newsletter_coupon", true).single();
-    if (couponData) {
-      setNewsletterCouponId(couponData.id);
-      setNewsletterDiscount(couponData.discount_value);
-      setNewsletterCode(couponData.code);
-      setNewsletterMaxUses(couponData.max_uses || 0);
-      setNewsletterUsedCount(couponData.used_count || 0);
+    const resCoupon = await fetch("/api/admin/settings/coupons?is_newsletter_coupon=true");
+    if (resCoupon.ok) {
+      const couponData = await resCoupon.json();
+      if (couponData) {
+        setNewsletterCouponId(couponData.id);
+        setNewsletterDiscount(couponData.discount_value);
+        setNewsletterCode(couponData.code);
+        setNewsletterMaxUses(couponData.max_uses || 0);
+        setNewsletterUsedCount(couponData.used_count || 0);
+      }
     }
 
     // Load SMTP Settings
-    const { data: smtpData } = await supabase.from("store_settings").select("value").eq("key", "smtp_settings").single();
-    if (smtpData && smtpData.value) {
-      try {
-        const settings = typeof smtpData.value === "string" ? JSON.parse(smtpData.value) : smtpData.value;
-        if (settings.host) setSmtpHost(settings.host);
-        if (settings.port) setSmtpPort(Number(settings.port));
-        if (settings.user) setSmtpUser(settings.user);
-        if (settings.password) setSmtpPassword(settings.password);
-        if (settings.senderName) setSmtpSenderName(settings.senderName);
-        if (settings.adminEmail) setAdminEmail(settings.adminEmail);
-      } catch (e) {
-        console.error("Failed to parse smtp settings:", e);
+    const resSmtp = await fetch("/api/admin/settings/store_settings?key=smtp_settings");
+    if (resSmtp.ok) {
+      const smtpData = await resSmtp.json();
+      if (smtpData && smtpData.value) {
+        try {
+          const settings = typeof smtpData.value === "string" ? JSON.parse(smtpData.value) : smtpData.value;
+          if (settings.host) setSmtpHost(settings.host);
+          if (settings.port) setSmtpPort(Number(settings.port));
+          if (settings.user) setSmtpUser(settings.user);
+          if (settings.password) setSmtpPassword(settings.password);
+          if (settings.senderName) setSmtpSenderName(settings.senderName);
+          if (settings.adminEmail) setAdminEmail(settings.adminEmail);
+        } catch (e) {
+          console.error("Failed to parse smtp settings:", e);
+        }
       }
     }
   };
 
   const saveMarketingSettings = async () => {
     setSavingMarketing(true);
-    const { error: settingsError } = await supabase
-      .from("store_settings")
-      .upsert({ key: "newsletter_enabled", value: newsletterEnabled }, { onConflict: 'key' });
+    const resSettings = await fetch("/api/admin/settings/store_settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "newsletter_enabled", value: newsletterEnabled })
+    });
     
-    if (settingsError) {
-      console.error("Error saving settings:", settingsError);
-      alert("Failed to save settings: " + settingsError.message);
+    if (!resSettings.ok) {
+      const data = await resSettings.json();
+      alert("Failed to save settings: " + data.error);
       setSavingMarketing(false);
       return;
     }
@@ -349,19 +333,30 @@ export default function AdminSettingsPage() {
     };
     
     if (newsletterCouponId) {
-      const { error: couponError } = await supabase.from("coupons").update(couponPayload).eq("id", newsletterCouponId);
-      if (couponError) {
-        alert("Failed to update coupon: " + couponError.message);
+      const res = await fetch("/api/admin/settings/coupons", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: newsletterCouponId, ...couponPayload })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert("Failed to update coupon: " + data.error);
         setSavingMarketing(false);
         return;
       }
     } else {
-      const { data, error: couponError } = await supabase.from("coupons").insert(couponPayload).select().single();
-      if (couponError) {
-        alert("Failed to create coupon: " + couponError.message);
+      const res = await fetch("/api/admin/settings/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(couponPayload)
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert("Failed to create coupon: " + data.error);
         setSavingMarketing(false);
         return;
       }
+      const data = await res.json();
       if (data) setNewsletterCouponId(data.id);
     }
 
@@ -374,13 +369,16 @@ export default function AdminSettingsPage() {
       senderName: smtpSenderName,
       adminEmail: adminEmail
     };
-    const { error: smtpError } = await supabase
-      .from("store_settings")
-      .upsert({ key: "smtp_settings", value: JSON.stringify(smtpPayload) }, { onConflict: 'key' });
+    const resSmtp = await fetch("/api/admin/settings/store_settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "smtp_settings", value: smtpPayload })
+    });
 
     setSavingMarketing(false);
-    if (smtpError) {
-      alert("Failed to save SMTP settings: " + smtpError.message);
+    if (!resSmtp.ok) {
+      const data = await resSmtp.json();
+      alert("Failed to save SMTP settings: " + data.error);
     } else {
       alert("Marketing & SMTP settings saved successfully!");
     }
@@ -388,27 +386,28 @@ export default function AdminSettingsPage() {
 
   const fetchCoupons = async () => {
     setLoadingCoupons(true);
-    const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false });
-    if (data) setCoupons(data);
+    const res = await fetch("/api/admin/settings/coupons");
+    if (res.ok) {
+      const data = await res.json();
+      setCoupons(data);
+    }
     setLoadingCoupons(false);
   };
 
   const fetchShippingRules = async () => {
     setLoadingRules(true);
     try {
-      const { data, error } = await supabase
-        .from("shipping_rules")
-        .select("*")
-        .order("created_at", { ascending: true });
-
-      if (!error && data && data.length > 0) {
-        setShippingRules(data);
-      } else {
-        // Fallback static rules so admin is populated even if DB not yet migrated
-        setShippingRules([
-          { id: "1", name: "Karachi Local", city: "Karachi", base_fee: 150, per_km_fee: 15, free_delivery_threshold: 2000, free_delivery_km: 15, free_areas: "Clifton, DHA, Gulshan-e-Iqbal, PECHS, Bahadurabad", estimated_days: "1-2 Business Days", is_active: true },
-          { id: "2", name: "Rest of Pakistan (Default)", city: "Default", base_fee: 250, per_km_fee: 0, free_delivery_threshold: 3000, free_delivery_km: null, free_areas: "", estimated_days: "3-5 Business Days", is_active: true }
-        ]);
+      const res = await fetch("/api/admin/settings/shipping");
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          setShippingRules(data);
+        } else {
+          setShippingRules([
+            { id: "1", name: "Karachi Local", city: "Karachi", base_fee: 150, per_km_fee: 15, free_delivery_threshold: 2000, free_delivery_km: 15, free_areas: "Clifton, DHA, Gulshan-e-Iqbal, PECHS, Bahadurabad", estimated_days: "1-2 Business Days", is_active: true },
+            { id: "2", name: "Rest of Pakistan (Default)", city: "Default", base_fee: 250, per_km_fee: 0, free_delivery_threshold: 3000, free_delivery_km: null, free_areas: "", estimated_days: "3-5 Business Days", is_active: true }
+          ]);
+        }
       }
     } catch (err) {
       console.error("Error loading rules:", err);
@@ -432,47 +431,48 @@ export default function AdminSettingsPage() {
     };
 
     if (editingRule) {
-      // Update
-      const { error } = await supabase
-        .from("shipping_rules")
-        .update(payload)
-        .eq("id", editingRule.id);
+      const res = await fetch("/api/admin/settings/shipping", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingRule.id, ...payload })
+      });
 
-      if (!error) {
+      if (res.ok) {
         alert("Shipping rule updated successfully!");
         setEditingRule(null);
         fetchShippingRules();
       } else {
-        alert("Failed to update: " + error.message);
+        const data = await res.json();
+        alert("Failed to update: " + data.error);
       }
     } else {
-      // Insert
-      const { error } = await supabase
-        .from("shipping_rules")
-        .insert(payload);
+      const res = await fetch("/api/admin/settings/shipping", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-      if (!error) {
+      if (res.ok) {
         alert("Shipping rule created successfully!");
         setShowAddRuleModal(false);
         fetchShippingRules();
       } else {
-        alert("Failed to insert: " + error.message);
+        const data = await res.json();
+        alert("Failed to insert: " + data.error);
       }
     }
   };
 
   const handleDeleteRule = async (id: string) => {
     if (!confirm("Are you sure you want to delete this shipping rule?")) return;
-    const { error } = await supabase
-      .from("shipping_rules")
-      .delete()
-      .eq("id", id);
+    const res = await fetch(`/api/admin/settings/shipping?id=${id}`, { method: "DELETE" });
 
-    if (!error) {
+    if (res.ok) {
       alert("Deleted rule.");
       fetchShippingRules();
     } else {
-      alert("Failed to delete: " + error.message);
+      const data = await res.json();
+      alert("Failed to delete: " + data.error);
     }
   };
 
@@ -511,12 +511,9 @@ export default function AdminSettingsPage() {
   const fetchDeliveryAreas = async () => {
     setLoadingAreas(true);
     try {
-      const { data, error } = await supabase
-        .from("delivery_areas")
-        .select("*")
-        .order("distance", { ascending: true });
-
-      if (!error && data) {
+      const res = await fetch("/api/admin/settings/delivery_areas");
+      if (res.ok) {
+        const data = await res.json();
         setDeliveryAreas(data);
       }
     } catch (err) {
@@ -535,27 +532,44 @@ export default function AdminSettingsPage() {
     };
 
     if (editingArea) {
-      const { error } = await supabase.from("delivery_areas").update(payload).eq("id", editingArea.id);
-      if (!error) {
+      const res = await fetch("/api/admin/settings/delivery_areas", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingArea.id, ...payload })
+      });
+      if (res.ok) {
         setEditingArea(null);
         setShowAddAreaModal(false);
         fetchDeliveryAreas();
-      } else alert("Failed to update: " + error.message);
+      } else {
+        const data = await res.json();
+        alert("Failed to update: " + data.error);
+      }
     } else {
-      const { error } = await supabase.from("delivery_areas").insert(payload);
-      if (!error) {
+      const res = await fetch("/api/admin/settings/delivery_areas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
         setShowAddAreaModal(false);
         fetchDeliveryAreas();
-      } else alert("Failed to insert: " + error.message);
+      } else {
+        const data = await res.json();
+        alert("Failed to insert: " + data.error);
+      }
     }
   };
 
   const handleDeleteArea = async (id: string) => {
     if (!confirm("Are you sure you want to delete this area?")) return;
-    const { error } = await supabase.from("delivery_areas").delete().eq("id", id);
-    if (!error) {
+    const res = await fetch(`/api/admin/settings/delivery_areas?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
       fetchDeliveryAreas();
-    } else alert("Failed to delete: " + error.message);
+    } else {
+      const data = await res.json();
+      alert("Failed to delete: " + data.error);
+    }
   };
 
   const openAddAreaModal = () => {
@@ -577,22 +591,31 @@ export default function AdminSettingsPage() {
       discount_value: Number(couponForm.discount_value), is_newsletter_coupon: couponForm.is_newsletter_coupon,
       is_active: couponForm.is_active
     };
-    if (payload.is_newsletter_coupon) {
-      await supabase.from("coupons").update({ is_newsletter_coupon: false }).neq("id", "00000000-0000-0000-0000-000000000000");
-    }
-    const { error } = await supabase.from("coupons").insert(payload);
-    if (!error) {
+    
+    const res = await fetch("/api/admin/settings/coupons", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
       alert("Coupon created successfully!");
       setShowAddCouponModal(false);
       fetchCoupons();
-    } else alert("Failed to insert: " + error.message);
+    } else {
+      const data = await res.json();
+      alert("Failed to insert: " + data.error);
+    }
   };
 
   const handleDeleteCoupon = async (id: string) => {
     if (!confirm("Are you sure?")) return;
-    const { error } = await supabase.from("coupons").delete().eq("id", id);
-    if (!error) { alert("Deleted coupon."); fetchCoupons(); }
-    else alert("Failed to delete: " + error.message);
+    const res = await fetch(`/api/admin/settings/coupons?id=${id}`, { method: "DELETE" });
+    if (res.ok) { alert("Deleted coupon."); fetchCoupons(); }
+    else {
+      const data = await res.json();
+      alert("Failed to delete: " + data.error);
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+
 import { Search, Trash2, MessageSquare, Star, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
@@ -16,16 +16,9 @@ export default function AdminReviewsPage() {
   }, []);
 
   const fetchReviews = async () => {
-    // We fetch reviews and join with products table to get the product name and slug
-    // Since product_id in reviews was text (slug) initially, we need to match it or just use it.
-    // Wait, earlier we used `product_id text NOT NULL` which stores the product slug.
-    
-    const { data: reviewsData, error: reviewsError } = await supabase
-      .from("product_reviews")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (reviewsData) {
+    const res = await fetch("/api/admin/reviews");
+    if (res.ok) {
+      const reviewsData = await res.json();
       setReviews(reviewsData);
     }
     setLoading(false);
@@ -33,15 +26,25 @@ export default function AdminReviewsPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this review?")) {
-      await supabase.from("product_reviews").delete().eq("id", id);
-      setReviews(reviews.filter(r => r.id !== id));
+      const res = await fetch(`/api/admin/reviews?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setReviews(reviews.filter(r => r.id !== id));
+      } else {
+        alert("Failed to delete review");
+      }
     }
   };
 
   const handleReply = async (id: string) => {
     if (!replyText.trim()) return;
-    const { error } = await supabase.from("product_reviews").update({ reply_text: replyText }).eq("id", id);
-    if (!error) {
+    
+    const res = await fetch("/api/admin/reviews", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, reply_text: replyText })
+    });
+
+    if (res.ok) {
       setReviews(reviews.map(r => r.id === id ? { ...r, reply_text: replyText } : r));
       setReplyingTo(null);
       setReplyText("");

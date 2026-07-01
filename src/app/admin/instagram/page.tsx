@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+
 import { useToast } from "@/components/ui/Toast";
 import { Plus, Trash2, Link } from "lucide-react";
 
@@ -18,16 +18,12 @@ export default function InstagramFeedAdmin() {
 
   const fetchPosts = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("instagram_posts")
-      .select("*")
-      .order("created_at", { ascending: false });
-    
-    if (error) {
-      console.error(error);
-      showToast("Error loading posts", "error");
-    } else {
+    const res = await fetch("/api/admin/instagram");
+    if (res.ok) {
+      const data = await res.json();
       setPosts(data || []);
+    } else {
+      showToast("Error loading posts", "error");
     }
     setLoading(false);
   };
@@ -55,21 +51,24 @@ export default function InstagramFeedAdmin() {
     }
 
     setIsSubmitting(true);
-    const { data, error } = await supabase
-      .from("instagram_posts")
-      .insert([{ shortcode }])
-      .select();
+    const res = await fetch("/api/admin/instagram", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shortcode })
+    });
 
-    if (error) {
-      if (error.code === '23505') {
+    if (!res.ok) {
+      const data = await res.json();
+      if (data.code === '23505') {
         showToast("This post is already added.", "error");
       } else {
         showToast("Failed to add post", "error");
       }
     } else {
+      const data = await res.json();
       showToast("Post added successfully!", "success");
       setNewUrl("");
-      setPosts((prev) => [data[0], ...prev]);
+      setPosts((prev) => [data, ...prev]);
     }
     setIsSubmitting(false);
   };
@@ -77,12 +76,9 @@ export default function InstagramFeedAdmin() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to remove this post from the homepage?")) return;
     
-    const { error } = await supabase
-      .from("instagram_posts")
-      .delete()
-      .eq("id", id);
+    const res = await fetch(`/api/admin/instagram?id=${id}`, { method: "DELETE" });
       
-    if (error) {
+    if (!res.ok) {
       showToast("Error deleting post", "error");
     } else {
       showToast("Post removed", "success");

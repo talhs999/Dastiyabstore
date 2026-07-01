@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { Search, Package, MapPin, Truck, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 
 export default function TrackOrderPage() {
@@ -21,40 +20,14 @@ export default function TrackOrderPage() {
     setItems([]);
 
     try {
-      let query = supabase.from('orders').select('*');
-
-      // Check if the input is a full UUID
-      const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input);
-
-      if (isFullUuid) {
-        query = query.eq('id', input);
-      } else if (input.length === 8 && /^[0-9a-f]{8}$/i.test(input)) {
-        // If it's the 8-character short ID segment, construct bounds for the query
-        const lowerBound = `${input}-0000-0000-0000-000000000000`;
-        const upperBound = `${input}-ffff-ffff-ffff-ffffffffffff`;
-        query = query.gte('id', lowerBound).lte('id', upperBound);
-      } else {
-        throw new Error("Invalid order format");
-      }
-
-      const { data, error: orderError } = await query;
-
-      if (orderError) throw orderError;
-      if (!data || data.length === 0) {
+      const res = await fetch(`/api/orders/${input}`);
+      if (!res.ok) {
         throw new Error("Order not found");
       }
 
-      const matchedOrder = data[0];
-
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('order_items')
-        .select('*')
-        .eq('order_id', matchedOrder.id);
-
-      if (itemsError) throw itemsError;
-
-      setOrder(matchedOrder);
-      setItems(itemsData || []);
+      const data = await res.json();
+      setOrder(data);
+      setItems(data.order_items || []);
     } catch (err: any) {
       console.error(err);
       setError("Order not found. Please check your order number and try again.");

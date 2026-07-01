@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { supabase, uploadProductImage } from "@/lib/supabase";
+
 import { ArrowLeft, Save, Loader2, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 
@@ -49,19 +49,24 @@ export default function EditProductPage() {
   }, [id]);
 
   const fetchData = async () => {
-    const { data: catData } = await supabase.from("categories").select("*");
-    if (catData) setCategories(catData);
+    const catRes = await fetch("/api/admin/categories");
+    let catData = [];
+    if (catRes.ok) {
+      catData = await catRes.json();
+      setCategories(catData);
+    }
 
     if (id && id !== "new") {
-      const { data: prodData } = await supabase.from("products").select("*").eq("id", id).single();
-      if (prodData) {
+      const prodRes = await fetch(`/api/admin/products/${id}`);
+      if (prodRes.ok) {
+        const prodData = await prodRes.json();
         setFormData({
           name: prodData.name,
           slug: prodData.slug,
           price: prodData.price.toString(),
           original_price: prodData.original_price ? prodData.original_price.toString() : "",
           image: prodData.image,
-          images: prodData.images ? prodData.images.join(", ") : "",
+          images: prodData.images ? (Array.isArray(prodData.images) ? prodData.images.join(", ") : typeof prodData.images === "string" ? JSON.parse(prodData.images).join(", ") : "") : "",
           rating: prodData.rating.toString(),
           reviews: prodData.reviews.toString(),
           badge: prodData.badge || "",
@@ -73,22 +78,26 @@ export default function EditProductPage() {
           is_featured: prodData.is_featured,
           is_best_seller: prodData.is_best_seller
         });
-        setSpecs(prodData.specs || []);
         
-        // Dynamic badges
-        if (prodData.badges && prodData.badges.length > 0) {
-          setBadges(prodData.badges);
+        setSpecs(prodData.specs ? (Array.isArray(prodData.specs) ? prodData.specs : typeof prodData.specs === "string" ? JSON.parse(prodData.specs) : []) : []);
+        
+        let dynamicBadges = [];
+        if (prodData.badges) dynamicBadges = Array.isArray(prodData.badges) ? prodData.badges : typeof prodData.badges === "string" ? JSON.parse(prodData.badges) : [];
+        if (dynamicBadges.length > 0) {
+          setBadges(dynamicBadges);
         } else if (prodData.badge) {
           setBadges([{ text: prodData.badge, type: prodData.badge_type || "yellow" }]);
         } else {
           setBadges([]);
         }
 
-        // Dynamic features
-        setFeatures(prodData.features && prodData.features.length > 0 ? prodData.features : [""]);
+        let dynamicFeatures = [];
+        if (prodData.features) dynamicFeatures = Array.isArray(prodData.features) ? prodData.features : typeof prodData.features === "string" ? JSON.parse(prodData.features) : [];
+        setFeatures(dynamicFeatures.length > 0 ? dynamicFeatures : [""]);
 
-        // Dynamic trust points
-        setTrustPoints(prodData.trust_points && prodData.trust_points.length > 0 ? prodData.trust_points : [
+        let dynamicTrustPoints = [];
+        if (prodData.trust_points) dynamicTrustPoints = Array.isArray(prodData.trust_points) ? prodData.trust_points : typeof prodData.trust_points === "string" ? JSON.parse(prodData.trust_points) : [];
+        setTrustPoints(dynamicTrustPoints.length > 0 ? dynamicTrustPoints : [
           { icon: "truck", text: "Free delivery on orders above Rs. 2000" },
           { icon: "shield", text: "100% authentic & quality guaranteed" },
           { icon: "rotate-ccw", text: "7-day easy returns & exchanges" },
@@ -99,6 +108,17 @@ export default function EditProductPage() {
       setFormData(prev => ({ ...prev, category_id: catData[0].id }));
     }
     setInitialLoading(false);
+  };
+
+  const uploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    if (res.ok) {
+      const data = await res.json();
+      return data.url;
+    }
+    return null;
   };
 
   const handleSlugGen = () => {
@@ -166,7 +186,7 @@ export default function EditProductPage() {
     try {
       let mainImageUrl = formData.image;
       if (mainImageFile) {
-        const url = await uploadProductImage(mainImageFile);
+        const url = await uploadImage(mainImageFile);
         if (url) mainImageUrl = url;
       }
 
@@ -175,7 +195,7 @@ export default function EditProductPage() {
         additionalImageUrls = formData.images.split(",").map(s => s.trim()).filter(s => s);
       }
       if (galleryFiles.length > 0) {
-        const uploadedUrls = await Promise.all(galleryFiles.map(f => uploadProductImage(f)));
+        const uploadedUrls = await Promise.all(galleryFiles.map(f => uploadImage(f)));
         const validUrls = uploadedUrls.filter(url => url !== null) as string[];
         additionalImageUrls = [...additionalImageUrls, ...validUrls];
       }
@@ -207,10 +227,15 @@ export default function EditProductPage() {
         trust_points: trustPoints.filter(tp => tp.text.trim() !== "")
       };
 
-      const { error } = await supabase.from("products").update(product).eq("id", id);
+      const res = await fetch(`/api/admin/products/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product)
+      });
 
-      if (error) {
-        alert("Error saving product: " + error.message);
+      if (!res.ok) {
+        const data = await res.json();
+        alert("Error saving product: " + data.error);
         setLoading(false);
       } else {
         router.push("/admin/products");

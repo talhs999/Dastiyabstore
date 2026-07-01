@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+
 import QRCode from "react-qr-code";
 import { Search, Phone, Eye, Download, Trash2, Printer, X, CreditCard, Calendar, User, MapPin } from "lucide-react";
 
@@ -44,76 +44,63 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*, order_items(*)")
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
+    const res = await fetch("/api/admin/orders");
+    if (res.ok) {
+      const data = await res.json();
       setOrders(data);
     }
     setLoading(false);
   };
 
   const updateStatus = async (id: string, newStatus: string) => {
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: newStatus })
-      .eq("id", id);
+    const res = await fetch("/api/admin/orders", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: [id], status: newStatus })
+    });
       
-    if (!error) {
+    if (res.ok) {
       setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
       if (activeOrder && activeOrder.id === id) {
         setActiveOrder({ ...activeOrder, status: newStatus });
       }
     } else {
-      alert("Failed to update status: " + error.message);
+      const data = await res.json();
+      alert("Failed to update status: " + data.error);
     }
   };
 
   const deleteOrders = async (ids: string[]) => {
     if (!confirm(`Are you sure you want to delete ${ids.length} order(s)?`)) return;
     
-    // Delete order items first
-    const { error: itemsError } = await supabase
-      .from("order_items")
-      .delete()
-      .in("order_id", ids);
+    const res = await fetch(`/api/admin/orders?ids=${ids.join(",")}`, { method: "DELETE" });
 
-    if (itemsError) {
-      alert("Failed to delete order items: " + itemsError.message);
-      return;
-    }
-
-    // Now delete orders
-    const { error: ordersError } = await supabase
-      .from("orders")
-      .delete()
-      .in("id", ids);
-
-    if (!ordersError) {
+    if (res.ok) {
       setOrders(orders.filter(o => !ids.includes(o.id)));
       setSelectedIds([]);
       setActiveOrder(null);
     } else {
-      alert("Failed to delete orders: " + ordersError.message);
+      const data = await res.json();
+      alert("Failed to delete orders: " + data.error);
     }
   };
 
   const bulkUpdateStatus = async (newStatus: string) => {
     if (selectedIds.length === 0 || !newStatus) return;
 
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: newStatus })
-      .in("id", selectedIds);
+    const res = await fetch("/api/admin/orders", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: selectedIds, status: newStatus })
+    });
 
-    if (!error) {
+    if (res.ok) {
       setOrders(orders.map(o => selectedIds.includes(o.id) ? { ...o, status: newStatus } : o));
       setSelectedIds([]);
       alert(`Updated status of ${selectedIds.length} order(s) to ${newStatus}`);
     } else {
-      alert("Failed to update orders: " + error.message);
+      const data = await res.json();
+      alert("Failed to update orders: " + data.error);
     }
   };
 

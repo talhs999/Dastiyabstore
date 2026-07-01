@@ -1,6 +1,5 @@
 "use client";
 import { use, useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import { notFound, useRouter } from "next/navigation";
 import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, Link as LinkIcon, Maximize2, X, ZoomIn, ZoomOut, MessageCircle } from "lucide-react";
 import { FaWhatsapp, FaFacebook } from "react-icons/fa";
@@ -65,85 +64,50 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   useEffect(() => {
-    async function fetchProduct() {
+    const fetchData = async () => {
       try {
-        // Clean up slug in case it has spaces or is missing hyphens
         let cleanSlug = decodeURIComponent(slug).trim();
         
-        // If it matches a UUID with spaces (e.g. "48849048 a92a 41d6 8102 d664365e1263")
+        // Clean up slug if UUID
         if (/^[a-fA-F0-9]{8}\s[a-fA-F0-9]{4}\s[a-fA-F0-9]{4}\s[a-fA-F0-9]{4}\s[a-fA-F0-9]{12}$/.test(cleanSlug)) {
           cleanSlug = cleanSlug.replace(/\s/g, "-");
-        }
-        // If it's a UUID without hyphens (e.g. "48849048a92a41d68102d664365e1263")
-        else if (/^[a-fA-F0-9]{32}$/.test(cleanSlug)) {
+        } else if (/^[a-fA-F0-9]{32}$/.test(cleanSlug)) {
           cleanSlug = `${cleanSlug.slice(0, 8)}-${cleanSlug.slice(8, 12)}-${cleanSlug.slice(12, 16)}-${cleanSlug.slice(16, 20)}-${cleanSlug.slice(20)}`;
         }
 
-        const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(cleanSlug);
-
-        let query = supabase.from("products").select("*");
-        if (isUUID) {
-          query = query.or(`id.eq.${cleanSlug},slug.eq.${cleanSlug}`);
-        } else {
-          query = query.eq("slug", cleanSlug);
+        const res = await fetch(`/api/products/${cleanSlug}`);
+        if (!res.ok) {
+          const staticProd = getProductBySlug(cleanSlug) || products.find(p => p.id === cleanSlug);
+          if (staticProd) setProduct(staticProd);
+          setLoadingProduct(false);
+          setLoadingReviews(false);
+          setLoadingQna(false);
+          return;
         }
 
-        const { data, error } = await query.maybeSingle();
-
-        if (data) {
-          // Map snake_case to camelCase
+        const data = await res.json();
+        
+        if (data.product) {
           const mapped = {
-            ...data,
-            originalPrice: data.original_price,
-            badgeType: data.badge_type,
-            isNew: data.is_new,
-            inStock: data.in_stock,
-            stockQuantity: data.stock_quantity,
+            ...data.product,
+            originalPrice: data.product.original_price,
+            badgeType: data.product.badge_type,
+            isNew: data.product.is_new,
+            inStock: data.product.in_stock,
+            stockQuantity: data.product.stock_quantity,
           };
           setProduct(mapped);
-          return mapped;
-        } else {
-          const staticProd = getProductBySlug(cleanSlug) || products.find(p => p.id === cleanSlug);
-          if (staticProd) {
-            setProduct(staticProd);
-            return staticProd;
-          }
+          setReviews(data.reviews || []);
+          setQnaList(data.qna || []);
         }
+
       } catch (err) {
         console.error("Error fetching product:", err);
-        const staticProd = getProductBySlug(slug) || products.find(p => p.id === slug);
-        if (staticProd) {
-          setProduct(staticProd);
-          return staticProd;
-        }
       } finally {
         setLoadingProduct(false);
-      }
-    }
-
-    const fetchData = async () => {
-      const p = await fetchProduct();
-      if (!p) {
         setLoadingReviews(false);
         setLoadingQna(false);
-        return;
       }
-
-      const { data: reviewsData } = await supabase
-        .from('product_reviews')
-        .select('*')
-        .eq('product_id', p.id)
-        .order('created_at', { ascending: false });
-      if (reviewsData) setReviews(reviewsData);
-      setLoadingReviews(false);
-
-      const { data: qnaData } = await supabase
-        .from('product_qna')
-        .select('*')
-        .eq('product_id', p.id)
-        .order('created_at', { ascending: false });
-      if (qnaData) setQnaList(qnaData);
-      setLoadingQna(false);
     };
     fetchData();
   }, [slug]);
@@ -184,17 +148,23 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       created_at: new Date().toISOString()
     };
 
-    const { error } = await supabase.from('product_reviews').insert([newReview]);
-    
-    if (error) {
-      showToast("Error submitting review");
-      console.error(error);
-    } else {
+    try {
+      const res = await fetch(`/api/products/${product.slug}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newReview)
+      });
+      if (!res.ok) throw new Error('Failed');
+      
+      const savedReview = await res.json();
       showToast("Review submitted successfully!");
-      setReviews([newReview, ...reviews]);
+      setReviews([savedReview, ...reviews]);
       setReviewName("");
       setReviewText("");
       setReviewRating(5);
+    } catch (err) {
+      showToast("Error submitting review");
+      console.error(err);
     }
     setSubmittingReview(false);
   };
@@ -223,15 +193,21 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       question: qnaQuestion
     };
 
-    const { data, error } = await supabase.from("product_qna").insert([newQna]).select();
-    
-    if (error) {
-      showToast("Failed to submit question", "error");
-      console.error(error);
-    } else if (data && data.length > 0) {
-      setQnaList([data[0], ...qnaList]);
+    try {
+      const res = await fetch(`/api/products/${product.slug}/qna`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newQna)
+      });
+      if (!res.ok) throw new Error('Failed');
+
+      const savedQna = await res.json();
+      setQnaList([savedQna, ...qnaList]);
       setQnaQuestion("");
       showToast("Question submitted successfully!", "success");
+    } catch (err) {
+      showToast("Failed to submit question", "error");
+      console.error(err);
     }
     setSubmittingQna(false);
   };

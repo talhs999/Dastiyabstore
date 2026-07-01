@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+
 import { Search, User, Mail, Phone, MapPin, Calendar, Loader2, Trash2 } from "lucide-react";
 
 export default function AdminCustomersPage() {
@@ -12,10 +12,11 @@ export default function AdminCustomersPage() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const res = await fetch("/api/admin/customers");
+      let data = [];
+      if (res.ok) {
+        data = await res.json();
+      }
 
       // Build the virtual admin account object
       const adminAccount = {
@@ -29,7 +30,7 @@ export default function AdminCustomersPage() {
         role: "ADMIN"
       };
 
-      if (!error && data) {
+      if (res.ok && data) {
         // Check if an admin account already exists in database data
         const hasAdmin = data.some((c: any) => c.role === "ADMIN" || c.email === "admin@dastiyab.com");
         if (hasAdmin) {
@@ -87,16 +88,14 @@ export default function AdminCustomersPage() {
     }
 
     try {
-      const { error } = await supabase
-        .from("customers")
-        .delete()
-        .eq("id", id);
+      const res = await fetch(`/api/admin/customers?id=${id}`, { method: "DELETE" });
 
-      if (!error) {
+      if (res.ok) {
         alert("Customer account deleted successfully.");
         fetchCustomers();
       } else {
-        throw error;
+        const data = await res.json();
+        throw new Error(data.error);
       }
     } catch (err: any) {
       console.error("Failed to delete customer:", err);

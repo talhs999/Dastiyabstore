@@ -7,24 +7,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function uploadProductImage(file: File): Promise<string | null> {
   try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const formData = new FormData();
+    formData.append('file', file);
 
-    const { error: uploadError } = await supabase.storage
-      .from('product-images')
-      .upload(filePath, file);
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
 
-    if (uploadError) {
-      console.error("Upload error: ", uploadError);
+    if (!res.ok) {
+      console.error("Upload error");
       return null;
     }
 
-    const { data } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
+    const data = await res.json();
+    return data.url;
   } catch (err) {
     console.error("Error uploading image: ", err);
     return null;

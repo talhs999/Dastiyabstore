@@ -1,6 +1,5 @@
 "use client";
 import { use, useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { CheckCircle, Calendar, CreditCard, User, MapPin, ShoppingBag, Download, ArrowLeft } from "lucide-react";
 
@@ -13,27 +12,15 @@ export default function OrderReceiptPage({ params }: { params: Promise<{ id: str
     async function fetchOrderDetails() {
       try {
         const cleanId = id.trim().toLowerCase();
-        let query = supabase.from("orders").select("*, order_items(*)");
-
-        const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
-
-        if (isFullUuid) {
-          query = query.eq("id", cleanId);
-        } else if (cleanId.length === 8 && /^[0-9a-f]{8}$/i.test(cleanId)) {
-          const lowerBound = `${cleanId}-0000-0000-0000-000000000000`;
-          const upperBound = `${cleanId}-ffff-ffff-ffff-ffffffffffff`;
-          query = query.gte("id", lowerBound).lte("id", upperBound);
-        } else {
+        const res = await fetch(`/api/orders/${cleanId}`);
+        if (!res.ok) {
           setLoading(false);
           return;
         }
 
-        const { data, error } = await query;
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          setOrder(data[0]);
+        const data = await res.json();
+        if (data) {
+          setOrder(data);
         }
       } catch (err) {
         console.error("Error fetching order details:", err);

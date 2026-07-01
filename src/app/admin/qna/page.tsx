@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+
 import { Search, Trash2, MessageSquare, ExternalLink, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -16,34 +16,35 @@ export default function AdminQnaPage() {
   }, []);
 
   const fetchQuestions = async () => {
-    const { data, error } = await supabase
-      .from("product_qna")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (data) setQuestions(data);
+    const res = await fetch("/api/admin/qna");
+    if (res.ok) {
+      const data = await res.json();
+      setQuestions(data);
+    }
     setLoading(false);
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this question?")) {
-      await supabase.from("product_qna").delete().eq("id", id);
-      setQuestions(questions.filter(q => q.id !== id));
+      const res = await fetch(`/api/admin/qna?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setQuestions(questions.filter(q => q.id !== id));
+      } else {
+        alert("Failed to delete question");
+      }
     }
   };
 
   const handleReply = async (id: string) => {
     if (!replyText.trim()) return;
-    const { error } = await supabase
-      .from("product_qna")
-      .update({ 
-        answer: replyText, 
-        status: "answered",
-        answered_at: new Date().toISOString()
-      })
-      .eq("id", id);
+    
+    const res = await fetch("/api/admin/qna", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, answer: replyText })
+    });
       
-    if (!error) {
+    if (res.ok) {
       setQuestions(questions.map(q => q.id === id ? { 
         ...q, 
         answer: replyText, 

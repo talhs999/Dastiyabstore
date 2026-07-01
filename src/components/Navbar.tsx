@@ -11,7 +11,6 @@ import { useCart } from "@/store/cartStore";
 import { useWishlist } from "@/store/wishlistStore";
 import { useRouter, usePathname } from "next/navigation";
 import { products } from "@/data/products";
-import { supabase } from "@/lib/supabase";
 
 const categories = [
   { name: "Neckband Earphones", icon: <Headphones size={16} />, href: "/shop/neckband" },
@@ -43,8 +42,15 @@ export default function Navbar() {
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const { data } = await supabase.from("categories").select("*").order("created_at", { ascending: true });
-      if (data) setDbCategories(data);
+      try {
+        const res = await fetch("/api/categories");
+        if (res.ok) {
+          const data = await res.json();
+          setDbCategories(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
     };
     fetchCategories();
   }, []);
@@ -78,33 +84,23 @@ export default function Navbar() {
 
     const delayDebounceFn = setTimeout(async () => {
       try {
-        const { data, error } = await supabase
-          .from("products")
-          .select("*, categories(name)")
-          .ilike("name", `%${searchQuery}%`)
-          .limit(5);
-
-        if (data && data.length > 0) {
-          const mappedResults = data.map((p: any) => ({
-            id: p.id,
-            slug: p.slug,
-            name: p.name,
-            price: Number(p.price),
-            image: p.image,
-            category: p.categories?.name || "",
-          }));
-          setSearchResults(mappedResults);
-        } else {
-          // Fallback to local products search
-          const localResults = products
-            .filter(
-              (p) =>
-                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                p.category.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .slice(0, 5);
-          setSearchResults(localResults);
+        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}&limit=5`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const mappedResults = data.map((p: any) => ({
+              id: p.id,
+              slug: p.slug,
+              name: p.name,
+              price: Number(p.price),
+              image: p.image,
+              category: p.category_name || "",
+            }));
+            setSearchResults(mappedResults);
+            return;
+          }
         }
+        
       } catch (err) {
         console.error("Error searching products:", err);
         const localResults = products

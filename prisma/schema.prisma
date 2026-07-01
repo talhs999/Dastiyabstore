@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id            String    @id @default(uuid())
+  name          String
+  slug          String    @unique
+  image         String?
+  is_in_sidebar Boolean   @default(false)
+  created_at    DateTime  @default(now())
+  products      Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id             String    @id @default(uuid())
+  name           String
+  slug           String    @unique
+  price          Float
+  original_price Float?
+  image          String
+  images         Json      @default("[]")
+  rating         Float     @default(0)
+  reviews        Int       @default(0)
+  badge          String?
+  badge_type     String?
+  is_new         Boolean   @default(false)
+  in_stock       Boolean   @default(true)
+  category_id    String?
+  category       Category? @relation(fields: [category_id], references: [id])
+  description    String?   @db.Text
+  specs          Json      @default("[]")
+  features       Json      @default("[]")
+  is_featured    Boolean   @default(false)
+  is_best_seller Boolean   @default(false)
+  created_at     DateTime  @default(now())
+
+  @@map("products")
+}
+
+model Order {
+  id               String   @id @default(uuid())
+  customer_id      String?
+  total            Float
+  status           String   @default("pending")
+  payment_method   String
+  shipping_address Json?
+  email            String?
+  first_name       String?
+  last_name        String?
+  phone            String?
+  company          String?
+  address          String?
+  apartment        String?
+  city             String?
+  state            String?
+  postal_code      String?
+  save_info        Boolean  @default(false)
+  created_at       DateTime @default(now())
+  items            Json?
+
+  @@map("orders")
+}
+
+model Customer {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  name       String?
+  role       String   @default("customer")
+  created_at DateTime @default(now())
+
+  @@map("customers")
+}
+
+model StoreSetting {
+  key        String   @id
+  value      Json
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("store_settings")
+}
+
+model Coupon {
+  id                   String   @id @default(uuid())
+  code                 String   @unique
+  discount_type        String   @default("percentage")
+  discount_value       Float
+  is_newsletter_coupon Boolean  @default(false)
+  is_active            Boolean  @default(true)
+  max_uses             Int      @default(0)
+  used_count           Int      @default(0)
+  created_at           DateTime @default(now())
+
+  @@map("coupons")
+}
+
+model NewsletterSubscriber {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  created_at DateTime @default(now())
+
+  @@map("newsletter_subscribers")
+}
+
+model DeliveryArea {
+  id           String   @id @default(uuid())
+  name         String
+  distance     Float    @default(0)
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+
+  @@map("delivery_areas")
+}
+
+model ShippingRule {
+  id                      String   @id @default(uuid())
+  name                    String
+  city                    String
+  base_fee                Float
+  per_km_fee              Float    @default(0)
+  free_delivery_threshold Float
+  free_delivery_km        Float?
+  free_areas              String?  @db.Text
+  estimated_days          String
+  is_active               Boolean  @default(true)
+  created_at              DateTime @default(now())
+
+  @@map("shipping_rules")
+}
+
+model ProductQna {
+  id            String    @id @default(uuid())
+  product_id    String
+  customer_id   String?
+  customer_name String
+  question      String    @db.Text
+  answer        String?   @db.Text
+  is_answered   Boolean   @default(false)
+  answered_at   DateTime?
+  created_at    DateTime  @default(now())
+
+  @@map("product_qna")
+}
+
+model ProductReview {
+  id            String   @id @default(uuid())
+  product_id    String
+  order_id      String?
+  customer_name String
+  rating        Float
+  review_text   String   @db.Text
+  reply_text    String?  @db.Text
+  images        Json     @default("[]")
+  is_approved   Boolean  @default(false)
+  created_at    DateTime @default(now())
+
+  @@map("product_reviews")
+}
+
+model InstagramPost {
+  id         String   @id @default(uuid())
+  shortcode  String   @unique
+  image_url  String?
+  video_url  String?
+  caption    String?  @db.Text
+  created_at DateTime @default(now())
+
+  @@map("instagram_posts")
+}
+
+model ActiveVisitor {
+  session_id   String   @id
+  current_url  String
+  location     String?
+  ip_address   String?
+  device_type  String?
+  browser      String?
+  last_active  DateTime @default(now())
+  created_at   DateTime @default(now())
+
+  @@map("active_visitors")
+}

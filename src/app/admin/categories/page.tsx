@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+
 import IconPicker from "@/components/admin/IconPicker";
 
 export default function AdminCategoriesPage() {
@@ -14,13 +14,10 @@ export default function AdminCategoriesPage() {
   }, []);
 
   const fetchCategories = async () => {
-    // Fetch categories and get the count of products in each category
-    const { data: catData } = await supabase.from("categories").select("*, products(id)").order("created_at", { ascending: true });
-    if (catData) {
-      setCategories(catData.map((c: any) => ({
-        ...c,
-        productCount: c.products ? c.products.length : 0
-      })));
+    const res = await fetch("/api/admin/categories");
+    if (res.ok) {
+      const catData = await res.json();
+      setCategories(catData);
     }
     setLoading(false);
   };
@@ -29,11 +26,16 @@ export default function AdminCategoriesPage() {
     const name = prompt("Enter new category name:");
     if (!name) return;
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-    const { data, error } = await supabase.from("categories").insert([{ name, slug }]).select().single();
-    if (error) {
-      alert("Error adding category: " + error.message);
+    const res = await fetch("/api/admin/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, slug })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert("Error adding category: " + data.error);
     } else if (data) {
-      setCategories([...categories, { ...data, productCount: 0 }]);
+      setCategories([...categories, data]);
     }
   };
 
@@ -41,9 +43,14 @@ export default function AdminCategoriesPage() {
     const name = prompt("Enter new category name:", oldName);
     if (!name || name === oldName) return;
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-    const { error } = await supabase.from("categories").update({ name, slug }).eq("id", id);
-    if (error) {
-      alert("Error updating category: " + error.message);
+    const res = await fetch("/api/admin/categories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, name, slug })
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      alert("Error updating category: " + data.error);
     } else {
       setCategories(categories.map(c => c.id === id ? { ...c, name, slug } : c));
     }
@@ -55,9 +62,12 @@ export default function AdminCategoriesPage() {
       return;
     }
     if (confirm("Are you sure you want to delete this category?")) {
-      const { error } = await supabase.from("categories").delete().eq("id", id);
-      if (error) {
-        alert("Error deleting category: " + error.message);
+      const res = await fetch(`/api/admin/categories?id=${id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert("Error deleting category: " + data.error);
       } else {
         setCategories(categories.filter(c => c.id !== id));
       }
@@ -66,25 +76,38 @@ export default function AdminCategoriesPage() {
 
   const toggleInHeader = async (id: string, current: boolean) => {
     const newVal = !current;
-    const { error } = await supabase.from("categories").update({ is_in_header: newVal }).eq("id", id);
-    if (!error) {
+    const res = await fetch("/api/admin/categories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_in_header: newVal })
+    });
+    if (res.ok) {
       setCategories(categories.map(c => c.id === id ? { ...c, is_in_header: newVal } : c));
     }
   };
 
   const updateBadge = async (id: string, badge: string) => {
-    const { error } = await supabase.from("categories").update({ header_badge: badge || null }).eq("id", id);
-    if (!error) {
+    const res = await fetch("/api/admin/categories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, header_badge: badge || null })
+    });
+    if (res.ok) {
       setCategories(categories.map(c => c.id === id ? { ...c, header_badge: badge } : c));
     }
   };
 
   const updateIcon = async (id: string, icon: string) => {
-    const { error } = await supabase.from("categories").update({ icon: icon || "Package" }).eq("id", id);
-    if (!error) {
+    const res = await fetch("/api/admin/categories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, icon: icon || "Package" })
+    });
+    if (res.ok) {
       setCategories(categories.map(c => c.id === id ? { ...c, icon: icon || "Package" } : c));
     } else {
-      alert("Error updating icon: " + error.message);
+      const data = await res.json();
+      alert("Error updating icon: " + data.error);
     }
   };
 

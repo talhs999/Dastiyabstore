@@ -11,29 +11,14 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
-import { supabase } from "@/lib/supabase";
 
 function DynamicIcon({ name, size = 20 }: { name: string, size?: number }) {
   const Icon = (Icons as any)[name] || Icons.Package;
   return <Icon size={size} />;
 }
 
-function InstagramCarousel() {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+function InstagramCarousel({ posts }: { posts: any[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase
-        .from('instagram_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-      setPosts(data || []);
-      setLoading(false);
-    }
-    load();
-  }, []);
 
   // Auto-scroll logic (Loop)
   useEffect(() => {
@@ -73,8 +58,7 @@ function InstagramCarousel() {
     }
   };
 
-  if (loading) return null;
-  if (posts.length === 0) return null;
+  if (!posts || posts.length === 0) return null;
 
   return (
     <div style={{ position: "relative", padding: "0 10px" }}>
@@ -402,6 +386,7 @@ export default function HomePage() {
   const [bestSellers, setBestSellers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarCategories, setSidebarCategories] = useState<any[]>([]);
+  const [instagramPosts, setInstagramPosts] = useState<any[]>([]);
   
   const scrollReviews = (dir: "left" | "right") => {
     if (reviewsRef.current) {
@@ -412,40 +397,31 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const { data: featuredData, error: featuredErr } = await supabase
-          .from("products")
-          .select("*")
-          .eq("is_featured", true);
+        const res = await fetch('/api/home');
+        if (!res.ok) throw new Error('Failed to fetch home data');
+        const data = await res.json();
 
-        const { data: bestData, error: bestErr } = await supabase
-          .from("products")
-          .select("*")
-          .eq("is_best_seller", true);
-
-        const { data: sidebarData } = await supabase
-          .from("categories")
-          .select("*")
-          .eq("is_in_sidebar", true)
-          .order("created_at", { ascending: true });
-
-        if (sidebarData) {
-          // Add "All Products" dynamically at the end if desired, or just use what's in DB
+        if (data.categories) {
           setSidebarCategories([
-            ...sidebarData,
+            ...data.categories,
             { name: "All Products", slug: "", sidebar_icon: "LayoutGrid", is_in_sidebar: true, sidebar_popular_items: [], sidebar_desc: "Browse the full catalog" }
           ]);
         }
 
-        if (featuredData && featuredData.length > 0) {
-          setFeatured(featuredData);
+        if (data.featured && data.featured.length > 0) {
+          setFeatured(data.featured);
         } else {
           setFeatured(getFeaturedProducts());
         }
 
-        if (bestData && bestData.length > 0) {
-          setBestSellers(bestData);
+        if (data.bestSellers && data.bestSellers.length > 0) {
+          setBestSellers(data.bestSellers);
         } else {
           setBestSellers(getBestSellers());
+        }
+
+        if (data.instagram) {
+          setInstagramPosts(data.instagram);
         }
 
       } catch (err) {
@@ -869,9 +845,7 @@ export default function HomePage() {
           </p>
           
           {/* Instagram Carousel Widget */}
-          <div className="instagram-feed-container" style={{ minHeight: 200, marginTop: 40, width: "100%", overflow: "hidden" }}>
-             <InstagramCarousel />
-          </div>
+             <InstagramCarousel posts={instagramPosts} />
         </div>
       </section>
 

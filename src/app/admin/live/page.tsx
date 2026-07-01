@@ -1,6 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useEffect, useState, useRef } from "react";
 import { 
   Activity, Monitor, Smartphone, Globe, ArrowRight,
   Play, Volume2, ShieldAlert, Clock, Compass, ExternalLink
@@ -93,94 +92,61 @@ export default function AdminLiveTrackingPage() {
     if (val) playAlertChime(soundStyle);
   };
 
-  // 1. Initial Load of active visitors (last 15 seconds)
+  const prevVisitorsRef = useRef<Visitor[]>([]);
+
+  // Polling mechanism
   useEffect(() => {
-    async function loadActiveVisitors() {
-      setLoading(true);
-      const cutoffTime = new Date(Date.now() - 15000).toISOString();
-      
-      const { data, error } = await supabase
-        .from("active_visitors")
-        .select("*")
-        .gt("last_active", cutoffTime)
-        .order("last_active", { ascending: false });
-
-      if (!error && data) {
-        setVisitors(data);
-        // Initialize pathways with their current page
-        const initialPaths: Record<string, string[]> = {};
-        data.forEach(v => {
-          initialPaths[v.session_id] = [v.current_url];
-        });
-        setPathways(initialPaths);
-      }
-      setLoading(false);
-    }
-
-    loadActiveVisitors();
-  }, []);
-
-  // 2. Real-time Subscription with chime alerts
-  useEffect(() => {
-    const channel = supabase
-      .channel("realtime-visitors-admin")
-      .on("postgres_changes", { event: "*", schema: "public", table: "active_visitors" }, (payload) => {
-        const updatedRow = payload.new as Visitor;
-        if (!updatedRow || !updatedRow.session_id) return;
-
-        setVisitors((prev) => {
-          const index = prev.findIndex((v) => v.session_id === updatedRow.session_id);
-          const isNewVisitor = index === -1;
-
-          // Check if this update happened in the last 15s (still active)
-          const isActive = new Date(updatedRow.last_active).getTime() > Date.now() - 15000;
-
-          if (!isActive) {
-            // If inactive, filter them out
-            return prev.filter((v) => v.session_id !== updatedRow.session_id);
-          }
-
-          // Trigger sound alert for new visitor landing
-          if (isNewVisitor && soundEnabled) {
-            playAlertChime(soundStyle);
-          }
-
-          // Update pathways log
-          setPathways((prevPaths) => {
-            const list = prevPaths[updatedRow.session_id] || [];
-            if (list.length === 0 || list[list.length - 1] !== updatedRow.current_url) {
-              return {
-                ...prevPaths,
-                [updatedRow.session_id]: [...list, updatedRow.current_url].slice(-5) // Keep last 5 actions
-              };
+    let isMounted = true;
+    const fetchLiveVisitors = async () => {
+      try {
+        const res = await fetch("/api/admin/live");
+        if (res.ok && isMounted) {
+          const data: Visitor[] = await res.json();
+          
+          setVisitors((prev) => {
+            // Find new visitors that weren't in the previous list
+            const prevIds = new Set(prev.map(v => v.session_id));
+            const newVisitors = data.filter(v => !prevIds.has(v.session_id));
+            
+            // Trigger sound alert for new visitor landing
+            if (newVisitors.length > 0 && soundEnabled) {
+              playAlertChime(soundStyle);
             }
-            return prevPaths;
+
+            // Update pathways log
+            setPathways((prevPaths) => {
+              let updatedPaths = { ...prevPaths };
+              let pathsChanged = false;
+
+              data.forEach(updatedRow => {
+                const list = updatedPaths[updatedRow.session_id] || [];
+                if (list.length === 0 || list[list.length - 1] !== updatedRow.current_url) {
+                  updatedPaths[updatedRow.session_id] = [...list, updatedRow.current_url].slice(-5);
+                  pathsChanged = true;
+                }
+              });
+
+              return pathsChanged ? updatedPaths : prevPaths;
+            });
+
+            return data;
           });
+          
+          if (isMounted) setLoading(false);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    };
 
-          if (isNewVisitor) {
-            // Add new visitor at top
-            return [updatedRow, ...prev];
-          } else {
-            // Update existing visitor details
-            const updatedList = [...prev];
-            updatedList[index] = updatedRow;
-            return updatedList.sort((a, b) => new Date(b.last_active).getTime() - new Date(a.last_active).getTime());
-          }
-        });
-      })
-      .subscribe();
-
-    // Loop interval to automatically prune dead sessions (> 15s inactive)
-    const deadSessionPruner = setInterval(() => {
-      const cutoff = Date.now() - 15000;
-      setVisitors((prev) => 
-        prev.filter((v) => new Date(v.last_active).getTime() > cutoff)
-      );
-    }, 5000);
+    fetchLiveVisitors(); // Initial fetch
+    
+    // Poll every 5 seconds
+    const interval = setInterval(fetchLiveVisitors, 5000);
 
     return () => {
-      supabase.removeChannel(channel);
-      clearInterval(deadSessionPruner);
+      isMounted = false;
+      clearInterval(interval);
     };
   }, [soundStyle, soundEnabled]);
 
@@ -309,8 +275,8 @@ export default function AdminLiveTrackingPage() {
             <Compass size={22} />
           </div>
           <div>
-            <div style={{ fontWeight: 700, color: "var(--gray-900)", fontSize: 15 }}>Realtime Channel</div>
-            <div style={{ fontSize: 12, color: "#16a34a", fontWeight: 700, marginTop: 2 }}>CONNECTED & LISTENING</div>
+            <div style={{ fontWeight: 700, color: "var(--gray-900)", fontSize: 15 }}>Live Polling</div>
+            <div style={{ fontSize: 12, color: "#16a34a", fontWeight: 700, marginTop: 2 }}>POLLING ACTIVE (5s)</div>
           </div>
         </div>
 

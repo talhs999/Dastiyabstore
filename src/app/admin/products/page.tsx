@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus, Search, Edit, Trash2, Eye } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -16,18 +16,18 @@ export default function AdminProductsPage() {
   }, []);
 
   const fetchData = async () => {
-    const { data: catData } = await supabase.from("categories").select("*");
-    if (catData) setCategories(catData);
+    const catRes = await fetch("/api/admin/categories");
+    if (catRes.ok) setCategories(await catRes.json());
 
-    const { data: prodData } = await supabase.from("products").select("*, categories(name)").order("created_at", { ascending: false });
-    if (prodData) setProducts(prodData);
+    const prodRes = await fetch("/api/admin/products");
+    if (prodRes.ok) setProducts(await prodRes.json());
     
     setLoading(false);
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
-      await supabase.from("products").delete().eq("id", id);
+      await fetch(`/api/admin/products?id=${id}`, { method: "DELETE" });
       setProducts(products.filter(p => p.id !== id));
     }
   };

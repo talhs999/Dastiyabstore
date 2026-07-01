@@ -6,7 +6,6 @@ import { useCart } from "@/store/cartStore";
 import { Heart, ShoppingCart, Trash2, ArrowRight } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { useToast } from "@/components/ui/Toast";
-import { supabase } from "@/lib/supabase";
 
 export default function WishlistPage() {
   const { items, removeFromWishlist, clearWishlist } = useWishlist();
@@ -22,14 +21,13 @@ export default function WishlistPage() {
     async function fetchLatestStock() {
       try {
         const itemIds = items.map(i => i.id);
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .in("id", itemIds);
+        const res = await fetch(`/api/products?ids=${itemIds.join(',')}`);
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const data = await res.json();
 
         if (data && data.length > 0) {
           const updatedItems = items.map(item => {
-            const dbProduct = data.find(db => db.id === item.id);
+            const dbProduct = data.find((db: any) => db.id === item.id);
             if (dbProduct) {
               const isProductInStock = dbProduct.in_stock !== undefined ? dbProduct.in_stock : true;
               const stockQty = dbProduct.stock_quantity !== undefined ? dbProduct.stock_quantity : 10;

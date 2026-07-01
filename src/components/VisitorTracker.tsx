@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 export default function VisitorTracker() {
   const pathname = usePathname();
@@ -86,9 +85,10 @@ export default function VisitorTracker() {
     // Send heartbeat to Supabase
     const sendPulse = async () => {
       try {
-        await supabase
-          .from("active_visitors")
-          .upsert({
+        await fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             session_id: sessionId,
             current_url: pathname,
             location: locationString,
@@ -96,7 +96,8 @@ export default function VisitorTracker() {
             device_type: deviceType,
             browser: browserName,
             last_active: new Date().toISOString()
-          }, { onConflict: "session_id" });
+          })
+        });
       } catch (e) {
         console.error("Failed to send visitor heartbeat:", e);
       }

@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronRight, Package, Clock, Heart, User, MapPin, LogOut, ShoppingBag, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 
 const statusColors: Record<string, string> = { 
   Pending: "var(--yellow-dark)", 
@@ -32,13 +31,13 @@ export default function AccountOrdersPage() {
     // 2. Fetch actual orders
     async function loadOrders() {
       try {
-        const { data, error } = await supabase
-          .from("orders")
-          .select("*")
-          .or(`customer_email.eq.${sessionUser.email},customer_phone.eq.${sessionUser.phone}`)
-          .order("created_at", { ascending: false });
+        const params = new URLSearchParams();
+        if (sessionUser.email) params.append("email", sessionUser.email);
+        if (sessionUser.phone) params.append("phone", sessionUser.phone);
 
-        if (!error && data) {
+        const res = await fetch(`/api/orders?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
           setOrders(data);
         }
       } catch (err) {

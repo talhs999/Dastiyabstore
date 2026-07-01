@@ -7,7 +7,7 @@ import {
   Users, Star, Settings, LogOut, MessageSquare, LayoutList, Activity,
   Menu, X
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+
 import { useToast } from "@/components/ui/Toast";
 
 let globalAudioCtx: any = null;
@@ -86,70 +86,83 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!isAuthorized) return;
 
-    // Listen for new orders in real-time
-    const channel = supabase
-      .channel('realtime-orders-admin')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-        const newOrder = payload.new;
-        if (!newOrder) return;
+    let lastChecked = new Date().toISOString();
+    let isMounted = true;
 
-        // 1. Play Sound chime if enabled
-        const soundVal = localStorage.getItem("admin_sound_notifications") !== "false";
-        if (soundVal) {
-          try {
-            if (!globalAudioCtx) {
-              const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-              if (AudioContextClass) globalAudioCtx = new AudioContextClass();
-            }
-            if (globalAudioCtx) {
-              if (globalAudioCtx.state === "suspended") {
-                globalAudioCtx.resume();
+    const pollNewOrders = async () => {
+      try {
+        const res = await fetch(`/api/admin/orders/latest?since=${lastChecked}`);
+        if (res.ok && isMounted) {
+          const newOrders = await res.json();
+          if (newOrders.length > 0) {
+            lastChecked = new Date().toISOString(); // update for next poll
+            
+            for (const newOrder of newOrders) {
+              // 1. Play Sound chime if enabled
+              const soundVal = localStorage.getItem("admin_sound_notifications") !== "false";
+              if (soundVal) {
+                try {
+                  if (!globalAudioCtx) {
+                    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+                    if (AudioContextClass) globalAudioCtx = new AudioContextClass();
+                  }
+                  if (globalAudioCtx) {
+                    if (globalAudioCtx.state === "suspended") {
+                      globalAudioCtx.resume();
+                    }
+                    const now = globalAudioCtx.currentTime;
+                    
+                    const osc1 = globalAudioCtx.createOscillator();
+                    const gain1 = globalAudioCtx.createGain();
+                    osc1.type = "sine";
+                    osc1.frequency.setValueAtTime(880, now);
+                    gain1.gain.setValueAtTime(0.3, now);
+                    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc1.connect(gain1);
+                    gain1.connect(globalAudioCtx.destination);
+                    osc1.start(now);
+                    osc1.stop(now + 0.6);
+
+                    const osc2 = globalAudioCtx.createOscillator();
+                    const gain2 = globalAudioCtx.createGain();
+                    osc2.type = "sine";
+                    osc2.frequency.setValueAtTime(659.25, now + 0.15);
+                    gain2.gain.setValueAtTime(0.3, now + 0.15);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+                    osc2.connect(gain2);
+                    gain2.connect(globalAudioCtx.destination);
+                    osc2.start(now + 0.15);
+                    osc2.stop(now + 0.8);
+                  }
+                } catch (e) {
+                  console.error("Audio chime error:", e);
+                }
               }
-              const now = globalAudioCtx.currentTime;
-              
-              const osc1 = globalAudioCtx.createOscillator();
-              const gain1 = globalAudioCtx.createGain();
-              osc1.type = "sine";
-              osc1.frequency.setValueAtTime(880, now);
-              gain1.gain.setValueAtTime(0.3, now);
-              gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-              osc1.connect(gain1);
-              gain1.connect(globalAudioCtx.destination);
-              osc1.start(now);
-              osc1.stop(now + 0.6);
 
-              const osc2 = globalAudioCtx.createOscillator();
-              const gain2 = globalAudioCtx.createGain();
-              osc2.type = "sine";
-              osc2.frequency.setValueAtTime(659.25, now + 0.15);
-              gain2.gain.setValueAtTime(0.3, now + 0.15);
-              gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
-              osc2.connect(gain2);
-              gain2.connect(globalAudioCtx.destination);
-              osc2.start(now + 0.15);
-              osc2.stop(now + 0.8);
+              // 2. Custom Toast Alert
+              showToast(`🔔 New Order! Rs. ${Number(newOrder.total).toLocaleString()} from ${newOrder.first_name || newOrder.customer_name || 'Customer'}`, "success");
+
+              // 3. Desktop Push Notification if enabled
+              const pushVal = localStorage.getItem("admin_push_notifications") === "true";
+              if (pushVal && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+                new Notification("🔔 New Order Received!", {
+                  body: `Total: Rs. ${Number(newOrder.total).toLocaleString()} - Customer: ${newOrder.first_name || newOrder.customer_name || 'Customer'} (${newOrder.city || newOrder.shipping_city || 'City'})`,
+                  icon: "/favicon.ico"
+                });
+              }
             }
-          } catch (e) {
-            console.error("Audio chime error:", e);
           }
         }
+      } catch (e) {
+        console.error("Polling error", e);
+      }
+    };
 
-        // 2. Custom Toast Alert
-        showToast(`🔔 New Order! Rs. ${Number(newOrder.total_amount).toLocaleString()} from ${newOrder.customer_name}`, "success");
-
-        // 3. Desktop Push Notification if enabled
-        const pushVal = localStorage.getItem("admin_push_notifications") === "true";
-        if (pushVal && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-          new Notification("🔔 New Order Received!", {
-            body: `Total: Rs. ${Number(newOrder.total_amount).toLocaleString()} - Customer: ${newOrder.customer_name} (${newOrder.shipping_city})`,
-            icon: "/favicon.ico"
-          });
-        }
-      })
-      .subscribe();
+    const interval = setInterval(pollNewOrders, 10000);
 
     return () => {
-      supabase.removeChannel(channel);
+      isMounted = false;
+      clearInterval(interval);
     };
   }, [isAuthorized, showToast]);
 

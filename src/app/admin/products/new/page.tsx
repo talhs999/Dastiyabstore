@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase, uploadProductImage } from "@/lib/supabase";
+
 import { ArrowLeft, Save, Loader2, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 
@@ -48,11 +48,23 @@ export default function AddProductPage() {
   }, []);
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from("categories").select("*");
-    if (data) {
+    const res = await fetch("/api/admin/categories");
+    if (res.ok) {
+      const data = await res.json();
       setCategories(data);
       if (data.length > 0) setFormData(prev => ({ ...prev, category_id: data[0].id }));
     }
+  };
+
+  const uploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    if (res.ok) {
+      const data = await res.json();
+      return data.url;
+    }
+    return null;
   };
 
   const handleSlugGen = () => {
@@ -120,7 +132,7 @@ export default function AddProductPage() {
     try {
       let mainImageUrl = formData.image;
       if (mainImageFile) {
-        const url = await uploadProductImage(mainImageFile);
+        const url = await uploadImage(mainImageFile);
         if (url) mainImageUrl = url;
       }
 
@@ -129,7 +141,7 @@ export default function AddProductPage() {
         additionalImageUrls = formData.images.split(",").map(s => s.trim()).filter(s => s);
       }
       if (galleryFiles.length > 0) {
-        const uploadedUrls = await Promise.all(galleryFiles.map(f => uploadProductImage(f)));
+        const uploadedUrls = await Promise.all(galleryFiles.map(f => uploadImage(f)));
         const validUrls = uploadedUrls.filter(url => url !== null) as string[];
         additionalImageUrls = [...additionalImageUrls, ...validUrls];
       }
@@ -161,10 +173,15 @@ export default function AddProductPage() {
         trust_points: trustPoints.filter(tp => tp.text.trim() !== "")
       };
 
-      const { error } = await supabase.from("products").insert([product]);
+      const res = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product)
+      });
 
-      if (error) {
-        alert("Error saving product: " + error.message);
+      if (!res.ok) {
+        const data = await res.json();
+        alert("Error saving product: " + data.error);
         setLoading(false);
       } else {
         router.push("/admin/products");

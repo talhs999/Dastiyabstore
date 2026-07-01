@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { DollarSign, Package, ShoppingCart, Users, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import Link from "next/link";
 
@@ -20,16 +19,11 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchData = async () => {
-    // 1. Fetch Orders
-    const { data: ordersData, error: ordersError } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    // 2. Fetch Products
-    const { data: productsData, error: productsError } = await supabase
-      .from("products")
-      .select("created_at");
+    try {
+      const res = await fetch('/api/admin/dashboard');
+      if (!res.ok) throw new Error('Failed to fetch dashboard data');
+      
+      const { orders: ordersData, products: productsData } = await res.json();
 
     const now = new Date();
     const thirtyDaysAgo = new Date();
@@ -44,50 +38,53 @@ export default function AdminDashboard() {
       return Math.round(((current - previous) / previous) * 100);
     };
 
-    if (!ordersError && ordersData) {
+    if (ordersData) {
       setOrders(ordersData);
       
-      const rev = ordersData.reduce((acc, order) => acc + order.total_amount, 0);
+      const rev = ordersData.reduce((acc: any, order: any) => acc + order.total_amount, 0);
       setTotalRevenue(rev);
       
-      const uniqueEmails = new Set(ordersData.map(o => o.customer_email));
+      const uniqueEmails = new Set(ordersData.map((o: any) => o.customer_email));
       setTotalCustomers(uniqueEmails.size);
 
       // Percentage Change Calculations:
-      const currentPeriodOrders = ordersData.filter(o => new Date(o.created_at) >= thirtyDaysAgo);
-      const previousPeriodOrders = ordersData.filter(o => {
+      const currentPeriodOrders = ordersData.filter((o: any) => new Date(o.created_at) >= thirtyDaysAgo);
+      const previousPeriodOrders = ordersData.filter((o: any) => {
         const d = new Date(o.created_at);
         return d >= sixtyDaysAgo && d < thirtyDaysAgo;
       });
 
       // Revenue Change
-      const revCurrent = currentPeriodOrders.reduce((acc, order) => acc + order.total_amount, 0);
-      const revPrevious = previousPeriodOrders.reduce((acc, order) => acc + order.total_amount, 0);
+      const revCurrent = currentPeriodOrders.reduce((acc: any, order: any) => acc + order.total_amount, 0);
+      const revPrevious = previousPeriodOrders.reduce((acc: any, order: any) => acc + order.total_amount, 0);
       setRevenueChange(calculatePercentageChange(revCurrent, revPrevious));
 
       // Active Orders Change
-      const activeCurrent = currentPeriodOrders.filter(o => ['Pending', 'Processing'].includes(o.status)).length;
-      const activePrevious = previousPeriodOrders.filter(o => ['Pending', 'Processing'].includes(o.status)).length;
+      const activeCurrent = currentPeriodOrders.filter((o: any) => ['Pending', 'Processing'].includes(o.status)).length;
+      const activePrevious = previousPeriodOrders.filter((o: any) => ['Pending', 'Processing'].includes(o.status)).length;
       setActiveChange(calculatePercentageChange(activeCurrent, activePrevious));
 
       // Customers Change
-      const custCurrent = new Set(currentPeriodOrders.map(o => o.customer_email)).size;
-      const custPrevious = new Set(previousPeriodOrders.map(o => o.customer_email)).size;
+      const custCurrent = new Set(currentPeriodOrders.map((o: any) => o.customer_email)).size;
+      const custPrevious = new Set(previousPeriodOrders.map((o: any) => o.customer_email)).size;
       setCustomersChange(calculatePercentageChange(custCurrent, custPrevious));
     }
 
-    if (!productsError && productsData) {
+    if (productsData) {
       setProductsCount(productsData.length);
 
-      const currentProds = productsData.filter(p => new Date(p.created_at) >= thirtyDaysAgo).length;
-      const previousProds = productsData.filter(p => {
+      const currentProds = productsData.filter((p: any) => new Date(p.created_at) >= thirtyDaysAgo).length;
+      const previousProds = productsData.filter((p: any) => {
         const d = new Date(p.created_at);
         return d >= sixtyDaysAgo && d < thirtyDaysAgo;
       }).length;
       setProductsChange(calculatePercentageChange(currentProds, previousProds));
     }
-
-    setLoading(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const statCards = [

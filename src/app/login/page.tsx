@@ -2,7 +2,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, ShoppingBag, ArrowRight, User, Phone, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/Toast";
 
 export default function LoginPage() {
@@ -27,29 +26,19 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1. Try matching by email
-      let { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('email', cleanEmail)
-        .eq('password', cleanPassword);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
+      });
 
-      // 2. Try matching by phone if email didn't match
-      if (!data || data.length === 0) {
-        const { data: byPhone, error: phoneError } = await supabase
-          .from('customers')
-          .select('*')
-          .eq('phone', cleanEmail)
-          .eq('password', cleanPassword);
-        
-        data = byPhone;
-        error = phoneError;
+      if (!res.ok) {
+        throw new Error('Invalid email/phone or password');
       }
 
-      if (error) throw error;
+      const { user } = await res.json();
 
-      if (data && data.length > 0) {
-        const user = data[0];
+      if (user) {
         localStorage.setItem("customer_session", JSON.stringify(user));
         document.cookie = "customer_session=true; path=/";
 
@@ -100,33 +89,23 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1. Check if email already exists
-      const { data: existing, error: checkError } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('email', regEmail.trim().toLowerCase());
-
-      if (existing && existing.length > 0) {
-        showToast("An account with this email already exists.", "error");
-        setLoading(false);
-        return;
-      }
-
-      // 2. Insert new customer record
-      const { data: newCustomer, error: insertError } = await supabase
-        .from('customers')
-        .insert({
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           name: regName.trim(),
           email: regEmail.trim().toLowerCase(),
           phone: regPhone.trim(),
-          password: regPassword.trim(),
-          address: "",
-          city: ""
+          password: regPassword.trim()
         })
-        .select()
-        .single();
+      });
 
-      if (insertError) throw insertError;
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+
+      const { user: newCustomer } = await res.json();
 
       // 3. Save session in localStorage
       localStorage.setItem("customer_session", JSON.stringify(newCustomer));
