@@ -471,7 +471,7 @@ export default function HomePage() {
               <span style={{ fontSize: 13, color: "var(--gray-500)" }}>Jo Chahiye, Wahi Dastiyab</span>
             </div>
             <h1 style={{ fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 900, lineHeight: 1.1, color: "var(--gray-900)", marginBottom: 16, whiteSpace: "pre-line" }}>
-              {slide.title.split("\\n").map((line, i) =>
+              {slide.title.split("\\n").map((line: string, i: number) =>
                 i === 0 ? <span key={i}>{line}<br /></span> : <span key={i} style={{ color: slide.accent }}>{line}</span>
               )}
             </h1>

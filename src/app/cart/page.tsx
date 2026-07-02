@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, Trash2, ArrowRight, Tag, Package } from "lucide-react";
+import { ShoppingCart, Trash2, ArrowRight, Tag, Package, Truck } from "lucide-react";
 import { useCart } from "@/store/cartStore";
 import { Minus, Plus } from "lucide-react";
 import { useSettings } from "@/components/SettingsProvider";
