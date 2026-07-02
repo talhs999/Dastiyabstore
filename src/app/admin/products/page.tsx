@@ -15,14 +15,36 @@ export default function AdminProductsPage() {
     fetchData();
   }, []);
 
+  const fetchProducts = async () => {
+    setLoading(true);
+    const res = await fetch("/api/admin/products");
+    if (res.ok) setProducts(await res.json());
+    setLoading(false);
+  };
+
+  const toggleFlag = async (id: string, field: 'is_featured' | 'is_best_seller', currentValue: boolean) => {
+    setProducts(products.map(p => p.id === id ? { ...p, [field]: !currentValue } : p));
+    try {
+      const res = await fetch(`/api/admin/products/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: !currentValue })
+      });
+      if (!res.ok) {
+        setProducts(products.map(p => p.id === id ? { ...p, [field]: currentValue } : p));
+        alert("Failed to update status");
+      }
+    } catch (err) {
+      setProducts(products.map(p => p.id === id ? { ...p, [field]: currentValue } : p));
+      alert("Error updating status");
+    }
+  };
+
   const fetchData = async () => {
     const catRes = await fetch("/api/admin/categories");
     if (catRes.ok) setCategories(await catRes.json());
 
-    const prodRes = await fetch("/api/admin/products");
-    if (prodRes.ok) setProducts(await prodRes.json());
-    
-    setLoading(false);
+    await fetchProducts();
   };
 
   const handleDelete = async (id: string) => {
@@ -66,7 +88,7 @@ export default function AdminProductsPage() {
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
           <thead>
             <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)" }}>
-              {["Product", "Category", "Price", "Stock", "Rating", "Status", "Actions"].map(h => (
+              {["Product", "Category", "Price", "Stock", "Featured", "Best Seller", "Actions"].map(h => (
                 <th key={h} style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: 0.5 }}>{h}</th>
               ))}
             </tr>
@@ -100,16 +122,15 @@ export default function AdminProductsPage() {
                 <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 700, color: p.in_stock ? "#16a34a" : "var(--red)" }}>
                   {p.in_stock ? "In Stock" : "Out of Stock"}
                 </td>
-                <td style={{ padding: "16px 24px", fontSize: 14 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ color: "var(--yellow-dark)", fontWeight: 700 }}>★</span>
-                    <span style={{ fontWeight: 700, color: "var(--gray-900)" }}>{p.rating}</span>
-                  </div>
+                <td style={{ padding: "16px 24px" }}>
+                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                    <input type="checkbox" checked={p.is_featured} onChange={() => toggleFlag(p.id, 'is_featured', p.is_featured)} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#ef4444" }} />
+                  </label>
                 </td>
                 <td style={{ padding: "16px 24px" }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: "var(--radius-full)", background: p.is_featured ? "#d1fae5" : "var(--gray-100)", color: p.is_featured ? "#065f46" : "var(--gray-600)", textTransform: "uppercase" }}>
-                    {p.is_featured ? "Featured" : "Standard"}
-                  </span>
+                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                    <input type="checkbox" checked={p.is_best_seller} onChange={() => toggleFlag(p.id, 'is_best_seller', p.is_best_seller)} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#ef4444" }} />
+                  </label>
                 </td>
                 <td style={{ padding: "16px 24px" }}>
                   <div style={{ display: "flex", gap: 8 }}>

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request, context: any) {
   try {
-    const id = context.params.id;
+    const { id } = await context.params;
     const product = await prisma.product.findUnique({
       where: { id }
     });
@@ -18,7 +18,7 @@ export async function GET(request: Request, context: any) {
 
 export async function PUT(request: Request, context: any) {
   try {
-    const id = context.params.id;
+    const { id } = await context.params;
     const data = await request.json();
     
     const updatedProduct = await prisma.product.update({

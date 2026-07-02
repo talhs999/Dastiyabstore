@@ -941,3 +941,23 @@ body {
     padding-bottom: 100%;
   }
 }
+
+/* === CHATBOT MOBILE OVERLAY FIX === */
+body.mobile-menu-open .chatbot-floating-btn {
+  left: auto !important;
+  right: 24px !important;
+  bottom: 96px !important;
+}
+
+body.mobile-menu-open .chatbot-window {
+  left: auto !important;
+  right: 24px !important;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

@@ -23,11 +23,10 @@ export default function Chatbot() {
     }
   }, [messages, isOpen]);
 
-  const sendMessage = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userMessage = input.trim();
+  const sendMessage = async (e?: React.FormEvent, textOverride?: string) => {
+    if (e) e.preventDefault();
+    const userMessage = textOverride || input.trim();
+    if (!userMessage) return;
     setInput("");
     
     // Add user message to UI
@@ -40,18 +39,37 @@ export default function Chatbot() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          history: messages.filter(m => m.role !== "model" || m.content !== "Hi there! I am the DastiyabStore AI Assistant. How can I help you today?"), // exclude initial greeting
+          history: messages.filter(m => m.role !== "model" || m.content !== "Hi there! I am the DastiyabStore AI Assistant. How can I help you today?"),
           message: userMessage
         })
       });
 
-      const data = await res.json();
-      
       if (!res.ok) {
-        throw new Error(data.error || "Failed to get response");
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to get response");
       }
 
-      setMessages([...newMessages, { role: "model", content: data.response }]);
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No readable stream available");
+      
+      const decoder = new TextDecoder("utf-8");
+      let botMessage = "";
+      
+      // Initialize empty bot message in UI
+      setMessages([...newMessages, { role: "model", content: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        botMessage += decoder.decode(value, { stream: true });
+        
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: "model", content: botMessage };
+          return updated;
+        });
+      }
     } catch (err: any) {
       setMessages([...newMessages, { role: "model", content: `Error: ${err.message}` }]);
     } finally {
@@ -63,6 +81,7 @@ export default function Chatbot() {
     <>
       {/* Floating Button */}
       <button 
+        className="chatbot-floating-btn"
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: "fixed",
@@ -113,7 +132,7 @@ export default function Chatbot() {
             overflow: "hidden",
             border: "1px solid var(--gray-200)"
           }}
-          className="animate-fade-up"
+          className="chatbot-window animate-fade-up"
         >
           {/* Header */}
           <div style={{ background: "var(--red)", color: "white", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12 }}>
@@ -164,8 +183,33 @@ export default function Chatbot() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Quick Prompts */}
+          {messages.length === 1 && (
+            <div style={{ padding: "12px 16px 0", background: "white", display: "flex", gap: 8, overflowX: "auto", whiteSpace: "nowrap", borderTop: "1px solid var(--gray-200)" }} className="hide-scrollbar">
+              {["Salam 👋", "Best Neck Fans?", "Delivery details?", "Contact info?"].map((prompt, i) => (
+                <button
+                  key={i}
+                  onClick={() => sendMessage(undefined, prompt)}
+                  disabled={loading}
+                  style={{
+                    padding: "6px 12px",
+                    background: "var(--gray-50)",
+                    border: "1px solid var(--gray-200)",
+                    borderRadius: 16,
+                    fontSize: 12,
+                    color: "var(--gray-700)",
+                    cursor: loading ? "default" : "pointer",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+                  }}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Input Area */}
-          <form onSubmit={sendMessage} style={{ padding: 16, background: "white", borderTop: "1px solid var(--gray-200)", display: "flex", gap: 8 }}>
+          <form onSubmit={e => sendMessage(e)} style={{ padding: 16, background: "white", borderTop: messages.length === 1 ? "none" : "1px solid var(--gray-200)", display: "flex", gap: 8 }}>
             <input 
               type="text" 
               value={input}

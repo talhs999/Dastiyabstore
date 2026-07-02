@@ -389,6 +389,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [sidebarCategories, setSidebarCategories] = useState<any[]>([]);
   const [instagramPosts, setInstagramPosts] = useState<any[]>([]);
+  const [promoBanner, setPromoBanner] = useState<any>(null);
   
   const scrollReviews = (dir: "left" | "right") => {
     if (reviewsRef.current) {
@@ -428,6 +429,28 @@ export default function HomePage() {
         
         if (data.bannerSlides && data.bannerSlides.length > 0) {
           setBanners(data.bannerSlides);
+        }
+
+        if (data.promoBanner) {
+          setPromoBanner(data.promoBanner);
+        } else {
+          setPromoBanner({
+            enabled: true,
+            badge1: "Limited Time",
+            badge2: "Up to 50% Off",
+            title: "Summer Sale —",
+            titleHighlight: "Neck Fans",
+            titleEnd: "Up to 50% Off",
+            subtitle: "Beat the heat with our best-selling wearable neck fans. Limited stock available!",
+            buttonText: "Shop Neck Fans",
+            buttonLink: "/shop/neck-fan",
+            buttonBg: "var(--yellow)",
+            buttonTextCol: "var(--black)",
+            bgStyle: "linear-gradient(135deg, var(--red) 0%, #c62333 40%, #9b1526 100%)",
+            bullet1: "Free Delivery Included",
+            bullet2: "Cash on Delivery",
+            bullet3: "7-Day Easy Returns"
+          });
         }
 
       } catch (err) {
@@ -569,26 +592,27 @@ export default function HomePage() {
       </section>
 
       {/* ── PROMO BANNER ── */}
+      {promoBanner?.enabled && (
       <section style={{ padding: "0 24px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div className="promo-grid" style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "linear-gradient(135deg, var(--red) 0%, #c62333 40%, #9b1526 100%)", padding: "48px 48px", alignItems: "center" }}>
+          <div className="promo-grid" style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: promoBanner.bgStyle, padding: "48px 48px", alignItems: "center" }}>
             <div>
               <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                <span className="badge badge-yellow" style={{ fontSize: 12 }}>Limited Time</span>
-                <span className="badge" style={{ background: "rgba(255,255,255,0.2)", color: "white", fontSize: 12 }}>Up to 50% Off</span>
+                {promoBanner.badge1 && <span className="badge badge-yellow" style={{ fontSize: 12 }}>{promoBanner.badge1}</span>}
+                {promoBanner.badge2 && <span className="badge" style={{ background: "rgba(255,255,255,0.2)", color: "white", fontSize: 12 }}>{promoBanner.badge2}</span>}
               </div>
               <h2 style={{ fontSize: "clamp(24px, 3.5vw, 44px)", fontWeight: 900, color: "white", marginBottom: 12 }}>
-                Summer Sale — <span style={{ color: "var(--yellow)" }}>Neck Fans</span> Up to 50% Off
+                {promoBanner.title} <span style={{ color: "var(--yellow)" }}>{promoBanner.titleHighlight}</span> {promoBanner.titleEnd}
               </h2>
               <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 15, marginBottom: 24 }}>
-                Beat the heat with our best-selling wearable neck fans. Limited stock available!
+                {promoBanner.subtitle}
               </p>
-              <Link href="/shop/neck-fan" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--yellow)", color: "var(--black)", padding: "14px 28px", borderRadius: "var(--radius-full)", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
-                <ShoppingCart size={18} /> Shop Neck Fans
+              <Link href={promoBanner.buttonLink || "#"} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: promoBanner.buttonBg, color: promoBanner.buttonTextCol, padding: "14px 28px", borderRadius: "var(--radius-full)", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
+                <ShoppingCart size={18} /> {promoBanner.buttonText}
               </Link>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {["Free Delivery Included", "Cash on Delivery", "7-Day Easy Returns"].map((t, i) => (
+              {[promoBanner.bullet1, promoBanner.bullet2, promoBanner.bullet3].filter(Boolean).map((t: any, i: number) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, color: "rgba(255,255,255,0.9)", fontSize: 14 }}>
                   <Shield size={16} color="var(--yellow)" /> {t}
                 </div>
@@ -597,6 +621,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ── BEST SELLERS ── */}
       <section style={{ padding: "72px 24px" }}>

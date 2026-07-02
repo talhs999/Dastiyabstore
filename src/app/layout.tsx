@@ -52,7 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       freeDeliverySettings = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value as any;
     }
   } catch (error) {
-    console.error("Failed to fetch global settings:", error);
+    console.warn("Failed to fetch global settings:", error);
   }
 
   const initialSettings = {

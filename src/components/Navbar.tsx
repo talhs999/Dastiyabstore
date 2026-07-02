@@ -44,6 +44,15 @@ export default function Navbar() {
   const [dbCategories, setDbCategories] = useState<any[]>([]);
 
   useEffect(() => {
+    if (mobileOpen) {
+      document.body.classList.add("mobile-menu-open");
+    } else {
+      document.body.classList.remove("mobile-menu-open");
+    }
+    return () => document.body.classList.remove("mobile-menu-open");
+  }, [mobileOpen]);
+
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch("/api/categories");

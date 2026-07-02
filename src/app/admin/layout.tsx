@@ -183,6 +183,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "Q&A", href: "/admin/qna", icon: <MessageSquare size={20} /> },
     { label: "Homepage Sidebar", href: "/admin/sidebar", icon: <LayoutList size={20} /> },
     { label: "Home Banner", href: "/admin/banner", icon: <LayoutList size={20} /> },
+    { label: "Promo Banner", href: "/admin/promo-banner", icon: <LayoutList size={20} /> },
     { label: "Instagram Feed", href: "/admin/instagram", icon: <LayoutList size={20} /> },
     { label: "Live Tracking", href: "/admin/live", icon: <Activity size={20} /> },
     { label: "Settings", href: "/admin/settings", icon: <Settings size={20} /> },

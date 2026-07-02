@@ -63,26 +63,45 @@ Key Information:
         { role: 'model', parts: [{ text: "Understood. How can I help you today?" }] },
         ...formattedHistory
       ],
-      generationConfig: { maxOutputTokens: 500, temperature: 0.7 },
+      generationConfig: { maxOutputTokens: 2000, temperature: 0.7 },
     };
 
-    let result;
+    let resultStream;
     try {
       const chat = model.startChat(chatParams);
-      result = await chat.sendMessage(message);
+      resultStream = await chat.sendMessageStream(message);
     } catch (err: any) {
-      if (err.message?.includes('404 Not Found') || err.message?.includes('is not found for API version')) {
-        console.log(`Model ${modelName} failed, falling back to gemini-3.5-flash`);
-        const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
+      if (err.message?.includes('404 Not Found') || err.message?.includes('is not found for API version') || err.message?.includes('503 Service Unavailable')) {
+        console.log(`Model ${modelName} failed, falling back to gemini-3.1-pro`);
+        const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-3.1-pro' });
         const fallbackChat = fallbackModel.startChat(chatParams);
-        result = await fallbackChat.sendMessage(message);
+        try {
+          resultStream = await fallbackChat.sendMessageStream(message);
+        } catch (fallbackErr: any) {
+          throw new Error("Hamara AI system abhi thora busy hai. Baraye meharbani kuch dair baad dobara koshish karein.");
+        }
       } else {
-        throw err;
+        throw new Error("Hamara AI system abhi thora busy hai. Baraye meharbani kuch dair baad dobara koshish karein.");
       }
     }
 
-    const responseText = result.response.text();
-    return NextResponse.json({ response: responseText });
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of resultStream.stream) {
+            controller.enqueue(encoder.encode(chunk.text()));
+          }
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      }
+    });
+
+    return new Response(stream, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    });
 
   } catch (error: any) {
     console.error('Gemini Chat API Error:', error);

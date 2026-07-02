@@ -18,7 +18,12 @@ export async function GET() {
     });
     const bannerSlides = bannerSetting ? bannerSetting.value : null;
 
-    return NextResponse.json({ featured, bestSellers, categories, instagram, bannerSlides });
+    const promoSetting = await prisma.storeSetting.findUnique({
+      where: { key: 'promo_banner' }
+    });
+    const promoBanner = promoSetting ? (typeof promoSetting.value === 'string' ? JSON.parse(promoSetting.value) : promoSetting.value) : null;
+
+    return NextResponse.json({ featured, bestSellers, categories, instagram, bannerSlides, promoBanner });
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
