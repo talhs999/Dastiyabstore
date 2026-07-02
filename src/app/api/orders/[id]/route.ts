@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request, context: any) {
   try {
-    const id = context.params.id;
+    const params = await context.params;
+    const id = params.id;
     const cleanId = id.trim().toLowerCase();
 
     const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
@@ -29,6 +30,11 @@ export async function GET(request: Request, context: any) {
     // Map Prisma items array to order_items property for backward compatibility with frontend
     const orderWithMappedItems = {
       ...order,
+      customer_name: order.first_name ? `${order.first_name} ${order.last_name || ''}`.trim() : 'Customer',
+      customer_email: order.email,
+      customer_phone: order.phone,
+      shipping_address: order.address || order.shipping_address, // fallback for old orders
+      shipping_city: order.city,
       order_items: (order.items as any[] || []).map((item: any) => ({
         ...item,
         // Ensure property names match what frontend expects

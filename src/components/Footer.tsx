@@ -8,6 +8,7 @@ import {
   MapPin, Phone, Mail, Truck, RotateCcw, Shield, Headphones,
   CreditCard, ChevronRight, Send, Loader2, CheckCircle
 } from "lucide-react";
+import { useSettings } from "@/components/SettingsProvider";
 
 // Inline SVG social icons (lucide-react dropped platform-specific icons)
 const FacebookIcon = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>);
@@ -36,16 +37,17 @@ const footerLinks = {
   ],
 };
 
-const trustFeatures = [
-  { icon: <Truck size={28} />, title: "Free Delivery", sub: "On orders Rs.2000+" },
-  { icon: <RotateCcw size={28} />, title: "Easy Returns", sub: "5-day return policy" },
-  { icon: <Shield size={28} />, title: "100% Secure", sub: "Trusted & verified" },
-  { icon: <Headphones size={28} />, title: "24/7 Support", sub: "Always here to help" },
-];
-
 export default function Footer() {
+  const { freeDelivery } = useSettings();
   const pathname = usePathname();
   const [email, setEmail] = useState("");
+  
+  const trustFeatures = [
+    ...(freeDelivery?.is_active ? [{ icon: <Truck size={28} />, title: "Free Delivery", sub: `On orders Rs.${freeDelivery.threshold}+` }] : []),
+    { icon: <RotateCcw size={28} />, title: "Easy Returns", sub: "5-day return policy" },
+    { icon: <Shield size={28} />, title: "100% Secure", sub: "Trusted & verified" },
+    { icon: <Headphones size={28} />, title: "24/7 Support", sub: "Always here to help" },
+  ];
   const [loading, setLoading] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [couponMessage, setCouponMessage] = useState("");
@@ -258,9 +260,9 @@ export default function Footer() {
             <div>
               <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Contact</h4>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
-                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>Karachi, Sindh, Pakistan</li>
+                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>H-151 Moinabad, Model Colony Phase 3 Malir, Karachi, 75100, Pakistan</li>
                 <li style={{ color: "var(--gray-600)", fontSize: 14 }}>support@dastiyabstore.com</li>
-                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>+92 300 1234567</li>
+                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>+92 316 2975195</li>
                 <li style={{ marginTop: 8 }}>
                   <Link href="/contact" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--gray-600)", fontSize: 14, textDecoration: "none", transition: "color 0.2s", marginBottom: 12 }} 
                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 

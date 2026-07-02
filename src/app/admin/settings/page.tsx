@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Store, Truck, Tag, CreditCard, Mail, Bell, Shield, Plus, Edit2, Trash2, X, AlertCircle, MapPin, Landmark } from "lucide-react";
+import { Store, Truck, Tag, CreditCard, Mail, Bell, Shield, Plus, Edit2, Trash2, X, AlertCircle, MapPin, Landmark, MessageCircle } from "lucide-react";
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState("General");
@@ -76,6 +76,12 @@ export default function AdminSettingsPage() {
     accountName: "", accountNumber: "", instructions: ""
   });
 
+  // Global states
+  const [globalLoading, setGlobalLoading] = useState(true);
+  const [globalSaving, setGlobalSaving] = useState(false);
+  const [globalFreeDeliveryActive, setGlobalFreeDeliveryActive] = useState(true);
+  const [globalFreeDeliveryThreshold, setGlobalFreeDeliveryThreshold] = useState(2000);
+
   // Notification states
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(false);
@@ -129,6 +135,13 @@ export default function AdminSettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+  // Chatbot states
+  const [loadingChatbot, setLoadingChatbot] = useState(true);
+  const [savingChatbot, setSavingChatbot] = useState(false);
+  const [chatbotApiKey, setChatbotApiKey] = useState("");
+  const [chatbotModel, setChatbotModel] = useState("gemini-1.5-pro");
+  const [chatbotEnabled, setChatbotEnabled] = useState(true);
+
   const tabs = [
     { label: "General", icon: <Store size={18} /> },
     { label: "Shipping & Delivery", icon: <Truck size={18} /> },
@@ -138,16 +151,87 @@ export default function AdminSettingsPage() {
     { label: "Emails & Marketing", icon: <Mail size={18} /> },
     { label: "Notifications", icon: <Bell size={18} /> },
     { label: "Security", icon: <Shield size={18} /> },
+    { label: "AI Chatbot", icon: <MessageCircle size={18} /> },
   ];
 
   useEffect(() => {
-    if (activeTab === "Shipping & Delivery") fetchShippingRules();
+    if (activeTab === "General") fetchGeneralSettings();
+    else if (activeTab === "Shipping & Delivery") fetchShippingRules();
     else if (activeTab === "Delivery Areas") fetchDeliveryAreas();
     else if (activeTab === "Coupons & Discounts") fetchCoupons();
     else if (activeTab === "Emails & Marketing") fetchMarketingSettings();
     else if (activeTab === "Payments") fetchPaymentSettings();
     else if (activeTab === "Security") fetchSecuritySettings();
+    else if (activeTab === "AI Chatbot") fetchChatbotSettings();
   }, [activeTab]);
+
+  const fetchChatbotSettings = async () => {
+    setLoadingChatbot(true);
+    const res = await fetch("/api/admin/settings/store_settings?key=chatbot_settings");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.value) {
+        try {
+          const settings = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+          setChatbotApiKey(settings.apiKey || "");
+          setChatbotModel(settings.model || "gemini-1.5-pro");
+          setChatbotEnabled(settings.enabled !== false);
+        } catch (e) {
+          console.error("Failed to parse chatbot settings", e);
+        }
+      }
+    }
+    setLoadingChatbot(false);
+  };
+
+  const saveChatbotSettings = async () => {
+    setSavingChatbot(true);
+    const res = await fetch("/api/admin/settings/store_settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key: "chatbot_settings",
+        value: { apiKey: chatbotApiKey, model: chatbotModel, enabled: chatbotEnabled }
+      })
+    });
+    setSavingChatbot(false);
+    if (!res.ok) alert("Failed to save Chatbot settings");
+    else alert("Chatbot settings saved successfully!");
+  };
+
+  const fetchGeneralSettings = async () => {
+    setGlobalLoading(true);
+    try {
+      const res = await fetch("/api/settings/global");
+      if (res.ok) {
+        const data = await res.json();
+        setGlobalFreeDeliveryActive(data.is_active);
+        setGlobalFreeDeliveryThreshold(data.threshold);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setGlobalLoading(false);
+    }
+  };
+
+  const saveGeneralSettings = async () => {
+    setGlobalSaving(true);
+    try {
+      const res = await fetch("/api/settings/global", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: globalFreeDeliveryActive, threshold: globalFreeDeliveryThreshold })
+      });
+      if (!res.ok) throw new Error("Failed to save global settings");
+      alert("General settings saved successfully!");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to save general settings");
+    } finally {
+      setGlobalSaving(false);
+    }
+  };
 
   const fetchPaymentSettings = async () => {
     setLoadingPayments(true);
@@ -674,8 +758,32 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
 
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)" }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Global Promos & Settings</h2>
+                <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", background: "var(--gray-50)", borderRadius: 8, border: "1px solid var(--gray-200)" }}>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>Free Delivery Promotion</div>
+                      <div style={{ fontSize: 12, color: "var(--gray-500)" }}>Show free delivery text on the site and apply at checkout.</div>
+                    </div>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={globalFreeDeliveryActive} onChange={(e) => setGlobalFreeDeliveryActive(e.target.checked)} />
+                      <span className="slider round"></span>
+                    </label>
+                  </div>
+                  {globalFreeDeliveryActive && (
+                    <div>
+                      <label className="label">Free Delivery Threshold (Rs.)</label>
+                      <input type="number" className="input" value={globalFreeDeliveryThreshold} onChange={(e) => setGlobalFreeDeliveryThreshold(Number(e.target.value))} style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end" }}>
-                <button className="btn-red">Save Changes</button>
+                <button className="btn-red" onClick={saveGeneralSettings} disabled={globalSaving}>
+                  {globalSaving ? "Saving..." : "Save Changes"}
+                </button>
               </div>
             </div>
           )}
@@ -1363,7 +1471,61 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
-          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && activeTab !== "Delivery Areas" && activeTab !== "Coupons & Discounts" && activeTab !== "Emails & Marketing" && activeTab !== "Payments" && activeTab !== "Notifications" && activeTab !== "Security" && (
+          {activeTab === "AI Chatbot" && (
+            <div className="animate-fade-up">
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)" }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>AI Chatbot Settings</h2>
+                <p style={{ color: "var(--gray-500)", fontSize: 14, marginTop: 4 }}>Configure your Gemini AI assistant.</p>
+              </div>
+              
+              {loadingChatbot ? (
+                <div style={{ padding: 40, textAlign: "center" }}><div className="spinner" style={{ margin: "0 auto" }}></div></div>
+              ) : (
+                <div style={{ padding: "24px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", background: "var(--gray-50)", borderRadius: 8, border: "1px solid var(--gray-200)" }}>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>Enable AI Chatbot</div>
+                      <div style={{ fontSize: 12, color: "var(--gray-500)" }}>Show the AI assistant on the store front.</div>
+                    </div>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={chatbotEnabled} onChange={(e) => setChatbotEnabled(e.target.checked)} />
+                      <span className="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="label">Gemini API Key</label>
+                    <input 
+                      type="text" 
+                      className="input" 
+                      placeholder="AIzaSy..." 
+                      value={chatbotApiKey} 
+                      onChange={(e) => setChatbotApiKey(e.target.value)} 
+                    />
+                    <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 6 }}>Get your API key from Google AI Studio.</p>
+                  </div>
+
+                  <div>
+                    <label className="label">Gemini Model</label>
+                    <select className="input" value={chatbotModel} onChange={e => setChatbotModel(e.target.value)}>
+                      <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+                      <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
+                      <option value="gemini-3.1-flash-image">Gemini 3.1 Flash Image</option>
+                    </select>
+                  </div>
+
+                </div>
+              )}
+
+              <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--gray-200)" }}>
+                <button onClick={saveChatbotSettings} disabled={savingChatbot} className="btn-red" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {savingChatbot ? "Saving..." : "Save Settings"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== "General" && activeTab !== "Shipping & Delivery" && activeTab !== "Delivery Areas" && activeTab !== "Coupons & Discounts" && activeTab !== "Emails & Marketing" && activeTab !== "Payments" && activeTab !== "Notifications" && activeTab !== "Security" && activeTab !== "AI Chatbot" && (
             <div style={{ padding: 60, textAlign: "center", color: "var(--gray-500)" }}>
               <p>Settings for <strong>{activeTab}</strong> will appear here.</p>
             </div>

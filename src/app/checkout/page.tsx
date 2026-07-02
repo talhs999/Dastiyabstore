@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { CheckCircle, User, MapPin, Phone, Mail, Zap, Truck, Shield, ChevronRight, Loader2, Landmark } from "lucide-react";
 import { useCart } from "@/store/cartStore";
+import { useSettings } from "@/components/SettingsProvider";
 
 const steps = ["Shipping", "Review", "Confirm"];
 
@@ -92,6 +93,7 @@ const PAKISTAN_CITIES = [
 ];
 
 export default function CheckoutPage() {
+  const { freeDelivery } = useSettings();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", city: "", notes: "" });
   const [placed, setPlaced] = useState(false);
@@ -231,7 +233,7 @@ export default function CheckoutPage() {
 
     const baseFee = Number(rule.base_fee) || 0;
     const perKmFee = Number(rule.per_km_fee) || 0;
-    const freeThreshold = Number(rule.free_delivery_threshold) || 0;
+    const freeThreshold = Number(rule.free_delivery_threshold) || Infinity;
     const freeMaxKm = rule.free_delivery_km !== null && rule.free_delivery_km !== undefined ? Number(rule.free_delivery_km) : null;
     const freeAreasList = rule.free_areas ? rule.free_areas.split(",").map((a: string) => a.trim().toLowerCase()) : [];
 
@@ -270,7 +272,7 @@ export default function CheckoutPage() {
       } else {
         explanation = `Order above Rs. ${freeThreshold.toLocaleString()}, but free shipping is restricted within ${freeMaxKm} km.`;
       }
-    } else if (!isFree) {
+    } else if (!isFree && freeThreshold < Infinity) {
       explanation = `Add Rs. ${(freeThreshold - totalPrice).toLocaleString()} more for Free Shipping.`;
     }
 
@@ -496,7 +498,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className="label">Phone Number *</label>
-                    <input className="input" placeholder="0300-1234567" value={form.phone} onChange={e => set("phone", e.target.value)} />
+                    <input className="input" placeholder="0316-2975195" value={form.phone} onChange={e => set("phone", e.target.value)} />
                   </div>
                 </div>
                 <div>

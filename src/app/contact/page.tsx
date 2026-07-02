@@ -54,14 +54,14 @@ export default function ContactPage() {
       </section>
 
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 24px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 48 }}>
+        <div className="contact-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 48 }}>
 
           {/* Info Cards */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {[
-              { icon: <Phone size={24} />, title: "Phone / WhatsApp", lines: ["0300-1234567", "Mon–Sat: 9 AM – 9 PM"] },
+              { icon: <Phone size={24} />, title: "Phone / WhatsApp", lines: ["0316-2975195", "Mon–Sat: 9 AM – 9 PM"] },
               { icon: <Mail size={24} />, title: "Email", lines: ["support@dastiyabstore.com", "Reply within 24 hours"] },
-              { icon: <MapPin size={24} />, title: "Address", lines: ["Karachi, Sindh", "Pakistan"] },
+              { icon: <MapPin size={24} />, title: "Address", lines: ["H-151 Moinabad, Model Colony Phase 3 Malir", "Karachi, 75100, Pakistan"] },
               { icon: <Clock size={24} />, title: "Business Hours", lines: ["Monday – Saturday", "9:00 AM – 9:00 PM PKT"] },
             ].map((c, i) => (
               <div key={i} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 20, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)", display: "flex", gap: 16, alignItems: "flex-start", transition: "all 0.3s" }}
@@ -107,14 +107,14 @@ export default function ContactPage() {
                   </div>
                 )}
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div className="contact-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                     <div>
                       <label className="label">Your Name</label>
                       <input className="input" placeholder="Muhammad Ali" required value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} />
                     </div>
                     <div>
                       <label className="label">Phone / WhatsApp</label>
-                      <input className="input" placeholder="0300-1234567" value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} />
+                      <input className="input" placeholder="0316-2975195" value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} />
                     </div>
                   </div>
                   <div>
@@ -159,7 +159,7 @@ export default function ContactPage() {
           ></iframe>
         </div>
       </section>
-      <style>{`@media(max-width:768px){div[style*="grid-template-columns: 1fr 1.5fr"]{grid-template-columns:1fr!important}div[style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}}`}</style>
+      <style>{`@media(max-width:768px){.contact-grid{grid-template-columns:1fr!important}.contact-form-grid{grid-template-columns:1fr!important}}`}</style>
     </div>
   );
 }

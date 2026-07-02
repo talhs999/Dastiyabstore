@@ -27,9 +27,9 @@ export const products: Product[] = [
     slug: "premium-360-neck-fan",
     price: 1499,
     originalPrice: 2500,
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80",
+    image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=600&q=80",
     images: [
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
+      "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80",
     ],
     rating: 5,
     reviews: 128,

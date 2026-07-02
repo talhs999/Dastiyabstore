@@ -214,7 +214,7 @@ export default function AdminOrdersPage() {
                         <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "#FFB703" }}>Store</span>
                       </span>
                     </div>
-                    <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 4 }}>Karachi, Pakistan | Support: 0300-1234567</p>
+                    <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 4 }}>Karachi, Pakistan | Support: 0316-2975195</p>
                     <h3 style={{ fontSize: 14, fontWeight: 700, marginTop: 14, color: "var(--gray-700)", textTransform: "uppercase", letterSpacing: "1px" }}>PACKING / INVOICE SLIP</h3>
                   </div>
                   <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>

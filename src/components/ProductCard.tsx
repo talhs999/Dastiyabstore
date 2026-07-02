@@ -125,7 +125,7 @@ export default function ProductCard({ product, view = "grid" }: { product: Produ
           )}
           {/* Hover Actions */}
           {(product.in_stock !== undefined ? product.in_stock : product.inStock) !== false && (
-            <div className="card-actions" style={{
+            <div className="card-actions desktop-only" style={{
               position: "absolute", bottom: 12, left: 0, right: 0,
               display: "flex", justifyContent: "center", gap: 8,
               opacity: 0, transform: "translateY(8px)", transition: "all 0.25s",

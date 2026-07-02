@@ -8,6 +8,7 @@ import { products, getProductBySlug } from "@/data/products";
 import { useCart } from "@/store/cartStore";
 import { useToast } from "@/components/ui/Toast";
 import { useWishlist } from "@/store/wishlistStore";
+import { useSettings } from "@/components/SettingsProvider";
 
 const renderTrustIcon = (iconName: string) => {
   const size = 18;
@@ -31,6 +32,7 @@ const renderTrustIcon = (iconName: string) => {
 };
 
 export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { freeDelivery } = useSettings();
   const { slug } = use(params);
   const [product, setProduct] = useState<any>(null);
   const [loadingProduct, setLoadingProduct] = useState(true);
@@ -447,7 +449,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               ))
             ) : (
               [
-                { icon: "truck", text: "Free delivery on orders above Rs. 2000" },
+                ...(freeDelivery?.is_active ? [{ icon: "truck", text: `Free delivery on orders above Rs. ${freeDelivery.threshold}` }] : []),
                 { icon: "shield", text: "100% authentic & quality guaranteed" },
                 { icon: "rotate-ccw", text: "7-day easy returns & exchanges" },
                 { icon: "zap", text: "Cash on Delivery available nationwide" }

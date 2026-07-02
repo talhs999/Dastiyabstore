@@ -71,7 +71,7 @@ export default function OrderReceiptPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* Invoice Card */}
-        <div style={{ background: "white", borderRadius: 16, border: "1px solid var(--gray-200)", overflow: "hidden", boxShadow: "0 10px 25px rgba(0,0,0,0.05)" }}>
+        <div id="invoice-container" style={{ background: "white", borderRadius: 16, border: "1px solid var(--gray-200)", overflow: "hidden", boxShadow: "0 10px 25px rgba(0,0,0,0.05)" }}>
           
           {/* Logo Header */}
           <div style={{ background: "linear-gradient(135deg, var(--red) 0%, #a81c2b 100%)", padding: "32px 24px", color: "white", textAlign: "center" }}>
@@ -164,11 +164,11 @@ export default function OrderReceiptPage({ params }: { params: Promise<{ id: str
             <div style={{ background: "var(--gray-50)", borderRadius: 12, padding: 18, border: "1px solid var(--gray-200)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--gray-600)", marginBottom: 8 }}>
                 <span>Subtotal</span>
-                <span style={{ fontWeight: 600, color: "var(--gray-800)" }}>Rs {order.subtotal.toLocaleString()}</span>
+                <span style={{ fontWeight: 600, color: "var(--gray-800)" }}>Rs {(order.subtotal || order.total || 0).toLocaleString()}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--gray-600)", marginBottom: 8 }}>
                 <span>Shipping Fee</span>
-                <span style={{ fontWeight: 600, color: "var(--gray-800)" }}>{order.shipping_fee === 0 ? "FREE" : `Rs ${order.shipping_fee}`}</span>
+                <span style={{ fontWeight: 600, color: "var(--gray-800)" }}>{order.shipping_fee === 0 || !order.shipping_fee ? "FREE" : `Rs ${order.shipping_fee}`}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--gray-600)", marginBottom: 8 }}>
                 <span>Tax (GST 0%)</span>
@@ -177,7 +177,7 @@ export default function OrderReceiptPage({ params }: { params: Promise<{ id: str
               <div style={{ height: 1, background: "var(--gray-200)", margin: "10px 0" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: 14, fontWeight: 800, color: "var(--gray-900)" }}>Grand Total</span>
-                <span style={{ fontSize: 20, fontWeight: 900, color: "var(--red)" }}>Rs {order.total_amount.toLocaleString()}</span>
+                <span style={{ fontSize: 20, fontWeight: 900, color: "var(--red)" }}>Rs {(order.total || 0).toLocaleString()}</span>
               </div>
             </div>
 
@@ -194,21 +194,18 @@ export default function OrderReceiptPage({ params }: { params: Promise<{ id: str
 
       <style>{`
         @media print {
-          .no-print {
-            display: none !important;
+          .no-print { display: none !important; }
+          body * { visibility: hidden; }
+          #invoice-container, #invoice-container * { visibility: visible; }
+          #invoice-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
           }
-          body {
-            background: white !important;
-            padding: 0 !important;
-          }
-          div[style*="background: var(--gray-50)"] {
-            background: white !important;
-            padding: 0 !important;
-          }
-          div[style*="box-shadow:"] {
-            box-shadow: none !important;
-            border: none !important;
-          }
+          body { background: white !important; padding: 0 !important; }
+          div[style*="background: var(--gray-50)"] { background: white !important; padding: 0 !important; }
+          div[style*="box-shadow:"] { box-shadow: none !important; border: none !important; }
         }
       `}</style>
     </div>

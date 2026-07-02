@@ -196,7 +196,7 @@ export default function LoginPage() {
                 <label className="label">Phone Number</label>
                 <div style={{ position: "relative" }}>
                   <Phone size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40 }} type="tel" placeholder="0300-1234567" value={regPhone} onChange={e => setRegPhone(e.target.value)} required />
+                  <input className="input" style={{ paddingLeft: 40 }} type="tel" placeholder="0316-2975195" value={regPhone} onChange={e => setRegPhone(e.target.value)} required />
                 </div>
               </div>
               <div>

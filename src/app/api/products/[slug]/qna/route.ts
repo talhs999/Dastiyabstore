@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request, context: any) {
   try {
-    const slug = context.params.slug;
+    const params = await context.params;
+    const slug = params.slug;
     const body = await request.json();
 
     const newQna = await prisma.productQna.create({

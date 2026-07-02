@@ -12,6 +12,7 @@ import { useCart } from "@/store/cartStore";
 import { useWishlist } from "@/store/wishlistStore";
 import { useRouter, usePathname } from "next/navigation";
 import { products } from "@/data/products";
+import { useSettings } from "@/components/SettingsProvider";
 
 const categories = [
   { name: "Neckband Earphones", icon: <Headphones size={16} />, href: "/shop/neckband" },
@@ -25,6 +26,7 @@ const categories = [
 ];
 
 export default function Navbar() {
+  const { freeDelivery } = useSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -150,12 +152,17 @@ export default function Navbar() {
       {/* Announcement Bar */}
       <div className="announcement-bar">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 32 }}>
-          <div className="animate-marquee" style={{ display: "flex", gap: 64, whiteSpace: "nowrap" }}>
-            {["Free Delivery on orders above Rs. 2000", "Cash on Delivery Available Nationwide", "Easy Returns within 5 Days", "100% Authentic Products", "Free Delivery on orders above Rs. 2000", "Cash on Delivery Available Nationwide", "Easy Returns within 5 Days", "100% Authentic Products"].map((t, i) => (
-              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <div className="animate-marquee" style={{ display: "flex", width: "fit-content", animation: "marquee 20s linear infinite" }}>
+            {[
+              ...(freeDelivery?.is_active ? [`Free Delivery on orders above Rs. ${freeDelivery.threshold}`] : []),
+              "Cash on Delivery Available Nationwide", "Easy Returns within 5 Days", "100% Authentic Products",
+              ...(freeDelivery?.is_active ? [`Free Delivery on orders above Rs. ${freeDelivery.threshold}`] : []),
+              "Cash on Delivery Available Nationwide", "Easy Returns within 5 Days", "100% Authentic Products"
+            ].map((t, i) => (
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8, marginRight: 64, whiteSpace: "nowrap" }}>
                 <Truck size={14} />
                 {t}
-                <span style={{ opacity: 0.4 }}>|</span>
+                <span style={{ opacity: 0.4, marginLeft: 8 }}>|</span>
               </span>
             ))}
           </div>
@@ -411,7 +418,7 @@ export default function Navbar() {
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, fontSize: 13, color: "var(--gray-500)" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Phone size={13} color="var(--red)" />
-                <strong style={{ color: "var(--gray-700)" }}>0300-1234567</strong>
+                <strong style={{ color: "var(--gray-700)" }}>0316-2975195</strong>
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <MapPin size={13} color="var(--red)" />

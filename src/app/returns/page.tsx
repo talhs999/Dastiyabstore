@@ -61,7 +61,7 @@ export default function ReturnsPage() {
         <section>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 12 }}>How to Request a Return</h2>
           <p style={{ color: "var(--gray-600)", lineHeight: 1.8 }}>
-            To initiate a return, please contact our support team at <strong>support@dastiyabstore.com</strong> or call us at <strong>+92 300 1234567</strong> with your order number. Our team will guide you through the process.
+            To initiate a return, please contact our support team at <strong>support@dastiyabstore.com</strong> or call us at <strong>+92 316 2975195</strong> with your order number. Our team will guide you through the process.
           </p>
         </section>
       </div>

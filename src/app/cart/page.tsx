@@ -4,10 +4,14 @@ import Image from "next/image";
 import { ShoppingCart, Trash2, ArrowRight, Tag, Package } from "lucide-react";
 import { useCart } from "@/store/cartStore";
 import { Minus, Plus } from "lucide-react";
+import { useSettings } from "@/components/SettingsProvider";
 
 export default function CartPage() {
+  const { freeDelivery } = useSettings();
   const { items, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
-  const shipping = totalPrice >= 2000 ? 0 : 200;
+  
+  // Shipping is calculated at checkout based on actual city/rules
+  const shipping = 0;
   const grandTotal = totalPrice + shipping;
 
   return (
@@ -73,17 +77,18 @@ export default function CartPage() {
                   <span>Subtotal ({totalItems} items)</span>
                   <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>Rs. {totalPrice.toLocaleString()}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "var(--gray-600)" }}>
-                  <span>Shipping</span>
-                  <span style={{ fontWeight: 600, color: shipping === 0 ? "#16a34a" : "var(--gray-900)" }}>
-                    {shipping === 0 ? "FREE" : `Rs. ${shipping}`}
-                  </span>
-                </div>
-                {shipping > 0 && (
-                  <p style={{ fontSize: 12, color: "var(--gray-500)", background: "var(--gray-50)", padding: "8px 12px", borderRadius: 8 }}>
-                    Add Rs. {(2000 - totalPrice).toLocaleString()} more for free shipping
-                  </p>
-                )}
+                  <div style={{ paddingBottom: 16, borderBottom: "1px dashed var(--gray-200)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                      <span style={{ color: "var(--gray-600)" }}>Shipping</span>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: "var(--gray-500)" }}>Calculated at checkout</span>
+                    </div>
+                    {freeDelivery?.is_active && totalPrice < freeDelivery.threshold && (
+                      <div style={{ fontSize: 13, color: "var(--red)", display: "flex", alignItems: "center", gap: 6 }}>
+                        <Truck size={14} /> 
+                        Add Rs. {(freeDelivery.threshold - totalPrice).toLocaleString()} more for free shipping
+                      </div>
+                    )}
+                  </div>
               </div>
               <div style={{ borderTop: "2px solid var(--gray-200)", paddingTop: 16, marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>

@@ -144,15 +144,15 @@ export default function AccountOrdersPage() {
                         <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: "var(--radius-full)", background: `${statusColors[order.status] || "var(--gray-400)"}20`, color: statusColors[order.status] || "var(--gray-600)" }}>{order.status}</span>
                       </div>
                       <div style={{ fontSize: 13, color: "var(--gray-500)", marginBottom: 6 }}>
-                        {order.shipping_address}
+                        {order.address}, {order.city}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 13, color: "var(--gray-500)" }}>
                         <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Clock size={12} /> {new Date(order.created_at).toLocaleDateString("en-PK", { month: "long", day: "numeric", year: "numeric" })}</span>
-                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Package size={12} /> Subtotal: Rs. {order.subtotal.toLocaleString()}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Package size={12} /> Subtotal: Rs. {(order.subtotal || order.total || 0).toLocaleString()}</span>
                       </div>
                     </div>
                     <div className="order-actions" style={{ minWidth: 160 }}>
-                      <div style={{ fontSize: 20, fontWeight: 900, color: "var(--red)" }}>Rs. {order.total_amount.toLocaleString()}</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: "var(--red)" }}>Rs. {(order.total || 0).toLocaleString()}</div>
                       <div style={{ fontSize: 12, color: "var(--gray-500)", marginBottom: 8 }}>Payment: {order.payment_method}</div>
                       <div className="order-btn-group" style={{ display: "flex", gap: 8 }}>
                         <Link href={`/track-order?id=${order.id}`} className="btn-ghost" style={{ fontSize: 12, padding: "6px 14px", border: "1px solid var(--gray-200)", textDecoration: "none", color: "var(--gray-700)", borderRadius: 6 }}>

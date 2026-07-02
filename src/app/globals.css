@@ -740,6 +740,7 @@ body {
   
   .desktop-only { display: none !important; }
   .mobile-only { display: flex !important; }
+  .card-actions { display: none !important; }
 }
 
 @media (min-width: 769px) {

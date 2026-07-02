@@ -9,6 +9,7 @@ import {
   Star, Zap, Package, Wind, Laptop, Monitor, Home, ShoppingCart,
   TrendingUp, Award, Heart, Menu, Fan, Smartphone, Cpu, LayoutGrid, Music
 } from "lucide-react";
+import { useSettings } from "@/components/SettingsProvider";
 import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
 
@@ -379,7 +380,9 @@ function CategorySidebar({ categories }: { categories: any[] }) {
 
 /* ─── HOME PAGE ─── */
 export default function HomePage() {
+  const { freeDelivery } = useSettings();
   const [activeSlide, setActiveSlide] = useState(0);
+  const [banners, setBanners] = useState<any[]>(heroSlides);
   const reviewsRef = useRef<HTMLDivElement>(null);
   const [featured, setFeatured] = useState<any[]>([]);
   const [bestSellers, setBestSellers] = useState<any[]>([]);
@@ -422,6 +425,10 @@ export default function HomePage() {
         if (data.instagram) {
           setInstagramPosts(data.instagram);
         }
+        
+        if (data.bannerSlides && data.bannerSlides.length > 0) {
+          setBanners(data.bannerSlides);
+        }
 
       } catch (err) {
         console.error("Error fetching homepage products:", err);
@@ -436,12 +443,12 @@ export default function HomePage() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveSlide(prev => (prev + 1) % heroSlides.length);
+      setActiveSlide(prev => (prev + 1) % banners.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [banners.length]);
 
-  const slide = heroSlides[activeSlide];
+  const slide = banners[activeSlide] || heroSlides[0];
 
   return (
     <div style={{ overflowX: "hidden" }}>
@@ -480,7 +487,11 @@ export default function HomePage() {
               </Link>
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 32, flexWrap: "wrap" }}>
-              {[{ icon: <Truck size={14} />, text: "Free Delivery Rs. 2000+" }, { icon: <Shield size={14} />, text: "100% Authentic" }, { icon: <RotateCcw size={14} />, text: "Easy Returns" }].map((t, i) => (
+              {[
+                ...(freeDelivery?.is_active ? [{ icon: <Truck size={14} />, text: `Free Delivery Rs. ${freeDelivery.threshold}+` }] : []),
+                { icon: <Shield size={14} />, text: "100% Authentic" },
+                { icon: <RotateCcw size={14} />, text: "Easy Returns" }
+              ].map((t, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--gray-600)", fontWeight: 500 }}>
                   <span style={{ color: "var(--red)" }}>{t.icon}</span> {t.text}
                 </div>
@@ -499,8 +510,8 @@ export default function HomePage() {
                   <TrendingUp size={18} color="var(--red)" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: "var(--gray-900)" }}>Best Seller</div>
-                  <div style={{ fontSize: 11, color: "var(--gray-500)" }}>500+ sold this week</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: "var(--gray-900)" }}>{slide.floatingTagTitle || "Best Seller"}</div>
+                  <div style={{ fontSize: 11, color: "var(--gray-500)" }}>{slide.floatingTagSubtitle || "500+ sold this week"}</div>
                 </div>
               </div>
             </div>
@@ -509,7 +520,7 @@ export default function HomePage() {
 
         {/* Slide indicators */}
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 24px 32px", display: "flex", justifyContent: "flex-start", alignItems: "center", gap: 8 }}>
-          {heroSlides.map((_, i) => (
+          {banners.map((_, i) => (
             <button key={i} onClick={() => setActiveSlide(i)} style={{
               width: i === activeSlide ? 28 : 8, height: 8, borderRadius: 4,
               background: i === activeSlide ? "var(--red)" : "var(--gray-300)",
@@ -617,7 +628,7 @@ export default function HomePage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24 }}>
             {[
-              { icon: <Truck size={24} />, title: "Fast Nationwide Delivery", desc: "Delivery across all of Pakistan within 48-72 hours. Free on orders above Rs. 2000." },
+              { icon: <Truck size={24} />, title: "Fast Nationwide Delivery", desc: `Delivery across all of Pakistan within 48-72 hours.${freeDelivery?.is_active ? ` Free on orders above Rs. ${freeDelivery.threshold}.` : ''}` },
               { icon: <Shield size={24} />, title: "100% Authentic Products", desc: "All products are tested and verified. Quality guaranteed or your money back." },
               { icon: <RotateCcw size={24} />, title: "Hassle-Free Returns", desc: "Not satisfied? Return within 5 days — no questions asked. Easy pickup." },
               { icon: <Headphones size={24} />, title: "24/7 Customer Support", desc: "Our support team is always ready via WhatsApp, phone, or email." },

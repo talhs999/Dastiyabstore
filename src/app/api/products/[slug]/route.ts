@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request, context: any) {
   try {
-    const slug = context.params.slug;
+    const params = await context.params;
+    const slug = params.slug;
     
     // Check if UUID
     const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(slug);

@@ -12,8 +12,13 @@ export async function GET() {
     const instagram = await prisma.instagramPost.findMany({ 
       orderBy: { created_at: 'desc' } 
     });
+    
+    const bannerSetting = await prisma.storeSetting.findUnique({
+      where: { key: 'home_banner_slides' }
+    });
+    const bannerSlides = bannerSetting ? bannerSetting.value : null;
 
-    return NextResponse.json({ featured, bestSellers, categories, instagram });
+    return NextResponse.json({ featured, bestSellers, categories, instagram, bannerSlides });
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });

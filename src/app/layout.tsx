@@ -5,6 +5,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ToastProvider } from "@/components/ui/Toast";
 import VisitorTracker from "@/components/VisitorTracker";
+import { SettingsProvider } from "@/components/SettingsProvider";
+import WhatsAppButton from "@/components/WhatsAppButton";
+import Chatbot from "@/components/Chatbot";
+import { prisma } from "@/lib/prisma";
 
 const inter = Inter({ 
   subsets: ["latin"], 
@@ -35,20 +39,43 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = 'force-dynamic';
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Fetch global settings
+  let freeDeliverySettings = { is_active: true, threshold: 2000 };
+  try {
+    const setting = await prisma.storeSetting.findUnique({
+      where: { key: 'global_free_delivery' }
+    });
+    if (setting && setting.value) {
+      freeDeliverySettings = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value as any;
+    }
+  } catch (error) {
+    console.error("Failed to fetch global settings:", error);
+  }
+
+  const initialSettings = {
+    freeDelivery: freeDeliverySettings,
+  };
+
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
       <body className="font-sans">
-        <ToastProvider>
-          <VisitorTracker />
-          <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <SettingsProvider initialSettings={initialSettings}>
+          <ToastProvider>
+            <VisitorTracker />
+            <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <Navbar />
             <main style={{ flex: 1 }}>
               {children}
             </main>
             <Footer />
+            <WhatsAppButton />
+            <Chatbot />
           </div>
-        </ToastProvider>
+          </ToastProvider>
+        </SettingsProvider>
       </body>
     </html>
   );

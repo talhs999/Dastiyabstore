@@ -16,7 +16,7 @@ const faqs = [
     cat: "Products & Quality",
     questions: [
       { q: "Are your products 100% authentic?", a: "Absolutely. Every product listed on DastiyabStore is personally tested by our team before listing. We guarantee quality and authenticity." },
-      { q: "What if the product I received is defective?", a: "Contact us within 5 days via WhatsApp (0300-1234567) and we'll arrange a free pickup and replacement or full refund." },
+      { q: "What if the product I received is defective?", a: "Contact us within 5 days via WhatsApp (0316-2975195) and we'll arrange a free pickup and replacement or full refund." },
       { q: "Do you provide warranty on products?", a: "Most tech products come with a 1–3 month seller warranty. Product-specific warranty details are mentioned on each product page." },
     ],
   },
