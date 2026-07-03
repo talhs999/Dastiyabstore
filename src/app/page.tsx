@@ -390,6 +390,9 @@ export default function HomePage() {
   const [sidebarCategories, setSidebarCategories] = useState<any[]>([]);
   const [instagramPosts, setInstagramPosts] = useState<any[]>([]);
   const [promoBanner, setPromoBanner] = useState<any>(null);
+  const [bentoGrid, setBentoGrid] = useState<any[]|null>(null);
+  const [dynamicStats, setDynamicStats] = useState<any[]|null>(null);
+  const [siteReviews, setSiteReviews] = useState<any[]|null>(null);
   
   const scrollReviews = (dir: "left" | "right") => {
     if (reviewsRef.current) {
@@ -451,6 +454,18 @@ export default function HomePage() {
             bullet2: "Cash on Delivery",
             bullet3: "7-Day Easy Returns"
           });
+        }
+
+        if (data.bentoGrid && Array.isArray(data.bentoGrid) && data.bentoGrid.length === 5) {
+          setBentoGrid(data.bentoGrid);
+        }
+
+        if (data.statsStrip && Array.isArray(data.statsStrip) && data.statsStrip.length === 4) {
+          setDynamicStats(data.statsStrip);
+        }
+
+        if (data.siteReviews && Array.isArray(data.siteReviews) && data.siteReviews.length > 0) {
+          setSiteReviews(data.siteReviews);
         }
 
       } catch (err) {
@@ -560,13 +575,20 @@ export default function HomePage() {
           margin: "0 auto",
           gap: "24px"
         }}>
-          {stats.map((s, i) => (
-            <div key={i} style={{ textAlign: "center", color: "white" }}>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 6, opacity: 0.8 }}>{s.icon}</div>
-              <div style={{ fontSize: 26, fontWeight: 900 }}><AnimatedCounter target={s.target} suffix={s.suffix} decimals={s.decimals} /></div>
-              <div style={{ fontSize: 13, opacity: 0.85 }}>{s.label}</div>
-            </div>
-          ))}
+          {(dynamicStats || stats).map((s: any, i: number) => {
+            const iconName = s.icon || "Heart";
+            const IconComp = (Icons as any)[iconName] || Icons.Heart;
+            const target = dynamicStats ? parseFloat(s.value) : s.target;
+            const suffix = dynamicStats ? s.suffix : s.suffix;
+            const decimals = dynamicStats ? (s.value && s.value.includes(".") ? 1 : 0) : (s.decimals || 0);
+            return (
+              <div key={i} style={{ textAlign: "center", color: "white" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 6, opacity: 0.8 }}><IconComp size={20} /></div>
+                <div style={{ fontSize: 26, fontWeight: 900 }}><AnimatedCounter target={target} suffix={suffix} decimals={decimals} /></div>
+                <div style={{ fontSize: 13, opacity: 0.85 }}>{s.label}</div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -679,80 +701,90 @@ export default function HomePage() {
           <div className="bento-grid">
             
             {/* Block 1: Main (Season's Hot Product) */}
-            <div className="bento-card bento-main" style={{ background: "linear-gradient(135deg, #fff5f5 0%, #fff0e0 100%)", padding: "40px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            {(() => { const b = bentoGrid ? bentoGrid[0] : null; return (
+            <div className="bento-card bento-main" style={{ background: b?.bg || "linear-gradient(135deg, #fff5f5 0%, #fff0e0 100%)", padding: "40px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div style={{ position: "relative", zIndex: 2 }}>
                 <span className="badge badge-yellow" style={{ fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
-                  <Zap size={12} fill="var(--black)" /> Season's Hot Product
+                  <Zap size={12} fill="var(--black)" /> {b?.badge || "Season's Hot Product"}
                 </span>
                 <h2 style={{ fontSize: "clamp(32px, 4vw, 48px)", fontWeight: 900, lineHeight: 1.1, color: "var(--gray-900)", marginBottom: 16 }}>
-                  Stay Cool with<br /><span style={{ color: "var(--red)" }}>Neck Fan</span>
+                  {b?.title || "Stay Cool with"}<br /><span style={{ color: b?.accentColor || "var(--red)" }}>{b?.titleHighlight || "Neck Fan"}</span>
                 </h2>
                 <p style={{ fontSize: 15, color: "var(--gray-600)", marginBottom: 32, lineHeight: 1.6, maxWidth: 320 }}>
-                  Wearable 360° bladeless neck fan — perfect for Pakistani summers.
+                  {b?.subtitle || "Wearable 360° bladeless neck fan — perfect for Pakistani summers."}
                 </p>
-                <Link href="/shop/neck-fan" className="btn-red" style={{ fontSize: 15, padding: "12px 28px", textDecoration: "none", display: "inline-flex" }}>
-                  Shop Now <ArrowRight size={16} style={{ marginLeft: 8 }} />
+                <Link href={b?.buttonLink || "/shop/neck-fan"} className="btn-red" style={{ fontSize: 15, padding: "12px 28px", textDecoration: "none", display: "inline-flex" }}>
+                  {b?.buttonText || "Shop Now"} <ArrowRight size={16} style={{ marginLeft: 8 }} />
                 </Link>
               </div>
             </div>
+            ); })()}
 
-            {/* Block 2: Wide Top (Mobile Accessories) */}
-            <div className="bento-card bento-wide bento-wide-inner" style={{ background: "#e0f2fe", padding: "32px", overflow: "hidden" }}>
+            {/* Block 2: Wide Top */}
+            {(() => { const b = bentoGrid ? bentoGrid[1] : null; return (
+            <div className="bento-card bento-wide bento-wide-inner" style={{ background: b?.bg || "#e0f2fe", padding: "32px", overflow: "hidden" }}>
               <div style={{ position: "relative", zIndex: 2, flex: 1 }}>
-                <h3 style={{ fontSize: 24, fontWeight: 800, color: "var(--gray-900)", marginBottom: 8 }}>
-                  Mobile<br />Accessories
+                <h3 style={{ fontSize: 24, fontWeight: 800, color: "var(--gray-900)", marginBottom: 8, whiteSpace: "pre-line" }}>
+                  {(b?.title || "Mobile\nAccessories").replace(/\\n/g, "\n")}
                 </h3>
-                <p style={{ fontSize: 14, color: "#0ea5e9", marginBottom: 20 }}>Chargers, Cables & More</p>
-                <Link href="/shop/mobile-accessories" className="btn-red" style={{ fontSize: 13, padding: "10px 20px", textDecoration: "none", display: "inline-block", background: "#0ea5e9" }}>
-                  Explore <ChevronRight size={14} style={{ display: "inline", verticalAlign: "middle" }} />
+                <p style={{ fontSize: 14, color: b?.accentColor || "#0ea5e9", marginBottom: 20 }}>{b?.subtitle || "Chargers, Cables & More"}</p>
+                <Link href={b?.buttonLink || "/shop/mobile-accessories"} className="btn-red" style={{ fontSize: 13, padding: "10px 20px", textDecoration: "none", display: "inline-block", background: b?.accentColor || "#0ea5e9" }}>
+                  {b?.buttonText || "Explore"} <ChevronRight size={14} style={{ display: "inline", verticalAlign: "middle" }} />
                 </Link>
               </div>
               <div className="bento-wide-img">
-                <Image src="https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=500&q=80" alt="Mobile Accessories" fill style={{ objectFit: "cover" }} />
+                <Image src={b?.image || "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=500&q=80"} alt={b?.title || "Mobile Accessories"} fill style={{ objectFit: "cover" }} />
               </div>
             </div>
+            ); })()}
 
-            {/* Block 3: Small Top (Home Products) */}
-            <div className="bento-card bento-small" style={{ background: "#fff0f0", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
-              <h4 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 4 }}>Home</h4>
-              <p style={{ fontSize: 12, color: "var(--gray-500)", marginBottom: 16 }}>Smart gadgets</p>
+            {/* Block 3: Small Top */}
+            {(() => { const b = bentoGrid ? bentoGrid[2] : null; return (
+            <div className="bento-card bento-small" style={{ background: b?.bg || "#fff0f0", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
+              <h4 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 4 }}>{b?.title || "Home"}</h4>
+              <p style={{ fontSize: 12, color: "var(--gray-500)", marginBottom: 16 }}>{b?.subtitle || "Smart gadgets"}</p>
               <div className="bento-small-img" style={{ marginBottom: 16 }}>
-                <Image src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" alt="Home Products" fill style={{ objectFit: "cover" }} />
+                <Image src={b?.image || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80"} alt={b?.title || "Home Products"} fill style={{ objectFit: "cover" }} />
               </div>
-              <Link href="/shop/home-gadgets" style={{ color: "var(--red)", fontSize: 12, fontWeight: 700, textDecoration: "none", textTransform: "uppercase", letterSpacing: 1 }}>
-                Learn More <ChevronRight size={12} style={{ display: "inline" }} />
+              <Link href={b?.buttonLink || "/shop/home-gadgets"} style={{ color: b?.accentColor || "var(--red)", fontSize: 12, fontWeight: 700, textDecoration: "none", textTransform: "uppercase", letterSpacing: 1 }}>
+                {b?.buttonText || "Learn More"} <ChevronRight size={12} style={{ display: "inline" }} />
               </Link>
             </div>
+            ); })()}
 
-            {/* Block 4: Small Bottom (Computer Accessories) */}
-            <div className="bento-card bento-small" style={{ background: "#f0fdf4", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            {/* Block 4: Small Bottom */}
+            {(() => { const b = bentoGrid ? bentoGrid[3] : null; return (
+            <div className="bento-card bento-small" style={{ background: b?.bg || "#f0fdf4", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
-                <h4 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 4 }}>Computer</h4>
-                <p style={{ fontSize: 12, color: "var(--gray-500)" }}>Stands, Hubs & More</p>
+                <h4 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 4 }}>{b?.title || "Computer"}</h4>
+                <p style={{ fontSize: 12, color: "var(--gray-500)" }}>{b?.subtitle || "Stands, Hubs & More"}</p>
               </div>
               <div className="bento-small-img" style={{ marginTop: "auto" }}>
-                <Image src="https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80" alt="Computer Accessories" fill style={{ objectFit: "cover" }} />
+                <Image src={b?.image || "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80"} alt={b?.title || "Computer Accessories"} fill style={{ objectFit: "cover" }} />
               </div>
-              <Link href="/shop/laptop-stand" style={{ color: "#16a34a", fontSize: 12, fontWeight: 700, textDecoration: "none", textTransform: "uppercase", letterSpacing: 1, marginTop: 12 }}>
-                Explore <ChevronRight size={12} style={{ display: "inline" }} />
+              <Link href={b?.buttonLink || "/shop/laptop-stand"} style={{ color: b?.accentColor || "#16a34a", fontSize: 12, fontWeight: 700, textDecoration: "none", textTransform: "uppercase", letterSpacing: 1, marginTop: 12 }}>
+                {b?.buttonText || "Explore"} <ChevronRight size={12} style={{ display: "inline" }} />
               </Link>
             </div>
+            ); })()}
 
-            {/* Block 5: Wide Bottom (All Categories) */}
-            <div className="bento-card bento-wide bento-wide-inner" style={{ background: "linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%)", padding: "32px" }}>
+            {/* Block 5: Wide Bottom */}
+            {(() => { const b = bentoGrid ? bentoGrid[4] : null; return (
+            <div className="bento-card bento-wide bento-wide-inner" style={{ background: b?.bg || "linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%)", padding: "32px" }}>
               <div style={{ position: "relative", zIndex: 2, flex: 1 }}>
-                <h3 style={{ fontSize: 24, fontWeight: 800, color: "var(--gray-900)", marginBottom: 8 }}>
-                  Explore All<br />Categories
+                <h3 style={{ fontSize: 24, fontWeight: 800, color: "var(--gray-900)", marginBottom: 8, whiteSpace: "pre-line" }}>
+                  {(b?.title || "Explore All\nCategories").replace(/\\n/g, "\n")}
                 </h3>
-                <p style={{ fontSize: 14, color: "#8b5cf6", marginBottom: 20 }}>Find everything you need in one place.</p>
-                <Link href="/shop" className="btn-yellow" style={{ fontSize: 13, padding: "10px 20px", textDecoration: "none", display: "inline-block", color: "var(--black)", background: "var(--yellow)" }}>
-                  Browse Catalog <ArrowRight size={14} style={{ display: "inline", verticalAlign: "middle", marginLeft: 4 }} />
+                <p style={{ fontSize: 14, color: b?.accentColor || "#8b5cf6", marginBottom: 20 }}>{b?.subtitle || "Find everything you need in one place."}</p>
+                <Link href={b?.buttonLink || "/shop"} className="btn-yellow" style={{ fontSize: 13, padding: "10px 20px", textDecoration: "none", display: "inline-block", color: "var(--black)", background: "var(--yellow)" }}>
+                  {b?.buttonText || "Browse Catalog"} <ArrowRight size={14} style={{ display: "inline", verticalAlign: "middle", marginLeft: 4 }} />
                 </Link>
               </div>
               <div className="bento-wide-img">
-                <Image src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80" alt="All Categories" fill style={{ objectFit: "cover" }} />
+                <Image src={b?.image || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"} alt={b?.title || "All Categories"} fill style={{ objectFit: "cover" }} />
               </div>
             </div>
+            ); })()}
 
           </div>
         </div>
@@ -793,14 +825,14 @@ export default function HomePage() {
               .reviews-slider::-webkit-scrollbar { display: none; }
             `}</style>
 
-            {[
-              { name: "Ahmed Raza", city: "Lahore", text: "Neck fan is amazing! Perfect for summer. COD delivery was smooth. Highly recommended!", product: "Neck Fan 360°", time: "a week ago", color: "#e91e63" },
-              { name: "Fatima Malik", city: "Karachi", text: "Laptop stand is very sturdy. Helps with neck pain during long work hours. Great quality!", product: "Aluminum Laptop Stand", time: "3 days ago", color: "#9c27b0" },
-              { name: "Usman Khan", city: "Islamabad", text: "AirPods sound quality is excellent at this price point. Battery lasts all day. Very happy!", product: "DastiyabBuds Pro", time: "2 weeks ago", color: "#2196f3" },
-              { name: "Zainab Ali", city: "Rawalpindi", text: "The quality of the mobile accessories is top-notch. Cables are thick and durable. Delivered in 2 days.", product: "Fast Charging Cable", time: "1 month ago", color: "#00bcd4" },
-              { name: "Bilal Qureshi", city: "Peshawar", text: "Best tech store in Pakistan! Customer service is highly responsive. The smartwatch works perfectly.", product: "Smart Watch Series 8", time: "2 months ago", color: "#4caf50" },
-              { name: "Sana Tariq", city: "Multan", text: "I bought the ring light for my TikTok videos and the brightness is fantastic. Love the tripod quality.", product: "LED Ring Light 10\"", time: "3 weeks ago", color: "#ff9800" },
-            ].map((r, i) => (
+            {(siteReviews || [
+              { name: "Ahmed Raza", city: "Lahore", text: "Neck fan is amazing! Perfect for summer. COD delivery was smooth. Highly recommended!", product: "Neck Fan 360°", time: "a week ago", color: "#e91e63", rating: 5 },
+              { name: "Fatima Malik", city: "Karachi", text: "Laptop stand is very sturdy. Helps with neck pain during long work hours. Great quality!", product: "Aluminum Laptop Stand", time: "3 days ago", color: "#9c27b0", rating: 5 },
+              { name: "Usman Khan", city: "Islamabad", text: "AirPods sound quality is excellent at this price point. Battery lasts all day. Very happy!", product: "DastiyabBuds Pro", time: "2 weeks ago", color: "#2196f3", rating: 5 },
+              { name: "Zainab Ali", city: "Rawalpindi", text: "The quality of the mobile accessories is top-notch. Cables are thick and durable. Delivered in 2 days.", product: "Fast Charging Cable", time: "1 month ago", color: "#00bcd4", rating: 5 },
+              { name: "Bilal Qureshi", city: "Peshawar", text: "Best tech store in Pakistan! Customer service is highly responsive. The smartwatch works perfectly.", product: "Smart Watch Series 8", time: "2 months ago", color: "#4caf50", rating: 5 },
+              { name: "Sana Tariq", city: "Multan", text: "I bought the ring light for my TikTok videos and the brightness is fantastic. Love the tripod quality.", product: "LED Ring Light 10\"", time: "3 weeks ago", color: "#ff9800", rating: 5 },
+            ]).map((r, i) => (
               <div key={i} style={{ 
                 flex: "0 0 340px", 
                 scrollSnapAlign: "start",
@@ -840,8 +872,10 @@ export default function HomePage() {
 
                 {/* Stars & Time ago */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ display: "flex", gap: 2 }}>
-                    {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} fill="#fbbc04" color="#fbbc04" />)}
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={14} fill={i < (r.rating || 5) ? "var(--yellow)" : "none"} strokeWidth={i < (r.rating || 5) ? 0 : 2} color="var(--yellow)" />
+                    ))}
                   </div>
                   <span style={{ fontSize: 13, color: "#6b7280" }}>{r.time}</span>
                 </div>

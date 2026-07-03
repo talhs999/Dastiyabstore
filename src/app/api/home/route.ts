@@ -23,7 +23,22 @@ export async function GET() {
     });
     const promoBanner = promoSetting ? (typeof promoSetting.value === 'string' ? JSON.parse(promoSetting.value) : promoSetting.value) : null;
 
-    return NextResponse.json({ featured, bestSellers, categories, instagram, bannerSlides, promoBanner });
+    const bentoSetting = await prisma.storeSetting.findUnique({
+      where: { key: 'bento_grid' }
+    });
+    const bentoGrid = bentoSetting ? bentoSetting.value : null;
+
+    const statsSetting = await prisma.storeSetting.findUnique({
+      where: { key: 'stats_strip' }
+    });
+    const statsStrip = statsSetting ? statsSetting.value : null;
+
+    const siteReviewsSetting = await prisma.storeSetting.findUnique({
+      where: { key: 'site_reviews' }
+    });
+    const siteReviews = siteReviewsSetting ? siteReviewsSetting.value : null;
+
+    return NextResponse.json({ featured, bestSellers, categories, instagram, bannerSlides, promoBanner, bentoGrid, statsStrip, siteReviews });
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });

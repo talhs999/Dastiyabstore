@@ -46,6 +46,9 @@ model Product {
   features       Json      @default("[]")
   is_featured    Boolean   @default(false)
   is_best_seller Boolean   @default(false)
+  stock_quantity Int       @default(10)
+  badges         Json?     @default("[]")
+  trust_points   Json?     @default("[]")
   created_at     DateTime  @default(now())
 
   @@map("products")

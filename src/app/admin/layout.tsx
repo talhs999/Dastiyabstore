@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Package, FolderTree, ShoppingCart, 
   Users, Star, Settings, LogOut, MessageSquare, LayoutList, Activity,
-  Menu, X
+  Menu, X, Grid3X3, UserCircle
 } from "lucide-react";
 
 import { useToast } from "@/components/ui/Toast";
@@ -185,6 +185,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "Home Banner", href: "/admin/banner", icon: <LayoutList size={20} /> },
     { label: "Promo Banner", href: "/admin/promo-banner", icon: <LayoutList size={20} /> },
     { label: "Instagram Feed", href: "/admin/instagram", icon: <LayoutList size={20} /> },
+    { label: "Bento Grid", href: "/admin/bento-grid", icon: <Grid3X3 size={20} /> },
+    { label: "Site Reviews", href: "/admin/site-reviews", icon: <Star size={20} /> },
+    { label: "Team Members", href: "/admin/team", icon: <UserCircle size={20} /> },
     { label: "Live Tracking", href: "/admin/live", icon: <Activity size={20} /> },
     { label: "Settings", href: "/admin/settings", icon: <Settings size={20} /> },
   ];

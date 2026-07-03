@@ -55,8 +55,8 @@ export default function AdminProductsPage() {
   };
 
   const filtered = products.filter(p => 
-    (p.name.toLowerCase().includes(search.toLowerCase()) || (p.categories?.name || "").toLowerCase().includes(search.toLowerCase())) &&
-    (categoryFilter === "All Categories" || p.categories?.name === categoryFilter)
+    (p.name.toLowerCase().includes(search.toLowerCase()) || (p.category?.name || "").toLowerCase().includes(search.toLowerCase())) &&
+    (categoryFilter === "All Categories" || p.category?.name === categoryFilter)
   );
 
   return (
@@ -113,7 +113,7 @@ export default function AdminProductsPage() {
                   </div>
                 </td>
                 <td style={{ padding: "16px 24px" }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--gray-700)", background: "var(--gray-100)", padding: "4px 10px", borderRadius: 12 }}>{p.categories?.name || "Uncategorized"}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--gray-700)", background: "var(--gray-100)", padding: "4px 10px", borderRadius: 12 }}>{p.category?.name || "Uncategorized"}</span>
                 </td>
                 <td style={{ padding: "16px 24px" }}>
                   <div style={{ fontWeight: 800, color: "var(--gray-900)", fontSize: 14 }}>Rs. {p.price.toLocaleString()}</div>

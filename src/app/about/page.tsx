@@ -1,10 +1,19 @@
 "use client";
+import { useState, useEffect } from "react";
 import { Award, Target, Users, ShoppingBag, Heart } from "lucide-react";
+import * as Icons from "lucide-react";
 
-const team = [
-  { name: "Amir Khan", role: "Founder & Chief Executive Officer", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&q=80" },
-  { name: "Sara Malik", role: "Head of Operations & Logistics", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&q=80" },
-  { name: "Bilal Ahmed", role: "Chief Product Officer", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&q=80" },
+const defaultTeam = [
+  { name: "Yousuf Ahmed Khan", role: "Co-Founder & CEO", image: "" },
+  { name: "Talha Khan", role: "Co-Founder & CTO", image: "" },
+  { name: "Muddassir Rizwan", role: "Co-Founder & COO", image: "" },
+];
+
+const defaultStats = [
+  { value: "10,000+", label: "Happy Customers" },
+  { value: "48hr", label: "Avg. Delivery" },
+  { value: "4.8★", label: "Rating" },
+  { value: "100%", label: "Authentic" },
 ];
 
 const milestones = [
@@ -14,7 +23,35 @@ const milestones = [
   { year: "2026", title: "Growing Community", desc: "Rapidly expanding our trusted customer base with authentic tech products and 24/7 dedicated support." },
 ];
 
+const AVATAR_COLORS = ["#e91e63", "#2196f3", "#4caf50", "#ff9800", "#9c27b0", "#00bcd4", "#ff5722", "#607d8b"];
+
 export default function AboutPage() {
+  const [team, setTeam] = useState(defaultTeam);
+  const [statsDisplay, setStatsDisplay] = useState(defaultStats);
+
+  useEffect(() => {
+    // Fetch team members
+    fetch("/api/settings/team")
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) setTeam(data);
+      })
+      .catch(() => {});
+
+    // Fetch stats strip
+    fetch("/api/settings/stats")
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length === 4) {
+          setStatsDisplay(data.map((s: any) => ({
+            value: `${s.value}${s.suffix}`,
+            label: s.label
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div>
       {/* Hero */}
@@ -28,10 +65,10 @@ export default function AboutPage() {
             We started DastiyabStore with a simple mission: make quality tech gadgets and accessories accessible to every Pakistani — at fair prices, with trusted service.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 32, marginTop: 16 }}>
-            {[{ n: "10,000+", l: "Happy Customers" }, { n: "48hr", l: "Avg. Delivery" }, { n: "4.8★", l: "Rating" }, { n: "100%", l: "Authentic" }].map((s, i) => (
+            {statsDisplay.map((s, i) => (
               <div key={i} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 900, color: "var(--red)", marginBottom: 4 }}>{s.n}</div>
-                <div style={{ fontSize: 13, color: "var(--gray-500)", fontWeight: 600 }}>{s.l}</div>
+                <div style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 900, color: "var(--red)", marginBottom: 4 }}>{s.value}</div>
+                <div style={{ fontSize: 13, color: "var(--gray-500)", fontWeight: 600 }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -128,7 +165,15 @@ export default function AboutPage() {
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ""}
               >
                 <div style={{ width: 100, height: 100, borderRadius: "50%", overflow: "hidden", margin: "0 auto 12px", border: "3px solid var(--red)", boxShadow: "var(--shadow-md)" }}>
-                  <img src={member.img} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  {member.image ? (
+                    <img src={member.image} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <div style={{ width: "100%", height: "100%", background: AVATAR_COLORS[i % AVATAR_COLORS.length], display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ color: "white", fontWeight: 900, fontSize: 32 }}>
+                        {member.name ? member.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() : "?"}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>{member.name}</div>
                 <div style={{ fontSize: 13, color: "var(--red)", fontWeight: 500 }}>{member.role}</div>

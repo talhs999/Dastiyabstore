@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Store, Truck, Tag, CreditCard, Mail, Bell, Shield, Plus, Edit2, Trash2, X, AlertCircle, MapPin, Landmark, MessageCircle } from "lucide-react";
+import { Store, Truck, Tag, CreditCard, Mail, Bell, Shield, Plus, Edit2, Trash2, X, AlertCircle, MapPin, Landmark, MessageCircle, BarChart3, Save } from "lucide-react";
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState("General");
@@ -86,6 +86,17 @@ export default function AdminSettingsPage() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(false);
 
+  // Stats Strip states
+  const [statsItems, setStatsItems] = useState([
+    { value: "10000", suffix: "+", label: "Happy Customers", icon: "Heart" },
+    { value: "500", suffix: "+", label: "Products Sold", icon: "Package" },
+    { value: "4.8", suffix: "/5", label: "Average Rating", icon: "Star" },
+    { value: "48", suffix: "hr", label: "Fast Delivery", icon: "Truck" },
+  ]);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [savingStats, setSavingStats] = useState(false);
+  const [statsSaved, setStatsSaved] = useState(false);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setSoundEnabled(localStorage.getItem("admin_sound_notifications") !== "false");
@@ -152,6 +163,7 @@ export default function AdminSettingsPage() {
     { label: "Notifications", icon: <Bell size={18} /> },
     { label: "Security", icon: <Shield size={18} /> },
     { label: "AI Chatbot", icon: <MessageCircle size={18} /> },
+    { label: "Stats Strip", icon: <BarChart3 size={18} /> },
   ];
 
   useEffect(() => {
@@ -163,6 +175,7 @@ export default function AdminSettingsPage() {
     else if (activeTab === "Payments") fetchPaymentSettings();
     else if (activeTab === "Security") fetchSecuritySettings();
     else if (activeTab === "AI Chatbot") fetchChatbotSettings();
+    else if (activeTab === "Stats Strip") fetchStatsStrip();
   }, [activeTab]);
 
   const fetchChatbotSettings = async () => {
@@ -197,6 +210,41 @@ export default function AdminSettingsPage() {
     setSavingChatbot(false);
     if (!res.ok) alert("Failed to save Chatbot settings");
     else alert("Chatbot settings saved successfully!");
+  };
+
+  const fetchStatsStrip = async () => {
+    setLoadingStats(true);
+    try {
+      const res = await fetch("/api/settings/stats");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length === 4) setStatsItems(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const saveStatsStrip = async () => {
+    setSavingStats(true);
+    try {
+      const res = await fetch("/api/settings/stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(statsItems),
+      });
+      if (res.ok) {
+        setStatsSaved(true);
+        alert("Stats strip saved successfully!");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to save stats");
+    } finally {
+      setSavingStats(false);
+    }
   };
 
   const fetchGeneralSettings = async () => {
@@ -1711,6 +1759,66 @@ export default function AdminSettingsPage() {
           </div>
         </div>
       )}
+
+          {activeTab === "Stats Strip" && (
+            <div>
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)" }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Stats Strip</h2>
+                <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 4 }}>Edit the numbers shown in the red stats bar on the homepage and about page</p>
+              </div>
+              <div style={{ padding: "24px 32px" }}>
+                {loadingStats ? (
+                  <p style={{ textAlign: "center", color: "var(--gray-500)" }}>Loading...</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                    {statsItems.map((stat, idx) => (
+                      <div key={idx} style={{ background: "var(--gray-50)", borderRadius: 12, border: "1px solid var(--gray-200)", padding: 20 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", marginBottom: 12 }}>Stat {idx + 1}</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 1fr 140px", gap: 12 }}>
+                          <div>
+                            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--gray-500)", marginBottom: 4, display: "block" }}>Number / Value</label>
+                            <input value={stat.value} onChange={e => { const updated = [...statsItems]; updated[idx] = { ...stat, value: e.target.value }; setStatsItems(updated); setStatsSaved(false); }} style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--gray-200)", borderRadius: 8, fontSize: 14 }} placeholder="e.g. 10000" />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--gray-500)", marginBottom: 4, display: "block" }}>Suffix</label>
+                            <input value={stat.suffix} onChange={e => { const updated = [...statsItems]; updated[idx] = { ...stat, suffix: e.target.value }; setStatsItems(updated); setStatsSaved(false); }} style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--gray-200)", borderRadius: 8, fontSize: 14 }} placeholder="+, /5, hr" />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--gray-500)", marginBottom: 4, display: "block" }}>Label</label>
+                            <input value={stat.label} onChange={e => { const updated = [...statsItems]; updated[idx] = { ...stat, label: e.target.value }; setStatsItems(updated); setStatsSaved(false); }} style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--gray-200)", borderRadius: 8, fontSize: 14 }} placeholder="Happy Customers" />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--gray-500)", marginBottom: 4, display: "block" }}>Icon Name</label>
+                            <select value={stat.icon} onChange={e => { const updated = [...statsItems]; updated[idx] = { ...stat, icon: e.target.value }; setStatsItems(updated); setStatsSaved(false); }} style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--gray-200)", borderRadius: 8, fontSize: 14 }}>
+                              <option value="Heart">Heart</option>
+                              <option value="Package">Package</option>
+                              <option value="Star">Star</option>
+                              <option value="Truck">Truck</option>
+                              <option value="Shield">Shield</option>
+                              <option value="Award">Award</option>
+                              <option value="Users">Users</option>
+                              <option value="ShoppingCart">Cart</option>
+                              <option value="Zap">Zap</option>
+                              <option value="ThumbsUp">Thumbs Up</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 10, padding: "8px 14px", background: "var(--red)", borderRadius: 8, display: "inline-flex", alignItems: "center", gap: 8, color: "white" }}>
+                          <span style={{ fontSize: 20, fontWeight: 900 }}>{stat.value}{stat.suffix}</span>
+                          <span style={{ fontSize: 12, opacity: 0.85 }}>{stat.label}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end" }}>
+                <button className="btn-red" onClick={saveStatsStrip} disabled={savingStats} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <Save size={16} /> {savingStats ? "Saving..." : statsSaved ? "Saved ✓" : "Save Stats"}
+                </button>
+              </div>
+            </div>
+          )}
 
     </div>
   );

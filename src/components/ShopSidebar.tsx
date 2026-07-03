@@ -9,9 +9,10 @@ import * as LucideIcons from "lucide-react";
 
 interface Props {
   currentCategory?: string;
+  currentCategorySlug?: string;
 }
 
-export default function ShopSidebar({ currentCategory }: Props) {
+export default function ShopSidebar({ currentCategory, currentCategorySlug }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -27,7 +28,7 @@ export default function ShopSidebar({ currentCategory }: Props) {
   const [openSections, setOpenSections] = useState({ categories: true, price: true, rating: true, tags: true });
   
   const [dbCategories, setDbCategories] = useState<any[]>([
-    { name: "All Products", href: "/shop", icon: <Package size={16} /> }
+    { name: "All Products", slug: "all", href: "/shop", icon: <Package size={16} /> }
   ]);
 
   useEffect(() => {
@@ -40,12 +41,13 @@ export default function ShopSidebar({ currentCategory }: Props) {
             const IconComponent = (LucideIcons as any)[c.icon] || LucideIcons.Package;
             return {
               name: c.name,
+              slug: c.slug,
               href: `/shop/${c.slug}`,
               icon: <IconComponent size={16} />
             };
           });
           setDbCategories([
-            { name: "All Products", href: "/shop", icon: <Package size={16} /> },
+            { name: "All Products", slug: "all", href: "/shop", icon: <Package size={16} /> },
             ...mapped
           ]);
         }
@@ -120,7 +122,9 @@ export default function ShopSidebar({ currentCategory }: Props) {
         </button>
         {openSections.categories && (
           <div style={{ padding: "0 8px 8px" }}>
-            {dbCategories.map(cat => (
+            {dbCategories.map(cat => {
+              const isActive = currentCategorySlug ? currentCategorySlug === cat.slug : currentCategory === cat.name;
+              return (
               <Link
                 key={cat.name}
                 href={cat.href}
@@ -128,16 +132,16 @@ export default function ShopSidebar({ currentCategory }: Props) {
                   display: "flex", alignItems: "center", gap: 10,
                   padding: "9px 10px", borderRadius: 8,
                   textDecoration: "none",
-                  color: currentCategory === cat.name ? "var(--red)" : "var(--gray-600)",
-                  background: currentCategory === cat.name ? "#fff0f0" : "transparent",
-                  fontWeight: currentCategory === cat.name ? 700 : 500,
+                  color: isActive ? "var(--red)" : "var(--gray-600)",
+                  background: isActive ? "#fff0f0" : "transparent",
+                  fontWeight: isActive ? 700 : 500,
                   fontSize: 14, transition: "all 0.2s",
                 }}
               >
                 <span style={{ color: "var(--red)" }}>{cat.icon}</span>
                 <span style={{ flex: 1 }}>{cat.name}</span>
               </Link>
-            ))}
+            )})}
           </div>
         )}
       </div>
