@@ -66,13 +66,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ToastProvider>
             <VisitorTracker />
             <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-            <Navbar />
+            <div className="no-print"><Navbar /></div>
             <main style={{ flex: 1 }}>
               {children}
             </main>
-            <Footer />
-            <WhatsAppButton />
-            <Chatbot />
+            <div className="no-print"><Footer /></div>
+            <div className="no-print"><WhatsAppButton /></div>
+            <div className="no-print"><Chatbot /></div>
           </div>
           </ToastProvider>
         </SettingsProvider>

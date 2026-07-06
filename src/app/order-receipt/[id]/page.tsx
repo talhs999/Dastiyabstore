@@ -194,18 +194,35 @@ export default function OrderReceiptPage({ params }: { params: Promise<{ id: str
 
       <style>{`
         @media print {
-          .no-print { display: none !important; }
-          body * { visibility: hidden; }
-          #invoice-container, #invoice-container * { visibility: visible; }
-          #invoice-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
+          @page { margin: 0; } /* Removes browser headers and footers */
+          
+          body { 
+            background: white !important; 
+            margin: 0 !important;
+            padding: 0 !important;
           }
-          body { background: white !important; padding: 0 !important; }
-          div[style*="background: var(--gray-50)"] { background: white !important; padding: 0 !important; }
-          div[style*="box-shadow:"] { box-shadow: none !important; border: none !important; }
+
+          .no-print { display: none !important; }
+
+          /* Reset wrappers to avoid blank pages and layout breaking */
+          div[style*="min-height: 100vh"], div[style*="minHeight: 100vh"] {
+            display: block !important;
+            min-height: auto !important;
+          }
+
+          div[style*="background: var(--gray-50)"] { 
+            background: white !important; 
+            padding: 0 !important; 
+            min-height: auto !important;
+          }
+
+          #invoice-container { 
+            box-shadow: none !important; 
+            border: none !important; 
+            margin: 0 !important;
+            padding: 20mm !important; /* Safe padding for print */
+            width: 100% !important;
+          }
         }
       `}</style>
     </div>

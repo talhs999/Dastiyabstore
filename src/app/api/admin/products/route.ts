@@ -22,9 +22,14 @@ export async function GET() {
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    let id = searchParams.get('id');
     
-    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
+    }
+
+    // Normalize id if it contains spaces
+    id = id.replace(/\s/g, '-');
 
     await prisma.product.delete({
       where: { id }

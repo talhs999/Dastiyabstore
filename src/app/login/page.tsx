@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff, ShoppingBag, ArrowRight, User, Phone, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
@@ -111,10 +112,10 @@ export default function LoginPage() {
       localStorage.setItem("customer_session", JSON.stringify(newCustomer));
       document.cookie = "customer_session=true; path=/";
       document.cookie = "admin_session=; path=/; max-age=0";
-      
+
       // Trigger storage event to update other components
       window.dispatchEvent(new Event("storage"));
-      
+
       showToast("Account created successfully!", "success");
       setTimeout(() => { window.location.href = "/account/orders"; }, 1000);
     } catch (err: any) {
@@ -130,8 +131,8 @@ export default function LoginPage() {
       <div style={{ width: "100%", maxWidth: 440 }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: "linear-gradient(135deg, var(--red), var(--yellow))", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-            <ShoppingBag size={28} color="white" />
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", overflow: "hidden", border: "1px solid var(--gray-200)", position: "relative" }}>
+            <Image src="/icon.png" alt="Dastiyab Store Logo" fill sizes="64px" style={{ objectFit: "contain", padding: 8 }} />
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 900, color: "var(--gray-900)" }}>
             Welcome to <span style={{ color: "var(--red)" }}>DastiyabStore</span>
@@ -162,7 +163,7 @@ export default function LoginPage() {
                 <label className="label">Email or Phone</label>
                 <div style={{ position: "relative" }}>
                   <Mail size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40 }} type="text" placeholder="admin@dastiyab.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                  <input className="input" style={{ paddingLeft: 40 }} type="text" placeholder="Enter email" value={email} onChange={e => setEmail(e.target.value)} required />
                 </div>
               </div>
               <div>
@@ -179,7 +180,7 @@ export default function LoginPage() {
                 <Link href="/forgot-password" style={{ fontSize: 13, color: "var(--red)", textDecoration: "none", fontWeight: 600 }}>Forgot Password?</Link>
               </div>
               <button type="submit" disabled={loading} className="btn-red" style={{ justifyContent: "center", padding: "14px" }}>
-                {loading ? <Loader2 size={16} className="animate-spin" /> : "Sign In"} 
+                {loading ? <Loader2 size={16} className="animate-spin" /> : "Sign In"}
                 {!loading && <ArrowRight size={16} />}
               </button>
             </form>
@@ -196,14 +197,14 @@ export default function LoginPage() {
                 <label className="label">Phone Number</label>
                 <div style={{ position: "relative" }}>
                   <Phone size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40 }} type="tel" placeholder="0316-2975195" value={regPhone} onChange={e => setRegPhone(e.target.value)} required />
+                  <input className="input" style={{ paddingLeft: 40 }} type="tel" placeholder="0314-297XXXX" value={regPhone} onChange={e => setRegPhone(e.target.value)} required />
                 </div>
               </div>
               <div>
                 <label className="label">Email Address</label>
                 <div style={{ position: "relative" }}>
                   <Mail size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} />
-                  <input className="input" style={{ paddingLeft: 40 }} type="email" placeholder="email@example.com" value={regEmail} onChange={e => setRegEmail(e.target.value)} required />
+                  <input className="input" style={{ paddingLeft: 40 }} type="email" placeholder="Enter email address" value={regEmail} onChange={e => setRegEmail(e.target.value)} required />
                 </div>
               </div>
               <div>
@@ -214,7 +215,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <button type="submit" disabled={loading} className="btn-red" style={{ justifyContent: "center", padding: "14px" }}>
-                {loading ? <Loader2 size={16} className="animate-spin" /> : "Create Account"} 
+                {loading ? <Loader2 size={16} className="animate-spin" /> : "Create Account"}
                 {!loading && <ArrowRight size={16} />}
               </button>
             </form>

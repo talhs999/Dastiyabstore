@@ -70,9 +70,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       try {
         let cleanSlug = decodeURIComponent(slug).trim();
         
+        // Normalize: replace spaces with hyphens (handles URLs with spaces)
+        cleanSlug = cleanSlug.replace(/\s+/g, '-');
+        
         // Clean up slug if UUID
-        if (/^[a-fA-F0-9]{8}\s[a-fA-F0-9]{4}\s[a-fA-F0-9]{4}\s[a-fA-F0-9]{4}\s[a-fA-F0-9]{12}$/.test(cleanSlug)) {
-          cleanSlug = cleanSlug.replace(/\s/g, "-");
+        if (/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/.test(cleanSlug)) {
+          // Already a valid UUID, keep as-is
         } else if (/^[a-fA-F0-9]{32}$/.test(cleanSlug)) {
           cleanSlug = `${cleanSlug.slice(0, 8)}-${cleanSlug.slice(8, 12)}-${cleanSlug.slice(12, 16)}-${cleanSlug.slice(16, 20)}-${cleanSlug.slice(20)}`;
         }
@@ -219,7 +222,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const isOutOfStock = !isProductInStock || stockQty <= 0;
   
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
-  const validImages = (product.images || []).filter((img: string) => img && img.trim() !== "");
+  const rawImages = typeof product.images === 'string' ? (function() { try { return JSON.parse(product.images); } catch { return []; } })() : (product.images || []);
+  const validImages = (Array.isArray(rawImages) ? rawImages : []).filter((img: string) => img && img.trim() !== "");
   const images = [product.image, ...validImages].filter((img: string) => img && img.trim() !== "");
   if (images.length === 0) images.push("https://placehold.co/800x800?text=No+Image");
 

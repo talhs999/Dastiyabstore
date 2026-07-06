@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary with your credentials
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'zpbci6tf',
+  api_key: process.env.CLOUDINARY_API_KEY || '925577957857674',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'e5sMu-FXAwQhnreh2-qIePzY28c'
+});
 
 export async function POST(request: Request) {
   try {
@@ -15,27 +20,29 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadsDir = join(process.cwd(), 'public', 'uploads');
-    
-    // Create directory if it doesn't exist
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
+    // Upload the file buffer to Cloudinary directly
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { 
+          folder: 'dastiyabstore',
+          // Automatically optimize the format and quality when the image is uploaded
+          format: 'webp' 
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      // Pass the buffer to the stream
+      uploadStream.end(buffer);
+    });
 
-    // Create unique filename
-    const fileExt = file.name.split('.').pop() || 'png';
-    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-    const filePath = join(uploadsDir, fileName);
-
-    // Save to public/uploads
-    await writeFile(filePath, buffer);
-
-    // Return public URL
-    const publicUrl = `/uploads/${fileName}`;
+    // We get a secure URL back from Cloudinary (https)
+    const publicUrl = (uploadResult as any).secure_url;
 
     return NextResponse.json({ url: publicUrl });
   } catch (error) {
-    console.error('Error uploading file:', error);
+    console.error('Error uploading file to Cloudinary:', error);
     return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
   }
 }
