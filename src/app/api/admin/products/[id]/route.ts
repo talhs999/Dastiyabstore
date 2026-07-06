@@ -5,9 +5,9 @@ export async function GET(request: Request, context: any) {
   try {
     let { id } = await context.params;
     
-    // Normalize id if it contains spaces (browser sometimes passes UUID hyphens as spaces)
+    // Normalize id if it contains spaces or URL encoded spaces
     if (typeof id === 'string') {
-      id = id.replace(/\s/g, '-');
+      id = decodeURIComponent(id).replace(/\s/g, '-');
     }
 
     const product = await prisma.product.findUnique({
@@ -26,13 +26,23 @@ export async function PUT(request: Request, context: any) {
   try {
     let { id } = await context.params;
     
-    // Normalize id if it contains spaces
+    // Normalize id if it contains spaces or URL encoded spaces
     if (typeof id === 'string') {
-      id = id.replace(/\s/g, '-');
+      id = decodeURIComponent(id).replace(/\s/g, '-');
     }
 
     const data = await request.json();
     
+    // Handle category_id mapping for Prisma
+    if ('category_id' in data) {
+      if (data.category_id) {
+        data.category = { connect: { id: data.category_id } };
+      } else {
+        data.category = { disconnect: true };
+      }
+      delete data.category_id;
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: data

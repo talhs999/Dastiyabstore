@@ -367,7 +367,9 @@ export default function CheckoutPage() {
           product_name: item.name,
           product_image: item.image,
           price: item.price,
-          quantity: item.quantity
+          quantity: item.quantity,
+          color: item.color,
+          colorHex: item.colorHex
         }))
       };
 
@@ -745,8 +747,8 @@ export default function CheckoutPage() {
         <div style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 24, border: "1px solid var(--gray-200)", boxShadow: "var(--shadow-md)", position: "sticky", top: 100, alignSelf: "start" }}>
           <h2 style={{ fontWeight: 800, fontSize: 18, marginBottom: 20 }}>Order Summary</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
-            {items.map(item => (
-              <div key={item.id} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            {items.map((item, index) => (
+              <div key={`${item.id}-${item.color || index}`} style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <div style={{ position: "relative", width: 64, height: 64 }}>
                   <div style={{ width: "100%", height: "100%", borderRadius: "var(--radius)", background: "var(--gray-50)", border: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                     <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/64x64?text=Invalid+Image'; }} />
@@ -757,6 +759,12 @@ export default function CheckoutPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)" }}>{item.name}</p>
+                  {item.color && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, marginBottom: 2 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: item.colorHex || "#ccc", border: "1px solid var(--gray-200)" }}></div>
+                      <span style={{ fontSize: 11, color: "var(--gray-500)" }}>{item.color}</span>
+                    </div>
+                  )}
                   <p style={{ fontSize: 12, color: "var(--gray-500)" }}>Qty: {item.quantity}</p>
                 </div>
                 <p style={{ fontWeight: 700, fontSize: 14 }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>

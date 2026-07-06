@@ -49,6 +49,7 @@ model Product {
   stock_quantity Int       @default(10)
   badges         Json?     @default("[]")
   trust_points   Json?     @default("[]")
+  colors         Json?     @default("[]")
   created_at     DateTime  @default(now())
 
   @@map("products")

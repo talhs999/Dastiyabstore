@@ -467,21 +467,27 @@ export default function Navbar() {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  {items.map(item => (
-                    <div key={item.id} style={{ display: "flex", gap: 12, padding: 12, background: "var(--gray-50)", borderRadius: "var(--radius)" }}>
+                  {items.map((item, index) => (
+                    <div key={`${item.id}-${item.color || index}`} style={{ display: "flex", gap: 12, padding: 12, background: "var(--gray-50)", borderRadius: "var(--radius)" }}>
                       <div style={{ position: "relative", width: 64, height: 64 }}>
                         <Image src={item.image} alt={item.name} fill sizes="64px" style={{ objectFit: "cover", borderRadius: 8 }} />
                       </div>
                       <div style={{ flex: 1 }}>
                         <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{item.name}</p>
+                        {item.color && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                            <div style={{ width: 12, height: 12, borderRadius: "50%", background: item.colorHex || "#ccc", border: "1px solid var(--gray-200)" }}></div>
+                            <span style={{ fontSize: 12, color: "var(--gray-500)" }}>{item.color}</span>
+                          </div>
+                        )}
                         <p style={{ color: "var(--red)", fontWeight: 700, fontSize: 15 }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                          <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Minus size={12} /></button>
+                          <button onClick={() => updateQuantity(item.id, item.color, Math.max(1, item.quantity - 1))} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Minus size={12} /></button>
                           <span style={{ fontSize: 13, fontWeight: 600 }}>{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Plus size={12} /></button>
+                          <button onClick={() => updateQuantity(item.id, item.color, item.quantity + 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Plus size={12} /></button>
                         </div>
                       </div>
-                      <button onClick={() => removeFromCart(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", alignSelf: "flex-start" }}>
+                      <button onClick={() => removeFromCart(item.id, item.color)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", alignSelf: "flex-start" }}>
                         <X size={16} />
                       </button>
                     </div>

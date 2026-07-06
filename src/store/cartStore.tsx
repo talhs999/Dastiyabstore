@@ -9,14 +9,15 @@ export interface CartItem {
   originalPrice?: number;
   image: string;
   quantity: number;
-  variant?: string;
+  color?: string;
+  colorHex?: string;
 }
 
 interface CartStore {
   items: CartItem[];
   addToCart: (item: Omit<CartItem, "quantity">) => void;
-  removeFromCart: (id: string) => void;
-  updateQuantity: (id: string, qty: number) => void;
+  removeFromCart: (id: string, color?: string) => void;
+  updateQuantity: (id: string, color: string | undefined, qty: number) => void;
   clearCart: () => void;
 }
 
@@ -26,24 +27,24 @@ const useCartStore = create<CartStore>()(
       items: [],
       addToCart: (item) =>
         set((state) => {
-          const existing = state.items.find((i) => i.id === item.id);
+          const existing = state.items.find((i) => i.id === item.id && i.color === item.color);
           if (existing) {
             return {
               items: state.items.map((i) =>
-                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+                (i.id === item.id && i.color === item.color) ? { ...i, quantity: i.quantity + 1 } : i
               ),
             };
           }
           return { items: [...state.items, { ...item, quantity: 1 }] };
         }),
-      removeFromCart: (id) =>
-        set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
-      updateQuantity: (id, qty) =>
+      removeFromCart: (id, color) =>
+        set((state) => ({ items: state.items.filter((i) => !(i.id === id && i.color === color)) })),
+      updateQuantity: (id, color, qty) =>
         set((state) => {
           if (qty < 1) return state;
           return {
             items: state.items.map((i) =>
-              i.id === id ? { ...i, quantity: qty } : i
+              (i.id === id && i.color === color) ? { ...i, quantity: qty } : i
             ),
           };
         }),

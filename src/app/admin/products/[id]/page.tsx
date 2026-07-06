@@ -18,6 +18,23 @@ export default function EditProductPage() {
     { text: "", type: "yellow" }
   ]);
   const [features, setFeatures] = useState<string[]>([""]);
+  const [colors, setColors] = useState<{name: string, hex: string}[]>([]);
+
+  const PREDEFINED_COLORS = [
+    { name: "Black", hex: "#000000" },
+    { name: "White", hex: "#FFFFFF" },
+    { name: "Red", hex: "#ef4444" },
+    { name: "Blue", hex: "#3b82f6" },
+    { name: "Green", hex: "#22c55e" },
+    { name: "Yellow", hex: "#eab308" },
+    { name: "Purple", hex: "#a855f7" },
+    { name: "Pink", hex: "#ec4899" },
+    { name: "Orange", hex: "#f97316" },
+    { name: "Grey", hex: "#6b7280" },
+    { name: "Gold", hex: "#D4AF37" },
+    { name: "Silver", hex: "#C0C0C0" },
+    { name: "Rose Gold", hex: "#B76E79" },
+  ];
   const [trustPoints, setTrustPoints] = useState<{ icon: string; text: string }[]>([
     { icon: "truck", text: "Free delivery on orders above Rs. 2000" },
     { icon: "shield", text: "100% authentic & quality guaranteed" },
@@ -95,6 +112,10 @@ export default function EditProductPage() {
         if (prodData.features) dynamicFeatures = Array.isArray(prodData.features) ? prodData.features : typeof prodData.features === "string" ? JSON.parse(prodData.features) : [];
         setFeatures(dynamicFeatures.length > 0 ? dynamicFeatures : [""]);
 
+        let dynamicColors = [];
+        if (prodData.colors) dynamicColors = Array.isArray(prodData.colors) ? prodData.colors : typeof prodData.colors === "string" ? JSON.parse(prodData.colors) : [];
+        setColors(dynamicColors);
+
         let dynamicTrustPoints = [];
         if (prodData.trust_points) dynamicTrustPoints = Array.isArray(prodData.trust_points) ? prodData.trust_points : typeof prodData.trust_points === "string" ? JSON.parse(prodData.trust_points) : [];
         setTrustPoints(dynamicTrustPoints.length > 0 ? dynamicTrustPoints : [
@@ -166,6 +187,15 @@ export default function EditProductPage() {
     setFeatures(features.filter((_, i) => i !== index));
   };
 
+  // Colors handlers
+  const handleToggleColor = (color: {name: string, hex: string}) => {
+    if (colors.some(c => c.name === color.name)) {
+      setColors(colors.filter(c => c.name !== color.name));
+    } else {
+      setColors([...colors, color]);
+    }
+  };
+
   // Trust Points handlers
   const handleAddTrustPoint = () => {
     setTrustPoints([...trustPoints, { icon: "truck", text: "" }]);
@@ -224,7 +254,8 @@ export default function EditProductPage() {
         is_best_seller: formData.is_best_seller,
         specs: specs.filter(s => s.label.trim() !== "" || s.value.trim() !== ""),
         features: features.filter(f => f.trim() !== ""),
-        trust_points: trustPoints.filter(tp => tp.text.trim() !== "")
+        trust_points: trustPoints.filter(tp => tp.text.trim() !== ""),
+        colors: colors
       };
 
       const res = await fetch(`/api/admin/products/${id}`, {
@@ -358,6 +389,41 @@ export default function EditProductPage() {
           <div>
             <label className="label">Description *</label>
             <textarea className="input" required rows={5} style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", resize: "vertical" }} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
+          </div>
+        </div>
+
+        {/* Colors Section */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label className="label" style={{ marginBottom: 0 }}>Available Colors</label>
+          <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: -8 }}>Select the colors available for this product. Leave empty if there are no color options.</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, padding: "16px", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)" }}>
+            {PREDEFINED_COLORS.map(color => {
+              const isSelected = colors.some(c => c.name === color.name);
+              return (
+                <button
+                  type="button"
+                  key={color.name}
+                  onClick={() => handleToggleColor(color)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 12px",
+                    borderRadius: "var(--radius-full)",
+                    border: `2px solid ${isSelected ? "var(--blue)" : "transparent"}`,
+                    background: isSelected ? "#eff6ff" : "white",
+                    cursor: "pointer",
+                    boxShadow: "var(--shadow-sm)",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <div style={{ width: 16, height: 16, borderRadius: "50%", background: color.hex, border: "1px solid var(--gray-300)" }}></div>
+                  <span style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400, color: isSelected ? "var(--blue)" : "var(--gray-700)" }}>
+                    {color.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

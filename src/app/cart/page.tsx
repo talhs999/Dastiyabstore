@@ -35,23 +35,29 @@ export default function CartPage() {
 
           {/* Cart Items */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {items.map(item => (
-              <div key={item.id} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 20, boxShadow: "var(--shadow-sm)", border: "1px solid var(--gray-200)", display: "flex", gap: 16, alignItems: "center" }}>
+            {items.map((item, index) => (
+              <div key={`${item.id}-${item.color || index}`} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 20, boxShadow: "var(--shadow-sm)", border: "1px solid var(--gray-200)", display: "flex", gap: 16, alignItems: "center" }}>
                 <div style={{ position: "relative", width: 80, height: 80, flexShrink: 0, borderRadius: 8, overflow: "hidden", background: "var(--gray-50)", border: "1px solid var(--gray-200)" }}>
                   <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0 }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x80?text=Invalid+Image'; }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontWeight: 700, fontSize: 15, color: "var(--gray-900)", marginBottom: 6 }}>{item.name}</h3>
+                  {item.color && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      <div style={{ width: 14, height: 14, borderRadius: "50%", background: item.colorHex || "#ccc", border: "1px solid var(--gray-200)" }}></div>
+                      <span style={{ fontSize: 13, color: "var(--gray-500)" }}>{item.color}</span>
+                    </div>
+                  )}
                   <p style={{ color: "var(--red)", fontWeight: 800, fontSize: 18 }}>Rs. {item.price.toLocaleString()}</p>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="qty-btn"><Minus size={13} /></button>
+                  <button onClick={() => updateQuantity(item.id, item.color, item.quantity - 1)} className="qty-btn"><Minus size={13} /></button>
                   <span style={{ fontWeight: 700, fontSize: 16, minWidth: 24, textAlign: "center" }}>{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="qty-btn"><Plus size={13} /></button>
+                  <button onClick={() => updateQuantity(item.id, item.color, item.quantity + 1)} className="qty-btn"><Plus size={13} /></button>
                 </div>
                 <div style={{ textAlign: "right", minWidth: 100 }}>
                   <p style={{ fontWeight: 800, fontSize: 16, color: "var(--gray-900)" }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
-                  <button onClick={() => removeFromCart(item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", marginTop: 8, padding: 4, display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                  <button onClick={() => removeFromCart(item.id, item.color)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", marginTop: 8, padding: 4, display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
                     <Trash2 size={14} /> Remove
                   </button>
                 </div>

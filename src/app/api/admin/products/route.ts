@@ -45,6 +45,15 @@ export async function DELETE(request: Request) {
 export async function POST(request: Request) {
   try {
     const data = await request.json();
+    
+    // Handle category_id mapping for Prisma
+    if ('category_id' in data) {
+      if (data.category_id) {
+        data.category = { connect: { id: data.category_id } };
+      }
+      delete data.category_id;
+    }
+
     const newProduct = await prisma.product.create({
       data: data
     });

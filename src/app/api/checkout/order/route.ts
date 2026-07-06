@@ -26,7 +26,9 @@ export async function POST(request: Request) {
           product_name: item.product_name,
           product_image: item.product_image,
           price: item.price,
-          quantity: item.quantity
+          quantity: item.quantity,
+          color: item.color,
+          colorHex: item.colorHex
         }))
       }
     });

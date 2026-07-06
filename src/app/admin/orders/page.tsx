@@ -601,6 +601,12 @@ export default function AdminOrdersPage() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-800)" }}>{item.product_name}</div>
+                        {item.color && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                            <div style={{ width: 10, height: 10, borderRadius: "50%", background: item.colorHex || "#ccc", border: "1px solid var(--gray-200)" }}></div>
+                            <span style={{ fontSize: 11, color: "var(--gray-500)" }}>{item.color}</span>
+                          </div>
+                        )}
                         <div style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 2 }}>Qty: {item.quantity} × Rs {item.price.toLocaleString()}</div>
                       </div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-900)" }}>

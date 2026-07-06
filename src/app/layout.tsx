@@ -1,5 +1,6 @@
 import { Inter, Poppins } from "next/font/google";
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -37,6 +38,9 @@ export const metadata: Metadata = {
     description: "Premium gadgets & accessories. Fast delivery across Pakistan. COD available.",
     type: "website",
   },
+  verification: {
+    google: "IwpEJoqgQmIi3hCd0CAu7Mx74w6MBkR9H_ZI6fHW76c",
+  },
 };
 
 export const dynamic = 'force-dynamic';
@@ -61,6 +65,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+      <head>
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-ZFKEG15ZRC"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-ZFKEG15ZRC');
+            `,
+          }}
+        />
+      </head>
       <body className="font-sans">
         <SettingsProvider initialSettings={initialSettings}>
           <ToastProvider>

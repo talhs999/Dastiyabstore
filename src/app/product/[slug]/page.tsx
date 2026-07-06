@@ -38,6 +38,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [loadingProduct, setLoadingProduct] = useState(true);
 
   const [qty, setQty] = useState(1);
+  const [selectedColor, setSelectedColor] = useState<{name: string, hex: string} | null>(null);
   const [activeTab, setActiveTab] = useState("description");
   const [activeImg, setActiveImg] = useState(0);
   const [showShare, setShowShare] = useState(false);
@@ -102,6 +103,15 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             stockQuantity: data.product.stock_quantity,
           };
           setProduct(mapped);
+          
+          let parsedColors = [];
+          try {
+             parsedColors = Array.isArray(mapped.colors) ? mapped.colors : (typeof mapped.colors === 'string' ? JSON.parse(mapped.colors) : []);
+          } catch(e) {}
+          if (parsedColors.length === 1) {
+            setSelectedColor(parsedColors[0]);
+          }
+
           setReviews(data.reviews || []);
           setQnaList(data.qna || []);
         }
@@ -227,13 +237,41 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const images = [product.image, ...validImages].filter((img: string) => img && img.trim() !== "");
   if (images.length === 0) images.push("https://placehold.co/800x800?text=No+Image");
 
+  const productColors = Array.isArray(product.colors) ? product.colors : (typeof product.colors === 'string' ? (function() { try { return JSON.parse(product.colors); } catch { return []; } })() : (product.colors || []));
+
   const handleAdd = () => {
-    for (let i = 0; i < qty; i++) addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
-    showToast(`${qty}x ${product.name} added to cart!`);
+    if (productColors.length > 0 && !selectedColor) {
+      showToast("Please select a color first", "error");
+      return;
+    }
+    for (let i = 0; i < qty; i++) {
+      addToCart({ 
+        id: product.id, 
+        name: product.name, 
+        price: product.price, 
+        image: product.image,
+        color: selectedColor?.name,
+        colorHex: selectedColor?.hex
+      });
+    }
+    showToast(`${qty}x ${product.name} ${selectedColor ? `(${selectedColor.name}) ` : ''}added!`);
   };
 
   const handleBuyNow = () => {
-    handleAdd();
+    if (productColors.length > 0 && !selectedColor) {
+      showToast("Please select a color first", "error");
+      return;
+    }
+    for (let i = 0; i < qty; i++) {
+      addToCart({ 
+        id: product.id, 
+        name: product.name, 
+        price: product.price, 
+        image: product.image,
+        color: selectedColor?.name,
+        colorHex: selectedColor?.hex
+      });
+    }
     router.push("/checkout");
   };
 
@@ -400,6 +438,38 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             </div>
           ) : (
             <>
+              {/* Color Selection */}
+              {productColors && productColors.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <label className="label">Color <span style={{ color: "var(--red)" }}>*</span></label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                    {productColors.map((color: any) => (
+                      <button
+                        key={color.name}
+                        onClick={() => setSelectedColor(color)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "8px 12px",
+                          borderRadius: "var(--radius-full)",
+                          border: `2px solid ${selectedColor?.name === color.name ? "var(--blue)" : "var(--gray-200)"}`,
+                          background: selectedColor?.name === color.name ? "#eff6ff" : "white",
+                          cursor: "pointer",
+                          boxShadow: selectedColor?.name === color.name ? "0 0 0 2px rgba(59, 130, 246, 0.2)" : "var(--shadow-sm)",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        <div style={{ width: 18, height: 18, borderRadius: "50%", background: color.hex, border: "1px solid var(--gray-300)" }}></div>
+                        <span style={{ fontSize: 14, fontWeight: selectedColor?.name === color.name ? 600 : 500, color: selectedColor?.name === color.name ? "var(--blue)" : "var(--gray-700)" }}>
+                          {color.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Quantity */}
               <div style={{ marginBottom: 24 }}>
                 <label className="label">Quantity</label>
