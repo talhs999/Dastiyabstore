@@ -426,6 +426,12 @@ export default function HomeClient({ initialData }: { initialData: any }) {
     ? initialData.siteReviews 
     : null;
 
+  const scrollReviews = (dir: "left" | "right") => {
+    if (reviewsRef.current) {
+      reviewsRef.current.scrollBy({ left: dir === "left" ? -360 : 360, behavior: "smooth" });
+    }
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveSlide(prev => (prev + 1) % banners.length);
@@ -555,7 +561,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
             </Link>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 24 }}>
-            {featured.map(product => <ProductCard key={product.id} product={product} />)}
+            {featured.map((product: any) => <ProductCard key={product.id} product={product} />)}
           </div>
         </div>
       </section>
@@ -608,7 +614,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
             </Link>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 24 }}>
-            {bestSellers.map(product => <ProductCard key={product.id} product={product} />)}
+            {bestSellers.map((product: any) => <ProductCard key={product.id} product={product} />)}
           </div>
         </div>
       </section>
@@ -779,7 +785,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
               { name: "Zainab Ali", city: "Rawalpindi", text: "The quality of the mobile accessories is top-notch. Cables are thick and durable. Delivered in 2 days.", product: "Fast Charging Cable", time: "1 month ago", color: "#00bcd4", rating: 5 },
               { name: "Bilal Qureshi", city: "Peshawar", text: "Best tech store in Pakistan! Customer service is highly responsive. The smartwatch works perfectly.", product: "Smart Watch Series 8", time: "2 months ago", color: "#4caf50", rating: 5 },
               { name: "Sana Tariq", city: "Multan", text: "I bought the ring light for my TikTok videos and the brightness is fantastic. Love the tripod quality.", product: "LED Ring Light 10\"", time: "3 weeks ago", color: "#ff9800", rating: 5 },
-            ]).map((r, i) => (
+            ]).map((r: any, i: number) => (
               <div key={i} style={{ 
                 flex: "0 0 340px", 
                 scrollSnapAlign: "start",
