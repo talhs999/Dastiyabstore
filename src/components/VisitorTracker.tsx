@@ -28,8 +28,8 @@ export default function VisitorTracker() {
         console.error("Error parsing cached geo data:", e);
       }
     } else {
-      // Fetch fresh location details
-      fetch("https://ipapi.co/json/")
+      // Fetch fresh location details via our own backend API to avoid CORS/adblockers
+      fetch("/api/ip")
         .then(res => {
           if (!res.ok) throw new Error("Network response was not ok");
           return res.json();
@@ -38,7 +38,7 @@ export default function VisitorTracker() {
           const payload = {
             ip: data.ip || "Unknown IP",
             city: data.city || "",
-            country: data.country_name || "Unknown Location"
+            country: data.country_name || data.country || "Unknown Location"
           };
           setGeoData(payload);
           sessionStorage.setItem("visitor_geo_data", JSON.stringify(payload));

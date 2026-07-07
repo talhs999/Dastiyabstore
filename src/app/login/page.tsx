@@ -1,13 +1,23 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff, ShoppingBag, ArrowRight, User, Phone, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
-export default function LoginPage() {
+function LoginContent() {
   const [show, setShow] = useState(false);
-  const [tab, setTab] = useState<"login" | "register">("login");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const defaultTab = searchParams.get("tab") === "register" ? "register" : "login";
+  const [tab, setTab] = useState<"login" | "register">(defaultTab);
+  
+  useEffect(() => {
+    const queryTab = searchParams.get("tab");
+    if (queryTab === "register") setTab("register");
+    else if (queryTab === "login") setTab("login");
+  }, [searchParams]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { showToast } = useToast();
@@ -229,5 +239,14 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: "center", padding: "100px 20px" }}>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -66,7 +66,7 @@ export default function AdminSidebarPage() {
         id: editingCat.id,
         sidebar_icon: editingCat.sidebar_icon,
         sidebar_desc: editingCat.sidebar_desc,
-        sidebar_image: editingCat.sidebar_image,
+        image: editingCat.image,
         sidebar_popular_items: popularItemsArr
       })
     });
@@ -206,15 +206,13 @@ export default function AdminSidebarPage() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--gray-700)", marginBottom: 8 }}>
-                  Flyout Banner Image URL
-                </label>
+                <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>Flyout Banner Image URL</label>
                 <input 
-                  className="input" 
-                  value={editingCat.sidebar_image || ""} 
-                  onChange={e => setEditingCat({...editingCat, sidebar_image: e.target.value})}
+                  type="text" 
+                  value={editingCat.image || ""} 
+                  onChange={e => setEditingCat({...editingCat, image: e.target.value})}
                   placeholder="https://..."
-                  style={{ width: "100%" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: 6, border: "1px solid var(--gray-200)" }}
                 />
               </div>
 

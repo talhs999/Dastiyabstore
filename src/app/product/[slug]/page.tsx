@@ -312,30 +312,77 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, marginBottom: 64 }}>
 
         {/* Images */}
-        <div>
-          <div style={{ borderRadius: "var(--radius-lg)", overflow: "hidden", background: "var(--gray-50)", marginBottom: 12, position: "relative" }}>
-            <img 
-              key={activeImg}
-              src={images[activeImg]} 
-              alt={product.name} 
-              onClick={() => { setShowZoom(true); setZoomLevel(1); }} 
-              style={{ width: "100%", height: "auto", display: "block", cursor: "zoom-in" }} 
-              fetchPriority="high"
-              onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x800?text=Invalid+Image'; }} 
-            />
-            {discount && (
-              <div style={{ position: "absolute", top: 16, left: 16 }}>
-                <span className="badge badge-red">{discount}% OFF</span>
+        <div style={{ position: "relative" }}>
+          <div 
+            id="product-slider"
+            style={{ 
+              display: "flex", 
+              overflowX: "auto", 
+              scrollSnapType: "x mandatory", 
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              borderRadius: "var(--radius-lg)", 
+              background: "var(--gray-50)", 
+              marginBottom: 12,
+              scrollBehavior: "smooth"
+            }}
+            onScroll={(e) => {
+              const container = e.currentTarget;
+              const index = Math.round(container.scrollLeft / container.clientWidth);
+              if (index !== activeImg) setActiveImg(index);
+            }}
+          >
+            <style>{`#product-slider::-webkit-scrollbar { display: none; }`}</style>
+            {images.map((img: string, i: number) => (
+              <div 
+                key={i} 
+                style={{ 
+                  flex: "0 0 100%", 
+                  width: "100%", 
+                  scrollSnapAlign: "start",
+                  position: "relative"
+                }}
+              >
+                <img 
+                  src={img} 
+                  alt={product.name} 
+                  onClick={() => { setShowZoom(true); setZoomLevel(1); }} 
+                  style={{ width: "100%", height: "auto", display: "block", cursor: "zoom-in" }} 
+                  fetchPriority={i === 0 ? "high" : "auto"}
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x800?text=Invalid+Image'; }} 
+                />
               </div>
-            )}
-            <button onClick={() => { setShowZoom(true); setZoomLevel(1); }} style={{ position: "absolute", bottom: 16, right: 16, background: "white", width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "none", boxShadow: "var(--shadow-md)", cursor: "pointer", color: "var(--gray-700)", transition: "transform 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
-              <Maximize2 size={18} />
-            </button>
+            ))}
           </div>
+
+          {discount && (
+            <div style={{ position: "absolute", top: 16, left: 16, zIndex: 10 }}>
+              <span className="badge badge-red">{discount}% OFF</span>
+            </div>
+          )}
+          
+          <button onClick={() => { setShowZoom(true); setZoomLevel(1); }} style={{ position: "absolute", bottom: 28, right: 16, background: "white", width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "none", boxShadow: "var(--shadow-md)", cursor: "pointer", color: "var(--gray-700)", transition: "transform 0.2s", zIndex: 10 }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+            <Maximize2 size={18} />
+          </button>
+
+          {/* Dots Indicator for Mobile Swiping */}
           {images.length > 1 && (
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div className="mobile-only" style={{ display: "flex", justifyContent: "center", gap: 6, position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)", zIndex: 10 }}>
+              {images.map((_, i) => (
+                <div key={i} style={{ width: activeImg === i ? 16 : 6, height: 6, borderRadius: 3, background: activeImg === i ? "var(--red)" : "rgba(0,0,0,0.2)", transition: "all 0.3s" }} />
+              ))}
+            </div>
+          )}
+
+          {/* Thumbnails */}
+          {images.length > 1 && (
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12 }}>
               {images.map((img: string, i: number) => (
-                <button key={i} onClick={() => setActiveImg(i)} style={{
+                <button key={i} onClick={() => {
+                  setActiveImg(i);
+                  const container = document.getElementById("product-slider");
+                  if (container) container.scrollTo({ left: i * container.clientWidth, behavior: "smooth" });
+                }} style={{
                   width: 72, height: 72, borderRadius: "var(--radius)", overflow: "hidden",
                   border: `2px solid ${activeImg === i ? "var(--red)" : "var(--gray-200)"}`,
                   cursor: "pointer", padding: 0, background: "var(--gray-50)",

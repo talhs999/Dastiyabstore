@@ -443,7 +443,7 @@ export default function Navbar() {
         <>
           <div className="overlay" onClick={() => setCartOpen(false)} />
           <div className="animate-fade-right" style={{
-            position: "fixed", right: 0, top: 0, height: "100vh", width: 380,
+            position: "fixed", right: 0, top: 0, bottom: 0, height: "100dvh", width: 380,
             background: "var(--white)", zIndex: 200, boxShadow: "var(--shadow-xl)",
             display: "flex", flexDirection: "column", maxWidth: "100vw",
           }}>
@@ -518,7 +518,7 @@ export default function Navbar() {
         <>
           <div className="overlay" onClick={() => setMobileOpen(false)} />
           <div className="animate-fade-left" style={{
-            position: "fixed", left: 0, top: 0, height: "100vh", width: 300,
+            position: "fixed", left: 0, top: 0, bottom: 0, height: "100dvh", width: 300,
             background: "var(--white)", zIndex: 200, boxShadow: "var(--shadow-xl)",
             display: "flex", flexDirection: "column",
           }}>
@@ -565,7 +565,7 @@ export default function Navbar() {
               <Link href="/login" onClick={() => setMobileOpen(false)} className="btn-outline-red" style={{ flex: 1, justifyContent: "center", textDecoration: "none", display: "flex", padding: "10px 16px" }}>
                 <LogIn size={16} /> Login
               </Link>
-              <Link href="/register" onClick={() => setMobileOpen(false)} className="btn-red" style={{ flex: 1, justifyContent: "center", textDecoration: "none", display: "flex", padding: "10px 16px" }}>
+              <Link href="/login?tab=register" onClick={() => setMobileOpen(false)} className="btn-red" style={{ flex: 1, justifyContent: "center", textDecoration: "none", display: "flex", padding: "10px 16px" }}>
                 Register
               </Link>
             </div>

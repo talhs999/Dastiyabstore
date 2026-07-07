@@ -325,7 +325,7 @@ function CategorySidebar({ categories }: { categories: any[] }) {
               }}>
                 {/* Image */}
                 <div style={{ height: 115, overflow: "hidden", position: "relative", flexShrink: 0 }}>
-                  {activeCat.sidebar_image && <Image src={activeCat.sidebar_image} alt={activeCat.name} fill sizes="300px" style={{ objectFit: "cover" }} />}
+                  {activeCat.image && <Image src={activeCat.image} alt={activeCat.name} fill sizes="300px" style={{ objectFit: "cover" }} />}
                   <div style={{
                     position: "absolute", inset: 0,
                     background: "linear-gradient(135deg, rgba(0,0,0,0.65) 0%, transparent 100%)",
