@@ -21,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // Fetch dynamic product routes
-  let products = [];
+  let products: any[] = [];
   try {
     products = await prisma.product.findMany({
       select: {
