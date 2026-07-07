@@ -2,8 +2,7 @@ import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
-// Clear cache to force reload of new schema with colors field
-globalForPrisma.prisma = undefined;
+// Removed cache clear that was causing max_connections_per_hour
 
 export const prisma = globalForPrisma.prisma || new PrismaClient();
 

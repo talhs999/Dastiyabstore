@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     }
 
     let apiKey = '';
-    let modelName = 'gemini-3.5-flash';
+    let modelName = 'gemini-1.5-flash';
     let enabled = true;
 
     // 1. Fetch settings from DB
@@ -23,9 +23,9 @@ export async function POST(request: Request) {
       if (parsed.apiKey) apiKey = parsed.apiKey;
       if (parsed.model) {
         modelName = parsed.model;
-        if (modelName.includes('1.5') || modelName.includes('pro')) {
-           // auto upgrade old models
-           modelName = 'gemini-3.5-flash';
+        if (modelName.includes('pro')) {
+           // auto upgrade old models to fast flash for speed
+           modelName = 'gemini-1.5-flash';
         }
       }
       if (parsed.enabled === false) enabled = false;
@@ -40,7 +40,9 @@ export async function POST(request: Request) {
 
     // 2. Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: modelName });
+    // Force fastest model if not explicitly set to something else
+    const finalModel = 'gemini-3.5-flash'; 
+    const model = genAI.getGenerativeModel({ model: finalModel });
 
     // 3. Format history for Gemini
     const formattedHistory = (history || []).map((msg: any) => ({
@@ -48,14 +50,14 @@ export async function POST(request: Request) {
       parts: [{ text: msg.content }],
     }));
 
-    const systemPrompt = `You are a helpful, friendly customer support AI for an online store named 'DastiyabStore' in Pakistan. 
-Key Information:
-- We sell premium tech gadgets, home accessories, neck fans, AirPods, laptop stands, earphones, and more.
-- Payment: We offer Cash on Delivery (COD) across Pakistan.
-- Returns: 7-Day Easy Returns policy.
-- Contact: Phone/WhatsApp at 0316-2975195.
+    const systemPrompt = `You are a helpful, fast, and friendly customer support AI for an online store named 'DastiyabStore' in Pakistan. 
+Key Rules:
+- Products: Premium tech gadgets, home accessories, neck fans, AirPods, laptop stands, earphones.
+- Payment: Cash on Delivery (COD) available across Pakistan. Free delivery on orders above Rs.2000.
+- Returns: STRICTLY 5-Day Easy Returns policy. NEVER mention 7 days.
+- Contact: WhatsApp/Call at 0316-2975195.
 - Address: H-151 Moinabad, Model Colony Phase 3 Malir, Karachi, 75100, Pakistan.
-- Tone: Be polite, concise, and helpful. Use Roman Urdu occasionally if the customer speaks in Roman Urdu, but default to English.`;
+- Tone: Keep responses VERY short, concise, and to the point. Use Roman Urdu if the customer speaks Roman Urdu.`;
 
     const chatParams = {
       history: [
@@ -63,7 +65,7 @@ Key Information:
         { role: 'model', parts: [{ text: "Understood. How can I help you today?" }] },
         ...formattedHistory
       ],
-      generationConfig: { maxOutputTokens: 2000, temperature: 0.7 },
+      generationConfig: { maxOutputTokens: 2000, temperature: 0.5 },
     };
 
     let resultStream;
@@ -71,6 +73,7 @@ Key Information:
       const chat = model.startChat(chatParams);
       resultStream = await chat.sendMessageStream(message);
     } catch (err: any) {
+      console.error("ACTUAL ERROR:", err.message);
       if (err.message?.includes('404 Not Found') || err.message?.includes('is not found for API version') || err.message?.includes('503 Service Unavailable')) {
         console.log(`Model ${modelName} failed, falling back to gemini-3.1-pro`);
         const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-3.1-pro' });
@@ -78,10 +81,10 @@ Key Information:
         try {
           resultStream = await fallbackChat.sendMessageStream(message);
         } catch (fallbackErr: any) {
-          throw new Error("Hamara AI system abhi thora busy hai. Baraye meharbani kuch dair baad dobara koshish karein.");
+          throw new Error("Hamara AI system abhi thora busy hai. Baraye meharbani kuch dair baad dobara koshish karein. Error: " + err.message);
         }
       } else {
-        throw new Error("Hamara AI system abhi thora busy hai. Baraye meharbani kuch dair baad dobara koshish karein.");
+        throw new Error("Hamara AI system abhi thora busy hai. Baraye meharbani kuch dair baad dobara koshish karein. Error: " + err.message);
       }
     }
 

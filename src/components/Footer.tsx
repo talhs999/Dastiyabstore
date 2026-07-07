@@ -21,6 +21,7 @@ const footerLinks = {
     { label: "Home", href: "/" },
     { label: "Shop All Products", href: "/shop" },
     { label: "About Us", href: "/about" },
+    { label: "Blog", href: "/blog" },
     { label: "Contact Us", href: "/contact" },
   ],
   "Categories": [
@@ -270,7 +271,7 @@ export default function Footer() {
                     <MapPin size={16} /> View on Google Maps
                   </Link>
                   <div style={{ borderRadius: 8, overflow: "hidden", border: "1px solid var(--gray-200)" }}>
-                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d924234.630043513!2d66.59498263595563!3d25.193389476710437!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb33e06651d4bbf%3A0x9cf92f44555a0c23!2sKarachi%2C%20Karachi%20City%2C%20Sindh%2C%20Pakistan!5e0!3m2!1sen!2s!4v1718000000000!5m2!1sen!2s" width="100%" height="120" style={{ border: 0, display: "block" }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3618.66579294218!2d67.18247577583696!3d24.891375443315757!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb3393daae898f5%3A0x6751d9459c7da81f!2sDastiyab%20Store!5e0!3m2!1sen!2s!4v1720371458999!5m2!1sen!2s" width="100%" height="120" style={{ border: 0, display: "block" }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
                   </div>
                 </li>
               </ul>

@@ -333,7 +333,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             </button>
           </div>
           {images.length > 1 && (
-            <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               {images.map((img: string, i: number) => (
                 <button key={i} onClick={() => setActiveImg(i)} style={{
                   width: 72, height: 72, borderRadius: "var(--radius)", overflow: "hidden",
