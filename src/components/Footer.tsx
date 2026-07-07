@@ -16,7 +16,7 @@ const InstagramIcon = () => (<svg width="18" height="18" viewBox="0 0 24 24" fil
 const TwitterIcon = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>);
 const YoutubeIcon = () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.54C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon fill="white" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>);
 
-const footerLinks = {
+const footerLinksStatic = {
   "Quick Links": [
     { label: "Home", href: "/" },
     { label: "Shop All Products", href: "/shop" },
@@ -39,7 +39,7 @@ const footerLinks = {
 };
 
 export default function Footer() {
-  const { freeDelivery } = useSettings();
+  const { freeDelivery, contact, footerLinks } = useSettings();
   const pathname = usePathname();
   const [email, setEmail] = useState("");
   
@@ -192,20 +192,30 @@ export default function Footer() {
                 </span>
               </div>
               <p style={{ color: "var(--gray-600)", fontSize: 14, lineHeight: 1.8, marginBottom: 32 }}>
-                Jo Chahiye, Wahi Dastiyab — Your trusted destination for tech gadgets and accessories in Pakistan. We build trust through quality products and fast delivery.
+                {contact?.aboutText || "Jo Chahiye, Wahi Dastiyab — Your trusted destination for tech gadgets and accessories in Pakistan. We build trust through quality products and fast delivery."}
               </p>
               <div style={{ display: "flex", gap: 16 }}>
                 {[
-                  { icon: <FacebookIcon />, href: "#" },
-                  { icon: <InstagramIcon />, href: "#" },
-                  { icon: <TwitterIcon />, href: "#" },
-                ].map((s, i) => (
-                  <a key={i} href={s.href} style={{ color: "var(--gray-500)", transition: "color 0.2s" }} 
-                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
-                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-500)"}>
-                    {s.icon}
-                  </a>
-                ))}
+                  { icon: <FacebookIcon />, href: contact?.facebook },
+                  { icon: <InstagramIcon />, href: contact?.instagram },
+                  { icon: <TwitterIcon />, href: contact?.twitter },
+                  { icon: <YoutubeIcon />, href: contact?.youtube },
+                ].filter(s => s.href && s.href !== "#" && s.href !== "").map((s, i) => {
+                  let validHref = s.href as string;
+                  if (validHref.startsWith("#") && validHref.length > 1) {
+                    validHref = validHref.replace(/^#+/, "");
+                  }
+                  if (!validHref.startsWith("http")) {
+                    validHref = "https://" + validHref;
+                  }
+                  return (
+                    <a key={i} href={validHref} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-500)", transition: "color 0.2s" }} 
+                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
+                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-500)"}>
+                      {s.icon}
+                    </a>
+                  );
+                })}
               </div>
             </div>
 
@@ -213,7 +223,7 @@ export default function Footer() {
             <div>
               <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Quick Links</h4>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
-                {footerLinks["Quick Links"].map(link => (
+                {(footerLinks?.quickLinks || footerLinksStatic["Quick Links"]).map((link: {label: string, href: string}) => (
                   <li key={link.label}>
                     <Link href={link.href} style={{ color: "var(--gray-600)", textDecoration: "none", fontSize: 14, transition: "color 0.2s" }} 
                           onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
@@ -229,7 +239,7 @@ export default function Footer() {
             <div>
               <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Support</h4>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
-                {footerLinks["Support"].map(link => (
+                {(footerLinks?.support || footerLinksStatic["Support"]).map((link: {label: string, href: string}) => (
                   <li key={link.label}>
                     <Link href={link.href} style={{ color: "var(--gray-600)", textDecoration: "none", fontSize: 14, transition: "color 0.2s" }} 
                           onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
@@ -245,7 +255,7 @@ export default function Footer() {
             <div>
               <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Categories</h4>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
-                {footerLinks["Categories"].map(link => (
+                {(footerLinks?.categories || footerLinksStatic["Categories"]).map((link: {label: string, href: string}) => (
                   <li key={link.label}>
                     <Link href={link.href} style={{ color: "var(--gray-600)", textDecoration: "none", fontSize: 14, transition: "color 0.2s" }} 
                           onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
@@ -261,19 +271,21 @@ export default function Footer() {
             <div>
               <h4 style={{ fontSize: 16, fontWeight: 700, color: "var(--gray-900)", marginBottom: 24 }}>Contact</h4>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 16 }}>
-                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>H-151 Moinabad, Model Colony Phase 3 Malir, Karachi, 75100, Pakistan</li>
-                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>support@dastiyabstore.com</li>
-                <li style={{ color: "var(--gray-600)", fontSize: 14 }}>+92 316 2975195</li>
-                <li style={{ marginTop: 8 }}>
-                  <Link href="/contact" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--gray-600)", fontSize: 14, textDecoration: "none", transition: "color 0.2s", marginBottom: 12 }} 
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-600)"}>
-                    <MapPin size={16} /> View on Google Maps
-                  </Link>
-                  <div style={{ borderRadius: 8, overflow: "hidden", border: "1px solid var(--gray-200)" }}>
-                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3618.66579294218!2d67.18247577583696!3d24.891375443315757!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb3393daae898f5%3A0x6751d9459c7da81f!2sDastiyab%20Store!5e0!3m2!1sen!2s!4v1720371458999!5m2!1sen!2s" width="100%" height="120" style={{ border: 0, display: "block" }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
-                  </div>
-                </li>
+                {contact?.address && <li style={{ color: "var(--gray-600)", fontSize: 14, display: "flex", gap: 8, alignItems: "flex-start" }}><MapPin size={16} style={{ flexShrink: 0, marginTop: 2 }} /> {contact.address}</li>}
+                {contact?.email && <li style={{ color: "var(--gray-600)", fontSize: 14, display: "flex", gap: 8, alignItems: "center" }}><Mail size={16} style={{ flexShrink: 0 }} /> {contact.email}</li>}
+                {contact?.phone && <li style={{ color: "var(--gray-600)", fontSize: 14, display: "flex", gap: 8, alignItems: "center" }}><Phone size={16} style={{ flexShrink: 0 }} /> {contact.phone}</li>}
+                {contact?.mapIframe && (
+                  <li style={{ marginTop: 8 }}>
+                    <Link href="/contact" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--gray-600)", fontSize: 14, textDecoration: "none", transition: "color 0.2s", marginBottom: 12 }} 
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-600)"}>
+                      <MapPin size={16} /> View on Google Maps
+                    </Link>
+                    <div style={{ borderRadius: 8, overflow: "hidden", border: "1px solid var(--gray-200)" }}>
+                      <iframe src={contact.mapIframe} width="100%" height="120" style={{ border: 0, display: "block" }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                  </li>
+                )}
               </ul>
             </div>
           </div>

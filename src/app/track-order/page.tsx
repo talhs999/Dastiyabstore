@@ -119,15 +119,15 @@ export default function TrackOrderPage() {
                   </h4>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 4 }}>
                     <span style={{ color: "var(--gray-600)" }}>Subtotal</span>
-                    <span style={{ fontWeight: 500 }}>Rs. {order.subtotal.toLocaleString()}</span>
+                    <span style={{ fontWeight: 500 }}>Rs. {(order.subtotal || 0).toLocaleString()}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 8 }}>
                     <span style={{ color: "var(--gray-600)" }}>Shipping</span>
-                    <span style={{ fontWeight: 500 }}>Rs. {order.shipping_fee.toLocaleString()}</span>
+                    <span style={{ fontWeight: 500 }}>Rs. {(order.shipping_fee || 0).toLocaleString()}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, paddingTop: 8, borderTop: "1px dashed var(--gray-200)" }}>
                     <span style={{ fontWeight: 700 }}>Total</span>
-                    <span style={{ fontWeight: 800, color: "var(--red)" }}>Rs. {order.total_amount.toLocaleString()}</span>
+                    <span style={{ fontWeight: 800, color: "var(--red)" }}>Rs. {(order.total || 0).toLocaleString()}</span>
                   </div>
                   <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 8 }}>Payment: {order.payment_method}</p>
                 </div>
@@ -135,8 +135,8 @@ export default function TrackOrderPage() {
 
               <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid var(--gray-100)" }}>Items in Order</h4>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {items.map(item => (
-                  <div key={item.id} style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                {items.map((item: any, idx: number) => (
+                  <div key={idx} style={{ display: "flex", gap: 16, alignItems: "center" }}>
                     <img src={item.product_image} alt={item.product_name} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, background: "var(--gray-50)" }} />
                     <div style={{ flex: 1 }}>
                       <p style={{ fontWeight: 600, color: "var(--gray-900)" }}>{item.product_name}</p>

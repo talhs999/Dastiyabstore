@@ -146,6 +146,29 @@ export default function AdminSettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+  // Contact & Footer states
+  const [loadingContact, setLoadingContact] = useState(true);
+  const [savingContact, setSavingContact] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    address: "H-151 Moinabad, Model Colony Phase 3 Malir, Karachi, 75100, Pakistan",
+    email: "support@dastiyabstore.com",
+    phone: "+92 316 2975195",
+    aboutText: "Your trusted destination for tech gadgets and accessories in Pakistan. We build trust through quality products and fast delivery.",
+    facebook: "#",
+    instagram: "#",
+    twitter: "#",
+    youtube: "#",
+    mapIframe: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3618.66579294218!2d67.18247577583696!3d24.891375443315757!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb3393daae898f5%3A0x6751d9459c7da81f!2sDastiyab%20Store!5e0!3m2!1sen!2s!4v1720371458999!5m2!1sen!2s"
+  });
+  const [footerLinksForm, setFooterLinksForm] = useState({
+    categories: [
+      { label: "Neckband Earphones", href: "/shop/neckband" },
+      { label: "AirPods / TWS", href: "/shop/airpods" },
+      { label: "Neck Fan", href: "/shop/neck-fan" },
+      { label: "Laptop Stand", href: "/shop/laptop-stand" },
+    ]
+  });
+
   // Chatbot states
   const [loadingChatbot, setLoadingChatbot] = useState(true);
   const [savingChatbot, setSavingChatbot] = useState(false);
@@ -164,6 +187,7 @@ export default function AdminSettingsPage() {
     { label: "Security", icon: <Shield size={18} /> },
     { label: "AI Chatbot", icon: <MessageCircle size={18} /> },
     { label: "Stats Strip", icon: <BarChart3 size={18} /> },
+    { label: "Contact & Footer", icon: <Landmark size={18} /> },
   ];
 
   useEffect(() => {
@@ -176,7 +200,62 @@ export default function AdminSettingsPage() {
     else if (activeTab === "Security") fetchSecuritySettings();
     else if (activeTab === "AI Chatbot") fetchChatbotSettings();
     else if (activeTab === "Stats Strip") fetchStatsStrip();
+    else if (activeTab === "Contact & Footer") fetchContactSettings();
   }, [activeTab]);
+
+  const fetchContactSettings = async () => {
+    setLoadingContact(true);
+    const res = await fetch("/api/admin/settings/store_settings?key=contact_footer_settings");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.value) {
+        try {
+          const settings = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+          setContactForm({ ...contactForm, ...settings });
+        } catch (e) {
+          console.error("Failed to parse contact settings", e);
+        }
+      }
+    }
+    
+    const resFL = await fetch("/api/admin/settings/store_settings?key=footer_links_settings");
+    if (resFL.ok) {
+      const dataFL = await resFL.json();
+      if (dataFL && dataFL.value) {
+        try {
+          const flSettings = typeof dataFL.value === "string" ? JSON.parse(dataFL.value) : dataFL.value;
+          if (flSettings.categories) setFooterLinksForm(prev => ({ ...prev, categories: flSettings.categories }));
+        } catch (e) {
+          console.error("Failed to parse footer links settings", e);
+        }
+      }
+    }
+    setLoadingContact(false);
+  };
+
+  const saveContactSettings = async () => {
+    setSavingContact(true);
+    await fetch("/api/admin/settings/store_settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key: "contact_footer_settings",
+        value: contactForm
+      })
+    });
+    
+    const res = await fetch("/api/admin/settings/store_settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key: "footer_links_settings",
+        value: footerLinksForm
+      })
+    });
+    setSavingContact(false);
+    if (!res.ok) alert("Failed to save Contact & Footer settings");
+    else alert("Contact & Footer settings saved successfully!");
+  };
 
   const fetchChatbotSettings = async () => {
     setLoadingChatbot(true);
@@ -1815,6 +1894,126 @@ export default function AdminSettingsPage() {
               <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn-red" onClick={saveStatsStrip} disabled={savingStats} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <Save size={16} /> {savingStats ? "Saving..." : statsSaved ? "Saved ✓" : "Save Stats"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Contact & Footer" && (
+            <div>
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)" }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Contact & Footer Settings</h2>
+                <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 4 }}>Manage contact details, social links, map location, and footer content.</p>
+              </div>
+              <div style={{ padding: "24px 32px" }}>
+                {loadingContact ? (
+                  <p style={{ textAlign: "center", color: "var(--gray-500)" }}>Loading...</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+                    
+                    {/* General Info */}
+                    <div style={{ background: "white", padding: 24, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>General Details</h3>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+                        <div>
+                          <label className="label">Footer About Text</label>
+                          <textarea className="input" rows={3} value={contactForm.aboutText} onChange={e => setContactForm({ ...contactForm, aboutText: e.target.value })} placeholder="Your trusted destination for tech gadgets..." style={{ resize: "vertical" }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contact Info */}
+                    <div style={{ background: "white", padding: 24, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Contact Information</h3>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div>
+                          <label className="label">Email Address</label>
+                          <input className="input" value={contactForm.email} onChange={e => setContactForm({ ...contactForm, email: e.target.value })} placeholder="support@dastiyabstore.com" />
+                        </div>
+                        <div>
+                          <label className="label">Phone / WhatsApp</label>
+                          <input className="input" value={contactForm.phone} onChange={e => setContactForm({ ...contactForm, phone: e.target.value })} placeholder="+92 316 2975195" />
+                        </div>
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <label className="label">Physical Address</label>
+                          <input className="input" value={contactForm.address} onChange={e => setContactForm({ ...contactForm, address: e.target.value })} placeholder="H-151 Moinabad, Model Colony..." />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Social Media */}
+                    <div style={{ background: "white", padding: 24, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Social Media Links</h3>
+                      <p style={{ fontSize: 13, color: "var(--gray-500)", marginBottom: 16 }}>Leave empty to hide the social icon from the footer.</p>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div>
+                          <label className="label">Facebook URL</label>
+                          <input className="input" value={contactForm.facebook} onChange={e => setContactForm({ ...contactForm, facebook: e.target.value })} placeholder="https://facebook.com/..." />
+                        </div>
+                        <div>
+                          <label className="label">Instagram URL</label>
+                          <input className="input" value={contactForm.instagram} onChange={e => setContactForm({ ...contactForm, instagram: e.target.value })} placeholder="https://instagram.com/..." />
+                        </div>
+                        <div>
+                          <label className="label">Twitter / X URL</label>
+                          <input className="input" value={contactForm.twitter} onChange={e => setContactForm({ ...contactForm, twitter: e.target.value })} placeholder="https://twitter.com/..." />
+                        </div>
+                        <div>
+                          <label className="label">YouTube URL</label>
+                          <input className="input" value={contactForm.youtube} onChange={e => setContactForm({ ...contactForm, youtube: e.target.value })} placeholder="https://youtube.com/..." />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Google Maps */}
+                    <div style={{ background: "white", padding: 24, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Google Maps Iframe URL</h3>
+                      <p style={{ fontSize: 13, color: "var(--gray-500)", marginBottom: 16 }}>Go to Google Maps &gt; Share &gt; Embed a map. Copy the src URL only.</p>
+                      <div>
+                        <label className="label">Embed Source URL</label>
+                        <textarea className="input" rows={4} value={contactForm.mapIframe} onChange={e => setContactForm({ ...contactForm, mapIframe: e.target.value })} placeholder="https://www.google.com/maps/embed?pb=..." style={{ resize: "vertical" }} />
+                      </div>
+                      {contactForm.mapIframe && (
+                        <div style={{ marginTop: 16, borderRadius: 8, overflow: "hidden", border: "1px solid var(--gray-200)" }}>
+                          <iframe src={contactForm.mapIframe} width="100%" height="200" style={{ border: 0, display: "block" }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer Categories Links */}
+                    <div style={{ background: "white", padding: 24, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                        <div>
+                          <h3 style={{ fontSize: 16, fontWeight: 700 }}>Footer Categories Links</h3>
+                          <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 4 }}>Add or remove links displayed under the 'Categories' section in the footer.</p>
+                        </div>
+                        <button type="button" className="btn-ghost" style={{ border: "1px solid var(--gray-300)", padding: "6px 12px", fontSize: 13 }} onClick={() => setFooterLinksForm({ ...footerLinksForm, categories: [...footerLinksForm.categories, { label: "", href: "" }] })}>
+                          + Add Link
+                        </button>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {footerLinksForm.categories.map((cat, idx) => (
+                          <div key={idx} style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                            <div style={{ flex: 1 }}>
+                              <input className="input" placeholder="Label (e.g. Neckband)" value={cat.label} onChange={e => { const newCat = [...footerLinksForm.categories]; newCat[idx].label = e.target.value; setFooterLinksForm({...footerLinksForm, categories: newCat}); }} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <input className="input" placeholder="URL (e.g. /shop/neckband)" value={cat.href} onChange={e => { const newCat = [...footerLinksForm.categories]; newCat[idx].href = e.target.value; setFooterLinksForm({...footerLinksForm, categories: newCat}); }} />
+                            </div>
+                            <button type="button" onClick={() => { const newCat = footerLinksForm.categories.filter((_, i) => i !== idx); setFooterLinksForm({...footerLinksForm, categories: newCat}); }} style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 8, flexShrink: 0 }}>
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+              </div>
+              <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--gray-200)" }}>
+                <button className="btn-red" onClick={saveContactSettings} disabled={savingContact} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <Save size={16} /> {savingContact ? "Saving..." : "Save Settings"}
                 </button>
               </div>
             </div>

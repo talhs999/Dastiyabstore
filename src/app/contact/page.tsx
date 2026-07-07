@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
 import { Phone, Mail, MapPin, Clock, MessageCircle, Send, CheckCircle, Loader2 } from "lucide-react";
+import { useSettings } from "@/components/SettingsProvider";
 
 export default function ContactPage() {
+  const { contact } = useSettings();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -59,9 +61,12 @@ export default function ContactPage() {
           {/* Info Cards */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {[
-              { icon: <Phone size={24} />, title: "Phone / WhatsApp", lines: ["0316-2975195", "Mon–Sat: 9 AM – 9 PM"] },
-              { icon: <Mail size={24} />, title: "Email", lines: ["support@dastiyabstore.com", "Reply within 24 hours"] },
-              { icon: <MapPin size={24} />, title: "Address", lines: ["H-151 Moinabad, Model Colony Phase 3 Malir", "Karachi, 75100, Pakistan"] },
+              { icon: <Phone size={24} />, title: "Phone / WhatsApp", lines: [contact?.phone || "0316-2975195", "Mon–Sat: 9 AM – 9 PM"] },
+              { icon: <Mail size={24} />, title: "Email", lines: [contact?.email || "support@dastiyabstore.com", "Reply within 24 hours"] },
+              { icon: <MapPin size={24} />, title: "Address", lines: [
+                  (contact?.address || "H-151 Moinabad, Model Colony Phase 3 Malir, Karachi, 75100, Pakistan").split(",").slice(0, 2).join(","),
+                  (contact?.address || "H-151 Moinabad, Model Colony Phase 3 Malir, Karachi, 75100, Pakistan").split(",").slice(2).join(",").trim()
+                ] },
               { icon: <Clock size={24} />, title: "Business Hours", lines: ["Monday – Saturday", "9:00 AM – 9:00 PM PKT"] },
             ].map((c, i) => (
               <div key={i} style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 20, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)", display: "flex", gap: 16, alignItems: "flex-start", transition: "all 0.3s" }}
@@ -77,7 +82,7 @@ export default function ContactPage() {
             ))}
 
             {/* WhatsApp CTA */}
-            <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer" style={{
+            <a href={`https://wa.me/${contact?.phone ? contact.phone.replace(/[^0-9]/g, "") : "923162975195"}`} target="_blank" rel="noopener noreferrer" style={{
               display: "flex", alignItems: "center", gap: 12,
               background: "#25d366", color: "white", padding: "16px 24px",
               borderRadius: "var(--radius-full)", textDecoration: "none",
@@ -149,7 +154,7 @@ export default function ContactPage() {
         <div style={{ marginTop: 64 }}>
           <h2 style={{ fontWeight: 800, fontSize: 22, marginBottom: 24, textAlign: "center" }}>Find Us in Karachi</h2>
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3618.66579294218!2d67.18247577583696!3d24.891375443315757!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb3393daae898f5%3A0x6751d9459c7da81f!2sDastiyab%20Store!5e0!3m2!1sen!2s!4v1720371458999!5m2!1sen!2s"
+            src={contact?.mapIframe || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3618.66579294218!2d67.18247577583696!3d24.891375443315757!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb3393daae898f5%3A0x6751d9459c7da81f!2sDastiyab%20Store!5e0!3m2!1sen!2s!4v1720371458999!5m2!1sen!2s"}
             width="100%"
             height="400"
             style={{ border: 0, borderRadius: "var(--radius-lg)" }}

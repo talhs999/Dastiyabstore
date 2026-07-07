@@ -100,6 +100,11 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { items, totalPrice, clearCart } = useCart();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Dynamic shipping states
   const [shippingRules, setShippingRules] = useState<any[]>([]);
@@ -456,6 +461,14 @@ export default function CheckoutPage() {
     );
   }
 
+  if (!mounted) {
+    return (
+      <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader2 className="animate-spin" size={48} color="var(--red)" />
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
       <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--gray-900)", marginBottom: 32 }}>
@@ -483,7 +496,7 @@ export default function CheckoutPage() {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 32 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
 
         {/* Form */}
         <div style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 32, border: "1px solid var(--gray-200)", boxShadow: "var(--shadow-sm)" }}>
