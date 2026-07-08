@@ -27,7 +27,19 @@ function ShopContent({ initialProducts }: { initialProducts: any[] }) {
 
     let filtered = dbProducts.filter(p => {
       // Search query
-      if (q && !p.name.toLowerCase().includes(q) && !p.description.toLowerCase().includes(q)) return false;
+      if (q) {
+        const searchTerms = q.split(/\s+/).filter(Boolean);
+        const nameClean = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const descClean = p.description ? p.description.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        const catClean = p.category ? p.category.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        
+        const matchesAll = searchTerms.every(term => {
+          const termClean = term.replace(/[^a-z0-9]/g, '');
+          if (!termClean) return true;
+          return nameClean.includes(termClean) || descClean.includes(termClean) || catClean.includes(termClean);
+        });
+        if (!matchesAll) return false;
+      }
       // Price range
       if (p.price < min || p.price > max) return false;
       // Rating

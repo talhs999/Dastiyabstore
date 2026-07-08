@@ -26,7 +26,7 @@ const categories = [
 ];
 
 export default function Navbar() {
-  const { freeDelivery } = useSettings();
+  const { freeDelivery, promoBanner = [] } = useSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -99,16 +99,20 @@ export default function Navbar() {
         const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}&limit=5`);
         if (res.ok) {
           const data = await res.json();
-          if (data && data.length > 0) {
-            const mappedResults = data.map((p: any) => ({
-              id: p.id,
-              slug: p.slug,
-              name: p.name,
-              price: Number(p.price),
-              image: p.image,
-              category: p.category_name || "",
-            }));
-            setSearchResults(mappedResults);
+          if (data) {
+            if (data.length > 0) {
+              const mappedResults = data.map((p: any) => ({
+                id: p.id,
+                slug: p.slug,
+                name: p.name,
+                price: Number(p.price),
+                image: p.image,
+                category: p.category_name || "",
+              }));
+              setSearchResults(mappedResults);
+            } else {
+              setSearchResults([]);
+            }
             return;
           }
         }
@@ -136,6 +140,7 @@ export default function Navbar() {
     if (searchQuery.trim()) {
       router.push(`/shop?q=${encodeURIComponent(searchQuery)}`);
       setSearchOpen(false);
+      setSearchResults([]); // Hide dropdown on enter
     }
   };
 
@@ -164,9 +169,9 @@ export default function Navbar() {
           <div className="animate-marquee" style={{ display: "flex", width: "fit-content", animation: "marquee 20s linear infinite" }}>
             {[
               ...(freeDelivery?.is_active ? [`Free Delivery on orders above Rs. ${freeDelivery.threshold}`] : []),
-              "Cash on Delivery Available Nationwide", "Easy Returns within 5 Days", "100% Authentic Products",
+              ...promoBanner,
               ...(freeDelivery?.is_active ? [`Free Delivery on orders above Rs. ${freeDelivery.threshold}`] : []),
-              "Cash on Delivery Available Nationwide", "Easy Returns within 5 Days", "100% Authentic Products"
+              ...promoBanner
             ].map((t, i) => (
               <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8, marginRight: 64, whiteSpace: "nowrap" }}>
                 <Truck size={14} />

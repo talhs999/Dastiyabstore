@@ -114,6 +114,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
           setReviews(data.reviews || []);
           setQnaList(data.qna || []);
+
+          // Trigger Facebook Pixel ViewContent Event
+          if (data.product && typeof window !== "undefined" && (window as any).fbq) {
+            (window as any).fbq('track', 'ViewContent', {
+              content_ids: [data.product.id],
+              content_name: data.product.name,
+              content_type: 'product',
+              value: data.product.price,
+              currency: 'PKR'
+            });
+          }
         }
 
       } catch (err) {

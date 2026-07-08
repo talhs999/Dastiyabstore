@@ -17,23 +17,38 @@ export async function GET(request: Request) {
     if (isFeatured === 'true') {
       whereClause.is_featured = true;
     }
-    if (search) {
-      whereClause.name = { contains: search };
-    }
     if (ids) {
       whereClause.id = { in: ids.split(',') };
     }
 
-    const products = await prisma.product.findMany({
+    let products = await prisma.product.findMany({
       where: whereClause,
       include: {
         category: {
           select: { name: true, slug: true }
         }
       },
-      orderBy: { created_at: 'desc' },
-      take: limit
+      orderBy: { created_at: 'desc' }
     });
+
+    if (search) {
+      const searchTerms = search.toLowerCase().split(/\s+/).filter(Boolean);
+      products = products.filter((p: any) => {
+        const nameClean = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const descClean = p.description ? p.description.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        const catClean = p.category?.name ? p.category.name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        
+        return searchTerms.every(term => {
+          const termClean = term.replace(/[^a-z0-9]/g, '');
+          if (!termClean) return true;
+          return nameClean.includes(termClean) || descClean.includes(termClean) || catClean.includes(termClean);
+        });
+      });
+    }
+
+    if (limit) {
+      products = products.slice(0, limit);
+    }
 
     return NextResponse.json(products);
   } catch (error) {

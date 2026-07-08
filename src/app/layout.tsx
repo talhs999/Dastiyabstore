@@ -80,6 +80,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       { label: "Terms & Conditions", href: "/terms" },
     ],
   };
+  let promoBannerSettings = [
+    "Cash on Delivery Available Nationwide",
+    "Easy Returns within 5 Days",
+    "100% Authentic Products"
+  ];
 
   try {
     const fdSetting = await prisma.storeSetting.findUnique({
@@ -102,6 +107,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     if (flSetting && flSetting.value) {
       footerLinksSettings = typeof flSetting.value === 'string' ? JSON.parse(flSetting.value) : flSetting.value as any;
     }
+
+    const pbSetting = await prisma.storeSetting.findUnique({
+      where: { key: 'promo_banner_settings' }
+    });
+    if (pbSetting && pbSetting.value) {
+      promoBannerSettings = typeof pbSetting.value === 'string' ? JSON.parse(pbSetting.value) : pbSetting.value as any;
+    }
   } catch (error) {
     console.warn("Failed to fetch global settings:", error);
   }
@@ -110,6 +122,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     freeDelivery: freeDeliverySettings,
     contact: contactSettings,
     footerLinks: footerLinksSettings,
+    promoBanner: promoBannerSettings
   };
 
   return (

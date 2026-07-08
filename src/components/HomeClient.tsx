@@ -422,9 +422,9 @@ export default function HomeClient({ initialData }: { initialData: any }) {
     ? initialData.statsStrip 
     : null;
 
-  const siteReviews = initialData?.siteReviews && Array.isArray(initialData.siteReviews) && initialData.siteReviews.length > 0 
+  const siteReviews = initialData?.siteReviews && Array.isArray(initialData.siteReviews)
     ? initialData.siteReviews 
-    : null;
+    : [];
 
   const scrollReviews = (dir: "left" | "right") => {
     if (reviewsRef.current) {
@@ -761,31 +761,34 @@ export default function HomeClient({ initialData }: { initialData: any }) {
             </div>
           </div>
           
-          <div 
-            className="reviews-slider"
-            ref={reviewsRef}
-            style={{ 
-              display: "flex", 
-              gap: 24, 
-              overflowX: "auto", 
-              scrollSnapType: "x mandatory", 
-              paddingBottom: 24, 
-              WebkitOverflowScrolling: "touch",
-              scrollbarWidth: "none" // Firefox
-            }}
-          >
-            <style>{`
-              .reviews-slider::-webkit-scrollbar { display: none; }
-            `}</style>
-
-            {(siteReviews || [
-              { name: "Ahmed Raza", city: "Lahore", text: "Neck fan is amazing! Perfect for summer. COD delivery was smooth. Highly recommended!", product: "Neck Fan 360°", time: "a week ago", color: "#e91e63", rating: 5 },
-              { name: "Fatima Malik", city: "Karachi", text: "Laptop stand is very sturdy. Helps with neck pain during long work hours. Great quality!", product: "Aluminum Laptop Stand", time: "3 days ago", color: "#9c27b0", rating: 5 },
-              { name: "Usman Khan", city: "Islamabad", text: "AirPods sound quality is excellent at this price point. Battery lasts all day. Very happy!", product: "DastiyabBuds Pro", time: "2 weeks ago", color: "#2196f3", rating: 5 },
-              { name: "Zainab Ali", city: "Rawalpindi", text: "The quality of the mobile accessories is top-notch. Cables are thick and durable. Delivered in 2 days.", product: "Fast Charging Cable", time: "1 month ago", color: "#00bcd4", rating: 5 },
-              { name: "Bilal Qureshi", city: "Peshawar", text: "Best tech store in Pakistan! Customer service is highly responsive. The smartwatch works perfectly.", product: "Smart Watch Series 8", time: "2 months ago", color: "#4caf50", rating: 5 },
-              { name: "Sana Tariq", city: "Multan", text: "I bought the ring light for my TikTok videos and the brightness is fantastic. Love the tripod quality.", product: "LED Ring Light 10\"", time: "3 weeks ago", color: "#ff9800", rating: 5 },
-            ]).map((r: any, i: number) => (
+          {siteReviews.length === 0 ? (
+            <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "40px 20px" }}>
+              <div style={{ background: "rgba(255,255,255,0.05)", border: "1px dashed rgba(255,255,255,0.2)", borderRadius: 16, padding: "40px 32px", textAlign: "center", maxWidth: 600 }}>
+                <h3 style={{ color: "var(--yellow)", fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Customer Reviews Coming Soon!</h3>
+                <p style={{ color: "var(--white)", opacity: 0.8, fontSize: 16, lineHeight: 1.5 }}>
+                  We are preparing some amazing products and gathering feedback from our valuable customers. 
+                  Real reviews from verified buyers will appear here shortly!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div 
+              className="reviews-slider"
+              ref={reviewsRef}
+              style={{ 
+                display: "flex", 
+                gap: 24, 
+                overflowX: "auto", 
+                scrollSnapType: "x mandatory", 
+                paddingBottom: 24, 
+                WebkitOverflowScrolling: "touch",
+                scrollbarWidth: "none" // Firefox
+              }}
+            >
+              <style>{`
+                .reviews-slider::-webkit-scrollbar { display: none; }
+              `}</style>
+              {siteReviews.map((r: any, i: number) => (
               <div key={i} style={{ 
                 flex: "0 0 340px", 
                 scrollSnapAlign: "start",
@@ -842,16 +845,19 @@ export default function HomeClient({ initialData }: { initialData: any }) {
                 </div>
               </div>
             ))}
-          </div>
-
-          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 32 }}>
-            <button onClick={() => scrollReviews("left")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
-              <ChevronLeft size={20} />
-            </button>
-            <button onClick={() => scrollReviews("right")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
-              <ChevronRight size={20} />
-            </button>
-          </div>
+            </div>
+          )}
+          
+          {siteReviews.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 32 }}>
+              <button onClick={() => scrollReviews("left")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
+                <ChevronLeft size={20} />
+              </button>
+              <button onClick={() => scrollReviews("right")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

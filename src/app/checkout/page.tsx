@@ -175,6 +175,15 @@ export default function CheckoutPage() {
 
   // 1. Fetch Shipping Rules & Delivery Areas on mount
   useEffect(() => {
+    // 0. Trigger Facebook Pixel InitiateCheckout Event
+    if (typeof window !== "undefined" && (window as any).fbq && totalPrice > 0) {
+      (window as any).fbq('track', 'InitiateCheckout', {
+        value: totalPrice,
+        currency: 'PKR',
+        num_items: items.length
+      });
+    }
+
     async function loadData() {
       try {
         const res = await fetch("/api/checkout/config");
@@ -408,6 +417,14 @@ export default function CheckoutPage() {
         body: JSON.stringify({ order: { ...orderPayload.order, ...savedOrder }, items: savedOrder.items })
       }).catch(err => console.error("Failed to trigger order confirmation email:", err));
 
+      // 5. Trigger Facebook Pixel Purchase Event
+      if (typeof window !== "undefined" && (window as any).fbq) {
+        (window as any).fbq('track', 'Purchase', {
+          value: orderPayload.order.total_amount,
+          currency: 'PKR'
+        });
+      }
+
       setOrderId(savedOrder.id);
       setPlaced(true);
       clearCart();
@@ -562,7 +579,7 @@ export default function CheckoutPage() {
                       <label className="label" style={{ fontWeight: 700 }}>Select Area / Location *</label>
                       <select className="input" value={selectedArea} onChange={e => setSelectedArea(e.target.value)} style={{ background: "white" }}>
                         {karachiAreas.map((a: any) => (
-                          <option key={a.name} value={a.name}>{a.name} (~{a.distance} km)</option>
+                          <option key={a.name} value={a.name}>{a.name}</option>
                         ))}
                       </select>
                     </div>
@@ -600,7 +617,7 @@ export default function CheckoutPage() {
                 <p style={{ color: "var(--gray-700)", fontSize: 15 }}>{form.name}</p>
                 <p style={{ color: "var(--gray-600)", fontSize: 14 }}>
                   {form.address}
-                  {form.city.toLowerCase() === "karachi" && `, ${selectedArea} (~${karachiAreas.find((a: any) => a.name === selectedArea)?.distance || 0} km)`}
+                  {form.city.toLowerCase() === "karachi" && `, ${selectedArea}`}
                   , {form.city}
                 </p>
                 <p style={{ color: "var(--gray-600)", fontSize: 14 }}>{form.phone}</p>

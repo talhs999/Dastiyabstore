@@ -22,6 +22,7 @@ type GlobalSettings = {
     categories: { label: string; href: string }[];
     support: { label: string; href: string }[];
   };
+  promoBanner: string[];
 };
 
 const defaultSettings: GlobalSettings = {
@@ -60,7 +61,12 @@ const defaultSettings: GlobalSettings = {
       { label: "FAQs", href: "/faqs" },
       { label: "Terms & Conditions", href: "/terms" },
     ],
-  }
+  },
+  promoBanner: [
+    "Cash on Delivery Available Nationwide",
+    "Easy Returns within 5 Days",
+    "100% Authentic Products"
+  ]
 };
 
 const SettingsContext = createContext<GlobalSettings>(defaultSettings);

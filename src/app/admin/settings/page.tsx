@@ -176,6 +176,11 @@ export default function AdminSettingsPage() {
   const [chatbotModel, setChatbotModel] = useState("gemini-1.5-pro");
   const [chatbotEnabled, setChatbotEnabled] = useState(true);
 
+  // Top Banner states
+  const [loadingPromoBanner, setLoadingPromoBanner] = useState(true);
+  const [savingPromoBanner, setSavingPromoBanner] = useState(false);
+  const [promoBannerText, setPromoBannerText] = useState("Cash on Delivery Available Nationwide, Easy Returns within 5 Days, 100% Authentic Products");
+
   const tabs = [
     { label: "General", icon: <Store size={18} /> },
     { label: "Shipping & Delivery", icon: <Truck size={18} /> },
@@ -188,6 +193,7 @@ export default function AdminSettingsPage() {
     { label: "AI Chatbot", icon: <MessageCircle size={18} /> },
     { label: "Stats Strip", icon: <BarChart3 size={18} /> },
     { label: "Contact & Footer", icon: <Landmark size={18} /> },
+    { label: "Top Banner", icon: <Store size={18} /> },
   ];
 
   useEffect(() => {
@@ -201,7 +207,43 @@ export default function AdminSettingsPage() {
     else if (activeTab === "AI Chatbot") fetchChatbotSettings();
     else if (activeTab === "Stats Strip") fetchStatsStrip();
     else if (activeTab === "Contact & Footer") fetchContactSettings();
+    else if (activeTab === "Top Banner") fetchPromoBannerSettings();
   }, [activeTab]);
+
+  const fetchPromoBannerSettings = async () => {
+    setLoadingPromoBanner(true);
+    const res = await fetch("/api/admin/settings/store_settings?key=promo_banner_settings");
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.value) {
+        try {
+          const bannerArr = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+          if (Array.isArray(bannerArr)) {
+            setPromoBannerText(bannerArr.join(", "));
+          }
+        } catch (e) {
+          console.error("Failed to parse promo banner settings", e);
+        }
+      }
+    }
+    setLoadingPromoBanner(false);
+  };
+
+  const savePromoBannerSettings = async () => {
+    setSavingPromoBanner(true);
+    const textArray = promoBannerText.split(",").map(s => s.trim()).filter(s => s.length > 0);
+    const res = await fetch("/api/admin/settings/store_settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key: "promo_banner_settings",
+        value: textArray
+      })
+    });
+    setSavingPromoBanner(false);
+    if (!res.ok) alert("Failed to save Top Banner settings");
+    else alert("Top Banner settings saved successfully!");
+  };
 
   const fetchContactSettings = async () => {
     setLoadingContact(true);
@@ -1894,6 +1936,42 @@ export default function AdminSettingsPage() {
               <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end" }}>
                 <button className="btn-red" onClick={saveStatsStrip} disabled={savingStats} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <Save size={16} /> {savingStats ? "Saving..." : statsSaved ? "Saved ✓" : "Save Stats"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Top Banner" && (
+            <div>
+              <div style={{ padding: "24px 32px", borderBottom: "1px solid var(--gray-100)" }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Top Banner (Marquee)</h2>
+                  <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 4 }}>Manage the scrolling text shown at the very top of the website.</p>
+                </div>
+              </div>
+              <div style={{ padding: "24px 32px" }}>
+                {loadingPromoBanner ? (
+                  <p style={{ textAlign: "center", color: "var(--gray-500)" }}>Loading...</p>
+                ) : (
+                  <div style={{ background: "white", padding: 24, borderRadius: 12, border: "1px solid var(--gray-200)" }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Scrolling Texts</h3>
+                    <p style={{ fontSize: 13, color: "var(--gray-500)", marginBottom: 16 }}>
+                      Enter the texts you want to display in the scrolling banner, separated by commas.
+                    </p>
+                    <textarea 
+                      className="input" 
+                      rows={5} 
+                      value={promoBannerText} 
+                      onChange={e => setPromoBannerText(e.target.value)} 
+                      placeholder="Cash on Delivery Available Nationwide, Easy Returns within 5 Days, 100% Authentic Products" 
+                      style={{ resize: "vertical" }} 
+                    />
+                  </div>
+                )}
+              </div>
+              <div style={{ padding: "20px 32px", background: "var(--gray-50)", display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--gray-200)" }}>
+                <button className="btn-red" onClick={savePromoBannerSettings} disabled={savingPromoBanner} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <Store size={16} /> {savingPromoBanner ? "Saving..." : "Save Settings"}
                 </button>
               </div>
             </div>
