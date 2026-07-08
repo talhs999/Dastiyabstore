@@ -13,8 +13,8 @@ export async function GET() {
       customer_email: o.email,
       customer_phone: o.phone,
       total_amount: o.total || 0,
-      subtotal: o.total || 0,
-      shipping_fee: 0,
+      subtotal: o.subtotal !== null ? o.subtotal : (o.total || 0),
+      shipping_fee: o.shipping_fee || 0,
       shipping_address: o.address || '',
       shipping_city: o.city || '',
       order_items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || [])

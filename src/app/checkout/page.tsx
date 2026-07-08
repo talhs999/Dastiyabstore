@@ -208,6 +208,18 @@ export default function CheckoutPage() {
     loadData();
   }, []);
 
+  // Handle COD availability based on City
+  useEffect(() => {
+    const isKarachi = form.city.toLowerCase() === "karachi";
+    if (!isKarachi && selectedPaymentMethod === "COD") {
+      // Find the first available alternative payment method
+      if (paymentSettings?.bank?.enabled) setSelectedPaymentMethod("Bank Transfer");
+      else if (paymentSettings?.jazzcash?.enabled) setSelectedPaymentMethod("JazzCash");
+      else if (paymentSettings?.easypaisa?.enabled) setSelectedPaymentMethod("EasyPaisa");
+      else setSelectedPaymentMethod(""); // fallback if no other options
+    }
+  }, [form.city, selectedPaymentMethod, paymentSettings]);
+
   // 2. Recalculate Shipping Fee dynamically
   useEffect(() => {
     if (!form.city) {
@@ -602,7 +614,7 @@ export default function CheckoutPage() {
               {/* Payment Method */}
               <h3 style={{ fontWeight: 800, fontSize: 16, marginBottom: 12 }}>Payment Method</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
-                {paymentSettings?.cod?.enabled && (
+                {paymentSettings?.cod?.enabled && form.city.toLowerCase() === "karachi" && (
                   <div 
                     onClick={() => setSelectedPaymentMethod("COD")}
                     style={{ border: selectedPaymentMethod === "COD" ? "2px solid var(--red)" : "1px solid var(--gray-200)", borderRadius: "var(--radius)", padding: 16, background: selectedPaymentMethod === "COD" ? "#fef2f2" : "white", cursor: "pointer", transition: "all 0.2s" }}>

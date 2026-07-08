@@ -6,6 +6,10 @@ export async function POST(request: Request) {
     const data = await request.json();
     
     if (data.session_id) {
+      if (data.current_url && data.current_url.startsWith('/admin')) {
+        return NextResponse.json({ success: true, ignored: true });
+      }
+
       await prisma.activeVisitor.upsert({
         where: { session_id: data.session_id },
         update: {

@@ -86,12 +86,17 @@ model Order {
 }
 
 model Customer {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  password   String
-  name       String?
-  role       String   @default("customer")
-  created_at DateTime @default(now())
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  password           String
+  name               String?
+  phone              String?
+  city               String?
+  address            String?   @db.Text
+  role               String    @default("customer")
+  reset_token        String?   @db.Text
+  reset_token_expiry DateTime?
+  created_at         DateTime  @default(now())
 
   @@map("customers")
 }

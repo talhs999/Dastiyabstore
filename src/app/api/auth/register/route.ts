@@ -17,7 +17,8 @@ export async function POST(request: Request) {
       data: {
         name: body.name,
         email: body.email,
-        password: body.password
+        password: body.password,
+        phone: body.phone
       }
     });
 

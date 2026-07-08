@@ -20,7 +20,7 @@ export default function VisitorTracker() {
     setSessionId(sId);
 
     // Retrieve cached geo-IP details to avoid API spam
-    const cachedGeo = sessionStorage.getItem("visitor_geo_data");
+    const cachedGeo = sessionStorage.getItem("visitor_geo_data_v2");
     if (cachedGeo) {
       try {
         setGeoData(JSON.parse(cachedGeo));
@@ -41,7 +41,7 @@ export default function VisitorTracker() {
             country: data.country_name || data.country || "Unknown Location"
           };
           setGeoData(payload);
-          sessionStorage.setItem("visitor_geo_data", JSON.stringify(payload));
+          sessionStorage.setItem("visitor_geo_data_v2", JSON.stringify(payload));
         })
         .catch(err => {
           // Silently fallback if ipapi fails (e.g. adblocker)
@@ -54,6 +54,9 @@ export default function VisitorTracker() {
   // 2. Perform Heartbeats and update Current Page
   useEffect(() => {
     if (!sessionId || !geoData) return;
+    
+    // Do not track admin pages to keep analytics clean and secure
+    if (pathname?.startsWith("/admin")) return;
 
     // Detect device type
     const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";

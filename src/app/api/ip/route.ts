@@ -1,27 +1,50 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const res = await fetch("https://ipapi.co/json/", {
-      headers: {
-        'User-Agent': 'NodeJS/NextJS Server',
-        'Accept': 'application/json'
-      }
-    });
+    // 1. Get the actual client's IP address (not the server's IP)
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const realIp = request.headers.get('x-real-ip');
+    let clientIp = "";
     
-    if (!res.ok) {
-      throw new Error(`Failed to fetch IP data: ${res.status}`);
+    if (forwardedFor) {
+      clientIp = forwardedFor.split(',')[0].trim();
+    } else if (realIp) {
+      clientIp = realIp;
     }
     
+    // 2. Localhost fallback
+    if (!clientIp || clientIp === "::1" || clientIp === "127.0.0.1") {
+      return NextResponse.json({
+        ip: "127.0.0.1",
+        city: "Local",
+        country_name: "Pakistan (Testing)"
+      });
+    }
+
+    // 3. Fetch location for the specific client IP
+    const res = await fetch(`http://ip-api.com/json/${clientIp}`, {
+      headers: { 'User-Agent': 'NodeJS/NextJS Server' }
+    });
+    
     const data = await res.json();
-    return NextResponse.json(data);
+    
+    if (data.status === "success") {
+      return NextResponse.json({
+        ip: data.query,
+        city: data.city,
+        country_name: data.country
+      });
+    }
+
+    throw new Error("Failed to parse location data");
+    
   } catch (error) {
     console.error("IP API Error:", error);
-    // Return a graceful fallback instead of failing completely
     return NextResponse.json({
-      ip: "127.0.0.1",
+      ip: "Unknown IP",
       city: "Unknown",
-      country_name: "Localhost/Blocked",
+      country_name: "Location Blocked",
       error: true
     });
   }
