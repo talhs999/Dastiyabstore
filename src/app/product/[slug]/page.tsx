@@ -583,8 +583,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               [
                 ...(freeDelivery?.is_active ? [{ icon: "truck", text: `Free delivery on orders above Rs. ${freeDelivery.threshold}` }] : []),
                 { icon: "shield", text: "100% authentic & quality guaranteed" },
-                { icon: "rotate-ccw", text: "7-day easy returns & exchanges" },
-                { icon: "zap", text: "Cash on Delivery available nationwide" }
+                { icon: "rotate-ccw", text: "5-day easy returns & exchanges" },
+                { icon: "zap", text: "Cash on Delivery available in Karachi" }
               ].map((t, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--gray-700)" }}>
                   {renderTrustIcon(t.icon)} {t.text}

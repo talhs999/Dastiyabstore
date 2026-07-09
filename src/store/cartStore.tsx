@@ -40,7 +40,7 @@ const useCartStore = create<CartStore>()(
           if (existing) {
             return {
               items: state.items.map((i) =>
-                (i.id === item.id && i.color === item.color) ? { ...i, quantity: i.quantity + 1 } : i
+                (i.id === item.id && i.color === item.color) ? { ...i, quantity: Math.min(i.quantity + 1, 5) } : i
               ),
             };
           }
@@ -53,7 +53,7 @@ const useCartStore = create<CartStore>()(
           if (qty < 1) return state;
           return {
             items: state.items.map((i) =>
-              (i.id === id && i.color === color) ? { ...i, quantity: qty } : i
+              (i.id === id && i.color === color) ? { ...i, quantity: Math.min(qty, 5) } : i
             ),
           };
         }),

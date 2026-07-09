@@ -28,7 +28,7 @@ type GlobalSettings = {
 const defaultSettings: GlobalSettings = {
   freeDelivery: {
     is_active: true,
-    threshold: 2000,
+    threshold: 3000,
   },
   contact: {
     address: "H-151 Moinabad, Model Colony Phase 3 Malir, Karachi, 75100, Pakistan",
@@ -63,7 +63,7 @@ const defaultSettings: GlobalSettings = {
     ],
   },
   promoBanner: [
-    "Cash on Delivery Available Nationwide",
+    "Cash on Delivery Available in Karachi",
     "Easy Returns within 5 Days",
     "100% Authentic Products"
   ]

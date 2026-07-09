@@ -45,6 +45,18 @@ export default function ReturnsPage() {
         </section>
 
         <section>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 12 }}>Warranty & Defective Products</h2>
+          <p style={{ color: "var(--gray-600)", lineHeight: 1.8, marginBottom: 12 }}>
+            We do <strong>not</strong> offer any warranty on online shopping. However, if you receive a defective product:
+          </p>
+          <ul style={{ color: "var(--gray-600)", lineHeight: 1.8, paddingLeft: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+            <li>You must report the defect within the 5-day return window.</li>
+            <li>The product will be returned to us and thoroughly inspected by our technical team.</li>
+            <li>A final decision on whether the product qualifies for a return or replacement will be made <strong>only after the inspection is complete</strong>.</li>
+          </ul>
+        </section>
+
+        <section>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--gray-900)", marginBottom: 12 }}>Refunds</h2>
           <p style={{ color: "var(--gray-600)", lineHeight: 1.8 }}>
             Once we receive your returned item, we will inspect it and notify you of the approval or rejection of your refund. If your return is approved, we will initiate a refund to your original method of payment (or via EasyPaisa/JazzCash/Bank Transfer for COD orders). Refunds may take a few days to process depending on your card issuer's policies.

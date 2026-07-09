@@ -15,7 +15,7 @@ export default function AdminSettingsPage() {
     city: "",
     base_fee: 150,
     per_km_fee: 0,
-    free_delivery_threshold: 2000,
+    free_delivery_threshold: 3000,
     free_delivery_km: "",
     free_areas: "",
     estimated_days: "2-3 Business Days",
@@ -80,7 +80,7 @@ export default function AdminSettingsPage() {
   const [globalLoading, setGlobalLoading] = useState(true);
   const [globalSaving, setGlobalSaving] = useState(false);
   const [globalFreeDeliveryActive, setGlobalFreeDeliveryActive] = useState(true);
-  const [globalFreeDeliveryThreshold, setGlobalFreeDeliveryThreshold] = useState(2000);
+  const [globalFreeDeliveryThreshold, setGlobalFreeDeliveryThreshold] = useState(3000);
 
   // Notification states
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -179,7 +179,7 @@ export default function AdminSettingsPage() {
   // Top Banner states
   const [loadingPromoBanner, setLoadingPromoBanner] = useState(true);
   const [savingPromoBanner, setSavingPromoBanner] = useState(false);
-  const [promoBannerText, setPromoBannerText] = useState("Cash on Delivery Available Nationwide, Easy Returns within 5 Days, 100% Authentic Products");
+  const [promoBannerText, setPromoBannerText] = useState("Cash on Delivery Available in Karachi, Easy Returns within 5 Days, 100% Authentic Products");
 
   const tabs = [
     { label: "General", icon: <Store size={18} /> },
@@ -657,8 +657,8 @@ export default function AdminSettingsPage() {
           setShippingRules(data);
         } else {
           setShippingRules([
-            { id: "1", name: "Karachi Local", city: "Karachi", base_fee: 150, per_km_fee: 15, free_delivery_threshold: 2000, free_delivery_km: 15, free_areas: "Clifton, DHA, Gulshan-e-Iqbal, PECHS, Bahadurabad", estimated_days: "1-2 Business Days", is_active: true },
-            { id: "2", name: "Rest of Pakistan (Default)", city: "Default", base_fee: 250, per_km_fee: 0, free_delivery_threshold: 3000, free_delivery_km: null, free_areas: "", estimated_days: "3-5 Business Days", is_active: true }
+            { id: "1", name: "Karachi Local", city: "Karachi", base_fee: 250, per_km_fee: 15, free_delivery_threshold: 3000, free_delivery_km: 15, free_areas: "Clifton, DHA, Gulshan-e-Iqbal, PECHS, Bahadurabad", estimated_days: "2-3 Days Minimum", is_active: true },
+            { id: "2", name: "Rest of Pakistan (Default)", city: "Default", base_fee: 400, per_km_fee: 0, free_delivery_threshold: 5000, free_delivery_km: null, free_areas: "", estimated_days: "5-7 Days Minimum", is_active: true }
           ]);
         }
       }
@@ -735,7 +735,7 @@ export default function AdminSettingsPage() {
       city: "",
       base_fee: 150,
       per_km_fee: 0,
-      free_delivery_threshold: 2000,
+      free_delivery_threshold: 3000,
       free_delivery_km: "",
       free_areas: "",
       estimated_days: "2-3 Business Days",
@@ -1963,7 +1963,7 @@ export default function AdminSettingsPage() {
                       rows={5} 
                       value={promoBannerText} 
                       onChange={e => setPromoBannerText(e.target.value)} 
-                      placeholder="Cash on Delivery Available Nationwide, Easy Returns within 5 Days, 100% Authentic Products" 
+                      placeholder="Cash on Delivery Available in Karachi, Easy Returns within 5 Days, 100% Authentic Products" 
                       style={{ resize: "vertical" }} 
                     />
                   </div>

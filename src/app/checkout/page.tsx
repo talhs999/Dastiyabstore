@@ -12,24 +12,24 @@ const DEFAULT_SHIPPING_RULES = [
     id: "1", 
     name: "Karachi Local", 
     city: "Karachi", 
-    base_fee: 150, 
+    base_fee: 250, 
     per_km_fee: 15, 
-    free_delivery_threshold: 2000, 
+    free_delivery_threshold: 3000, 
     free_delivery_km: 15, 
     free_areas: "Clifton, DHA, Gulshan-e-Iqbal, PECHS, Bahadurabad", 
-    estimated_days: "1-2 Business Days", 
+    estimated_days: "2-3 Days Minimum", 
     is_active: true 
   },
   { 
     id: "2", 
     name: "Rest of Pakistan (Default)", 
     city: "Default", 
-    base_fee: 250, 
+    base_fee: 400, 
     per_km_fee: 0, 
-    free_delivery_threshold: 3000, 
+    free_delivery_threshold: 5000, 
     free_delivery_km: null, 
     free_areas: "", 
-    estimated_days: "3-5 Business Days", 
+    estimated_days: "5-7 Days Minimum", 
     is_active: true 
   }
 ];
@@ -117,6 +117,44 @@ export default function CheckoutPage() {
 
   const [dropdownCity, setDropdownCity] = useState<string>("");
   const [customCity, setCustomCity] = useState<string>("");
+
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    // Name validation
+    if (!form.name || form.name.trim().length < 3) {
+      errors.name = "Please enter a valid full name";
+    } else if (/^\d+$/.test(form.name.replace(/\s/g, ''))) {
+      errors.name = "Name cannot be just numbers";
+    }
+
+    // Phone validation (11 digits, starts with 03)
+    const phoneClean = form.phone.replace(/\D/g, '');
+    if (!/^03\d{9}$/.test(phoneClean)) {
+      errors.phone = "Enter a valid 11-digit Pakistani number (e.g., 03001234567)";
+    }
+
+    // Address validation
+    if (!form.address || form.address.trim().length < 10) {
+      errors.address = "Please enter a complete detailed address";
+    }
+
+    // Email validation
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleContinue = () => {
+    if (validateForm()) {
+      setStep(1);
+    }
+  };
 
   // Coupon states
   const [couponCode, setCouponCode] = useState("");
@@ -538,24 +576,28 @@ export default function CheckoutPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                   <div>
                     <label className="label">Full Name *</label>
-                    <input className="input" placeholder="Muhammad Ali" value={form.name} onChange={e => set("name", e.target.value)} />
+                    <input type="text" className="input" placeholder="Full Name" value={form.name} onChange={e => { set("name", e.target.value); setFormErrors(p => ({...p, name: ""})); }} />
+                    {formErrors.name && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 4 }}>{formErrors.name}</p>}
                   </div>
                   <div>
                     <label className="label">Phone Number *</label>
-                    <input className="input" placeholder="0316-2975195" value={form.phone} onChange={e => set("phone", e.target.value)} />
+                    <input type="tel" className="input" placeholder="03XXXXXXXXX" value={form.phone} onChange={e => { set("phone", e.target.value); setFormErrors(p => ({...p, phone: ""})); }} />
+                    {formErrors.phone && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 4 }}>{formErrors.phone}</p>}
                   </div>
                 </div>
                 <div>
-                  <label className="label">Email Address</label>
-                  <input className="input" type="email" placeholder="you@email.com" value={form.email} onChange={e => set("email", e.target.value)} />
+                  <label className="label">Email Address (Optional)</label>
+                  <input type="email" className="input" placeholder="you@email.com" value={form.email} onChange={e => { set("email", e.target.value); setFormErrors(p => ({...p, email: ""})); }} />
+                  {formErrors.email && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 4 }}>{formErrors.email}</p>}
                 </div>
                 <div>
                   <label className="label">Complete Address *</label>
-                  <input className="input" placeholder="House no., Street, Area" value={form.address} onChange={e => set("address", e.target.value)} />
+                  <textarea className="input" rows={3} placeholder="House no., Street, Area" value={form.address} onChange={e => { set("address", e.target.value); setFormErrors(p => ({...p, address: ""})); }} style={{ resize: "vertical" }} />
+                  {formErrors.address && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 4 }}>{formErrors.address}</p>}
                 </div>
                 <div>
                   <label className="label">City *</label>
-                  <select className="input" value={dropdownCity} onChange={e => setDropdownCity(e.target.value)}>
+                  <select className="input" value={dropdownCity} onChange={e => { setDropdownCity(e.target.value); setFormErrors(p => ({...p, city: ""})); }}>
                     <option value="">Select City</option>
                     {PAKISTAN_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -592,7 +634,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
               <button 
-                onClick={() => setStep(1)} 
+                onClick={handleContinue} 
                 className="btn-red" 
                 style={{ marginTop: 24, justifyContent: "center" }}
                 disabled={
@@ -631,10 +673,10 @@ export default function CheckoutPage() {
               {/* Payment Method */}
               <h3 style={{ fontWeight: 800, fontSize: 16, marginBottom: 12 }}>Payment Method</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
-                {paymentSettings?.cod?.enabled && form.city.toLowerCase() === "karachi" && (
+                {paymentSettings?.cod?.enabled && (form.city.toLowerCase() === "karachi") && (
                   <div 
                     onClick={() => setSelectedPaymentMethod("COD")}
-                    style={{ border: selectedPaymentMethod === "COD" ? "2px solid var(--red)" : "1px solid var(--gray-200)", borderRadius: "var(--radius)", padding: 16, background: selectedPaymentMethod === "COD" ? "#fef2f2" : "white", cursor: "pointer", transition: "all 0.2s" }}>
+                    style={{ border: selectedPaymentMethod === "COD" ? "1px solid var(--red)" : "1px solid var(--gray-200)", borderRadius: "var(--radius)", padding: 16, background: selectedPaymentMethod === "COD" ? "#fff5f5" : "white", cursor: "pointer", transition: "all 0.2s" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid", borderColor: selectedPaymentMethod === "COD" ? "var(--red)" : "var(--gray-300)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         {selectedPaymentMethod === "COD" && <div style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--red)" }} />}

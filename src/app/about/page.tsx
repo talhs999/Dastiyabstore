@@ -18,7 +18,7 @@ const defaultStats = [
 
 const milestones = [
   { year: "2026", title: "The Beginning", desc: "Founded DastiyabStore in Karachi with a vision to bring premium, tested gadgets to every Pakistani home." },
-  { year: "2026", title: "Nationwide Logistics", desc: "Established partnerships with top couriers for reliable Cash on Delivery across Pakistan." },
+  { year: "2026", title: "Nationwide Logistics", desc: "Established partnerships with top couriers for reliable delivery across Pakistan, and COD in Karachi." },
   { year: "2026", title: "Quality Assurance Hub", desc: "Set up our dedicated testing facility to ensure zero-compromise quality before any product is shipped." },
   { year: "2026", title: "Growing Community", desc: "Rapidly expanding our trusted customer base with authentic tech products and 24/7 dedicated support." },
 ];

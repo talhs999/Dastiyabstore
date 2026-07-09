@@ -6,9 +6,9 @@ const faqs = [
   {
     cat: "Orders & Delivery",
     questions: [
-      { q: "How long does delivery take?", a: "We deliver within 48–72 hours to major cities (Lahore, Karachi, Islamabad, Rawalpindi). For other cities, delivery may take 3–5 working days." },
-      { q: "Do you offer Cash on Delivery?", a: "Yes! Cash on Delivery (COD) is available nationwide across all of Pakistan. You pay when your order arrives at your doorstep." },
-      { q: "Is there a delivery charge?", a: "Delivery is FREE on orders above Rs. 2,000. For orders below that, a flat delivery fee of Rs. 200 applies." },
+      { q: "How long does delivery take?", a: "Delivery to Karachi takes 2-3 working days minimum (may take longer in some cases). For all other cities, delivery takes 5-7 working days minimum." },
+      { q: "Do you offer Cash on Delivery?", a: "Cash on Delivery (COD) is available ONLY in Karachi. For all other cities across Pakistan, please select our secure advance payment methods (Bank Transfer, EasyPaisa, or JazzCash)." },
+      { q: "Is there a delivery charge?", a: "For Karachi: Delivery is FREE on orders above Rs. 3,000 (Base charge Rs. 250). For rest of Pakistan: Delivery is FREE on orders above Rs. 5,000 (Base charge Rs. 400)." },
       { q: "Can I track my order?", a: "Yes! Once your order is shipped, you'll receive an SMS with a tracking link. You can also check order status in your account under 'My Orders'." },
     ],
   },
@@ -16,14 +16,14 @@ const faqs = [
     cat: "Products & Quality",
     questions: [
       { q: "Are your products 100% authentic?", a: "Absolutely. Every product listed on DastiyabStore is personally tested by our team before listing. We guarantee quality and authenticity." },
-      { q: "What if the product I received is defective?", a: "Contact us within 5 days via WhatsApp (0316-2975195) and we'll arrange a free pickup and replacement or full refund." },
-      { q: "Do you provide warranty on products?", a: "Most tech products come with a 1–3 month seller warranty. Product-specific warranty details are mentioned on each product page." },
+      { q: "What if the product I received is defective?", a: "Contact us within 5 days via WhatsApp (0316-2975195) and we'll guide you on how to return it for a replacement or full refund." },
+      { q: "Do you provide warranty on products?", a: "We do not offer any warranty on online shopping. However, if you receive a defective product, it will be thoroughly inspected, and a final decision regarding return or replacement will be made based on the inspection." },
     ],
   },
   {
     cat: "Returns & Refunds",
     questions: [
-      { q: "What is your return policy?", a: "We offer a 7-day easy return policy. If you're not satisfied, just contact us and we'll arrange a free return pickup from your location." },
+      { q: "What is your return policy?", a: "We offer a 5-day easy return policy. If you're not satisfied, just contact us within 5 days of delivery to initiate a return. Please note that return shipping costs are borne by the customer." },
       { q: "How long does a refund take?", a: "Refunds are processed within 5–7 business days after we receive and inspect the returned product." },
       { q: "Can I exchange a product?", a: "Yes, exchange is available for defective or wrong products received. Contact our support team to arrange an exchange." },
     ],

@@ -47,7 +47,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Fetch global settings
-  let freeDeliverySettings = { is_active: true, threshold: 2000 };
+  let freeDeliverySettings = { is_active: true, threshold: 3000 };
   let contactSettings = {
     address: "H-151 Moinabad, Model Colony Phase 3 Malir, Karachi, 75100, Pakistan",
     email: "support@dastiyabstore.com",
@@ -81,7 +81,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ],
   };
   let promoBannerSettings = [
-    "Cash on Delivery Available Nationwide",
+    "Cash on Delivery Available in Karachi",
     "Easy Returns within 5 Days",
     "100% Authentic Products"
   ];

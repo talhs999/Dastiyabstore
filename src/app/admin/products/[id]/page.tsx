@@ -36,10 +36,10 @@ export default function EditProductPage() {
     { name: "Rose Gold", hex: "#B76E79" },
   ];
   const [trustPoints, setTrustPoints] = useState<{ icon: string; text: string }[]>([
-    { icon: "truck", text: "Free delivery on orders above Rs. 2000" },
+    { icon: "truck", text: "Free delivery on orders above Rs. 3000" },
     { icon: "shield", text: "100% authentic & quality guaranteed" },
-    { icon: "rotate-ccw", text: "7-day easy returns & exchanges" },
-    { icon: "zap", text: "Cash on Delivery available nationwide" }
+    { icon: "rotate-ccw", text: "5-day easy returns & exchanges" },
+    { icon: "zap", text: "Cash on Delivery available in Karachi" }
   ]);
   
   const [formData, setFormData] = useState({
@@ -119,10 +119,10 @@ export default function EditProductPage() {
         let dynamicTrustPoints = [];
         if (prodData.trust_points) dynamicTrustPoints = Array.isArray(prodData.trust_points) ? prodData.trust_points : typeof prodData.trust_points === "string" ? JSON.parse(prodData.trust_points) : [];
         setTrustPoints(dynamicTrustPoints.length > 0 ? dynamicTrustPoints : [
-          { icon: "truck", text: "Free delivery on orders above Rs. 2000" },
+          { icon: "truck", text: "Free delivery on orders above Rs. 3000" },
           { icon: "shield", text: "100% authentic & quality guaranteed" },
-          { icon: "rotate-ccw", text: "7-day easy returns & exchanges" },
-          { icon: "zap", text: "Cash on Delivery available nationwide" }
+          { icon: "rotate-ccw", text: "5-day easy returns & exchanges" },
+          { icon: "zap", text: "Cash on Delivery available in Karachi" }
         ]);
       }
     } else if (catData && catData.length > 0) {
@@ -658,7 +658,7 @@ export default function EditProductPage() {
                         type="text" 
                         className="input" 
                         style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", padding: "10px 14px", fontSize: 14 }}
-                        placeholder="e.g. Free delivery on orders above Rs. 2000" 
+                        placeholder="e.g. Free delivery on orders above Rs. 3000" 
                         value={tp.text} 
                         onChange={e => handleTrustPointChange(index, "text", e.target.value)}
                       />
