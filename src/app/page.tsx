@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import HomeClient from '@/components/HomeClient';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 export default async function HomePage() {
   let initialData = {};

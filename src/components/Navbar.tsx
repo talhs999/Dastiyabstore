@@ -6,7 +6,7 @@ import {
   ShoppingCart, Heart, User, Search, Menu, X, ChevronDown,
   Phone, MapPin, Truck, Star, Bell, Headphones, Monitor,
   Wind, Laptop, Package, Home, ChevronRight, LogIn, Settings,
-  ShoppingBag, Clock, Plus, Minus
+  ShoppingBag, Clock, Plus, Minus, Gift
 } from "lucide-react";
 import { useCart } from "@/store/cartStore";
 import { useWishlist } from "@/store/wishlistStore";
@@ -413,6 +413,7 @@ export default function Navbar() {
                 href: `/shop/${c.slug}`,
                 badge: c.header_badge
               })),
+              { label: "Custom Gifts", href: "/gifts", badge: "New" },
               { label: "About Us", href: "/about" },
               { label: "Contact", href: "/contact" },
             ].map((link: any) => (
@@ -547,6 +548,7 @@ export default function Navbar() {
                 { label: "Shop All", href: "/shop", icon: <Package size={16} /> }, 
                 { label: "Wishlist", href: "/account/wishlist", icon: <Heart size={16} />, badge: wishlistItems.length > 0 ? wishlistItems.length : null },
                 { label: "My Account", href: accountHref, icon: <User size={16} /> },
+                { label: "Custom Gifts", href: "/gifts", icon: <Gift size={16} />, badge: "New" },
                 { label: "About Us", href: "/about", icon: <Star size={16} /> }, 
                 { label: "Contact", href: "/contact", icon: <Phone size={16} /> }
               ].map(link => (

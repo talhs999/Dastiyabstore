@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Package, FolderTree, ShoppingCart, 
   Users, Star, Settings, LogOut, MessageSquare, LayoutList, Activity,
-  Menu, X, Grid3X3, UserCircle
+  Menu, X, Grid3X3, UserCircle, BarChart
 } from "lucide-react";
 
 import { useToast } from "@/components/ui/Toast";
@@ -189,6 +189,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "Site Reviews", href: "/admin/site-reviews", icon: <Star size={20} /> },
     { label: "Team Members", href: "/admin/team", icon: <UserCircle size={20} /> },
     { label: "Live Tracking", href: "/admin/live", icon: <Activity size={20} /> },
+    { label: "Analytics", href: "/admin/analytics", icon: <BarChart size={20} /> },
     { label: "Settings", href: "/admin/settings", icon: <Settings size={20} /> },
   ];
 

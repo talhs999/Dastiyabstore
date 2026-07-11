@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import CategoryClient from "./CategoryClient";
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 3600;
+
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
   // Await the params Promise for Next.js 15
   const unwrappedParams = await params;

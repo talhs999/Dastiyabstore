@@ -20,49 +20,56 @@ function DynamicIcon({ name, size = 20 }: { name: string, size?: number }) {
 
 function InstagramCarousel({ posts }: { posts: any[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isInteracting, setIsInteracting] = useState(false);
 
-  // Auto-scroll logic (Loop)
+  // Auto-scroll logic (Continuous Seamless Loop)
   useEffect(() => {
-    if (!scrollRef.current || posts.length <= 1) return;
-    const interval = setInterval(() => {
+    if (!scrollRef.current || posts.length <= 1 || isInteracting) return;
+    
+    let animationFrameId: number;
+    let lastTime = performance.now();
+
+    const scrollCarousel = (time: number) => {
       if (scrollRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-        if (scrollLeft + clientWidth >= scrollWidth - 10) {
-          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' }); // Loop back
-        } else {
-          scrollRef.current.scrollBy({ left: 350, behavior: 'smooth' });
+        const deltaTime = time - lastTime;
+        if (deltaTime > 16) {
+          scrollRef.current.scrollLeft += 1;
+          
+          if (scrollRef.current.scrollLeft >= scrollRef.current.scrollWidth / 2) {
+            scrollRef.current.scrollLeft = 0;
+          }
+          lastTime = time;
         }
       }
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [posts]);
+      animationFrameId = requestAnimationFrame(scrollCarousel);
+    };
+
+    animationFrameId = requestAnimationFrame(scrollCarousel);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [posts, isInteracting]);
 
   const scrollLeft = () => {
     if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      if (scrollLeft <= 0) {
-        scrollRef.current.scrollTo({ left: scrollWidth, behavior: 'smooth' });
-      } else {
-        scrollRef.current.scrollBy({ left: -350, behavior: 'smooth' });
-      }
+      scrollRef.current.scrollBy({ left: -350, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
     if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      if (scrollLeft + clientWidth >= scrollWidth - 10) {
-        scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        scrollRef.current.scrollBy({ left: 350, behavior: 'smooth' });
-      }
+      scrollRef.current.scrollBy({ left: 350, behavior: 'smooth' });
     }
   };
 
   if (!posts || posts.length === 0) return null;
 
   return (
-    <div style={{ position: "relative", padding: "0 10px" }}>
+    <div 
+      style={{ position: "relative", padding: "0 10px" }}
+      onMouseEnter={() => setIsInteracting(true)}
+      onMouseLeave={() => setIsInteracting(false)}
+      onTouchStart={() => setIsInteracting(true)}
+      onTouchEnd={() => { setTimeout(() => setIsInteracting(false), 2000); }}
+    >
       {posts.length > 1 && (
         <button 
           onClick={scrollLeft}
@@ -74,12 +81,27 @@ function InstagramCarousel({ posts }: { posts: any[] }) {
 
       <div ref={scrollRef} className="insta-carousel hide-scroll" style={{ 
         display: "flex", gap: 24, overflowX: "auto", paddingBottom: 20, marginTop: 40, 
-        scrollSnapType: "x mandatory", padding: "0 8px", scrollBehavior: "smooth",
-        justifyContent: posts.length >= 3 ? "flex-start" : "center"
+        padding: "0 8px", justifyContent: "flex-start"
       }}>
         {posts.map((post) => (
-          <div key={post.id} style={{ 
-            flexShrink: 0, scrollSnapAlign: "center", width: 326, borderRadius: 12, 
+          <div key={`orig-${post.id}`} style={{ 
+            flexShrink: 0, width: 326, borderRadius: 12, 
+            overflow: "hidden", border: "1px solid var(--gray-200)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+            background: "white"
+          }}>
+            <iframe
+              src={`https://www.instagram.com/p/${post.shortcode}/embed`}
+              width="100%"
+              height="540"
+              frameBorder="0"
+              scrolling="no"
+              style={{ border: "none", background: "white", display: "block" }}
+            />
+          </div>
+        ))}
+        {posts.length > 1 && posts.map((post) => (
+          <div key={`dup-${post.id}`} style={{ 
+            flexShrink: 0, width: 326, borderRadius: 12, 
             overflow: "hidden", border: "1px solid var(--gray-200)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
             background: "white"
           }}>

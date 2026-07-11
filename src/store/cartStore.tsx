@@ -27,14 +27,23 @@ const useCartStore = create<CartStore>()(
       items: [],
       addToCart: (item) =>
         set((state) => {
-          if (typeof window !== "undefined" && (window as any).fbq) {
-            (window as any).fbq('track', 'AddToCart', {
-              content_ids: [item.id],
-              content_name: item.name,
-              content_type: 'product',
-              value: item.price,
-              currency: 'PKR'
-            });
+          if (typeof window !== "undefined") {
+            if ((window as any).fbq) {
+              (window as any).fbq('track', 'AddToCart', {
+                content_ids: [item.id],
+                content_name: item.name,
+                content_type: 'product',
+                value: item.price,
+                currency: 'PKR'
+              });
+            }
+            
+            // Track in our own internal Analytics
+            fetch('/api/analytics/track-cart', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ productId: item.id })
+            }).catch(e => console.error("Analytics tracking failed", e));
           }
           const existing = state.items.find((i) => i.id === item.id && i.color === item.color);
           if (existing) {

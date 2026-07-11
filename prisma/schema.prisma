@@ -52,6 +52,7 @@ model Product {
   trust_points   Json?     @default("[]")
   colors         Json?     @default("[]")
   created_at     DateTime  @default(now())
+  analytics_events ProductAnalyticsEvent[]
 
   @@map("products")
 }
@@ -209,4 +210,18 @@ model ActiveVisitor {
   created_at   DateTime @default(now())
 
   @@map("active_visitors")
+}
+
+model ProductAnalyticsEvent {
+  id        String   @id @default(uuid())
+  productId String
+  eventType String   // e.g., "ADD_TO_CART", "VIEW"
+  createdAt DateTime @default(now())
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_analytics_events")
+  @@index([productId])
+  @@index([eventType])
+  @@index([createdAt])
 }

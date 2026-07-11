@@ -71,6 +71,8 @@ export default function Footer() {
 
   if (pathname.startsWith("/admin")) return null;
 
+  const isGiftsPage = pathname.startsWith("/gifts");
+
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes("@")) return;
@@ -105,24 +107,26 @@ export default function Footer() {
   return (
     <footer>
       {/* Trust Bar */}
-      <div style={{ background: "var(--gray-50)", padding: "40px 24px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24 }}>
-            {trustFeatures.map((f, i) => (
-              <div key={i} className="trust-badge" style={{ flexDirection: "column", textAlign: "center", padding: "24px 16px", gap: 12 }}>
-                <div style={{ color: "var(--red)" }}>{f.icon}</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: "var(--gray-900)" }}>{f.title}</div>
-                  <div style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 2 }}>{f.sub}</div>
+      {!isGiftsPage && (
+        <div style={{ background: "var(--gray-50)", padding: "40px 24px" }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24 }}>
+              {trustFeatures.map((f, i) => (
+                <div key={i} className="trust-badge" style={{ flexDirection: "column", textAlign: "center", padding: "24px 16px", gap: 12 }}>
+                  <div style={{ color: "var(--red)" }}>{f.icon}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: "var(--gray-900)" }}>{f.title}</div>
+                    <div style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 2 }}>{f.sub}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Newsletter */}
-      {newsletterEnabled && (
+      {!isGiftsPage && newsletterEnabled && (
         <div style={{
           background: "linear-gradient(135deg, var(--red) 0%, #c62333 50%, #9b1526 100%)",
           padding: "60px 24px",

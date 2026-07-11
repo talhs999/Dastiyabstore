@@ -9,6 +9,8 @@ export default function VisitorTracker() {
 
   // 1. Initialize Session and fetch IP/Location
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_ENABLE_VISITOR_TRACKING !== "true") return;
+
     // Generate/retrieve session ID from sessionStorage (persists across page reloads in same tab)
     let sId = sessionStorage.getItem("visitor_session_id");
     if (!sId) {
@@ -53,6 +55,7 @@ export default function VisitorTracker() {
 
   // 2. Perform Heartbeats and update Current Page
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_ENABLE_VISITOR_TRACKING !== "true") return;
     if (!sessionId || !geoData) return;
     
     // Do not track admin pages to keep analytics clean and secure

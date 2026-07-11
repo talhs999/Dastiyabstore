@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 
+import Link from "next/link";
 import QRCode from "react-qr-code";
-import { Search, Phone, Eye, Download, Trash2, Printer, X, CreditCard, Calendar, User, MapPin } from "lucide-react";
+import { Search, Phone, Eye, Download, Trash2, Printer, X, CreditCard, Calendar, User, MapPin, Plus } from "lucide-react";
 
 const statusOptions = ["Pending", "Processing", "Shipped", "Completed", "Cancelled"];
 const statusColors: Record<string, { bg: string; color: string }> = {
@@ -308,19 +309,32 @@ export default function AdminOrdersPage() {
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--gray-900)", marginBottom: 4 }}>Orders</h1>
           <p style={{ fontSize: 14, color: "var(--gray-500)" }}>Track and manage deliveries</p>
         </div>
-        <button 
-          onClick={exportCSV}
-          style={{ 
-            display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", 
-            background: "white", border: "1px solid var(--gray-200)", borderRadius: "var(--radius)", 
-            fontWeight: 600, color: "var(--gray-700)", cursor: "pointer", boxShadow: "var(--shadow-sm)",
-            transition: "all 0.2s"
-          }}
-          onMouseEnter={e => e.currentTarget.style.borderColor = "var(--gray-400)"}
-          onMouseLeave={e => e.currentTarget.style.borderColor = "var(--gray-200)"}
-        >
-          <Download size={16} /> Export CSV
-        </button>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <Link
+            href="/admin/orders/new"
+            style={{ 
+              display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", 
+              background: "var(--red)", border: "1px solid var(--red)", borderRadius: "var(--radius)", 
+              fontWeight: 600, color: "white", cursor: "pointer", boxShadow: "var(--shadow-sm)",
+              transition: "all 0.2s", textDecoration: "none"
+            }}
+          >
+            <Plus size={16} /> Create Manual Order
+          </Link>
+          <button 
+            onClick={exportCSV}
+            style={{ 
+              display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", 
+              background: "white", border: "1px solid var(--gray-200)", borderRadius: "var(--radius)", 
+              fontWeight: 600, color: "var(--gray-700)", cursor: "pointer", boxShadow: "var(--shadow-sm)",
+              transition: "all 0.2s"
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = "var(--gray-400)"}
+            onMouseLeave={e => e.currentTarget.style.borderColor = "var(--gray-200)"}
+          >
+            <Download size={16} /> Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Filter Options */}
