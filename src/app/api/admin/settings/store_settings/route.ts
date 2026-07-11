@@ -35,6 +35,13 @@ export async function POST(request: Request) {
       create: { key, value }
     });
 
+    try {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag('settings');
+    } catch (e) {
+      console.error("Failed to revalidate cache", e);
+    }
+
     return NextResponse.json(setting);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -86,6 +86,7 @@ const getGlobalSettings = unstable_cache(
       "Easy Returns within 5 Days",
       "100% Authentic Products"
     ];
+    let liveTrackingEnabled = false;
 
     try {
       const fdSetting = await prisma.storeSetting.findUnique({
@@ -115,6 +116,14 @@ const getGlobalSettings = unstable_cache(
       if (pbSetting && pbSetting.value) {
         promoBannerSettings = typeof pbSetting.value === 'string' ? JSON.parse(pbSetting.value) : pbSetting.value as any;
       }
+
+      const trackingSetting = await prisma.storeSetting.findUnique({
+        where: { key: 'live_tracking_settings' }
+      });
+      if (trackingSetting && trackingSetting.value) {
+        const parsed = typeof trackingSetting.value === 'string' ? JSON.parse(trackingSetting.value) : trackingSetting.value as any;
+        liveTrackingEnabled = parsed.enabled ?? false;
+      }
     } catch (error) {
       console.warn("Failed to fetch global settings:", error);
     }
@@ -123,7 +132,8 @@ const getGlobalSettings = unstable_cache(
       freeDelivery: freeDeliverySettings,
       contact: contactSettings,
       footerLinks: footerLinksSettings,
-      promoBanner: promoBannerSettings
+      promoBanner: promoBannerSettings,
+      liveTrackingEnabled
     };
   },
   ['global-layout-settings'],
@@ -177,7 +187,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         <SettingsProvider initialSettings={initialSettings}>
           <ToastProvider>
-            <VisitorTracker />
+            <VisitorTracker enabled={initialSettings.liveTrackingEnabled} />
             <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <div className="no-print"><Navbar /></div>
             <main style={{ flex: 1 }}>

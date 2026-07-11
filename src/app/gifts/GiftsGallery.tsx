@@ -61,6 +61,7 @@ export default function GiftsGallery({ whatsappLink }: { whatsappLink: string })
           >
             <video 
               src={url} 
+              poster={url.replace(/\.mp4$/i, '.jpg')}
               autoPlay 
               muted 
               loop 
@@ -84,7 +85,7 @@ export default function GiftsGallery({ whatsappLink }: { whatsappLink: string })
             {selectedMedia.type === 'image' ? (
               <img src={selectedMedia.url} alt="Gift Details" />
             ) : (
-              <video src={selectedMedia.url} autoPlay controls playsInline />
+              <video src={selectedMedia.url} poster={selectedMedia.url.replace(/\.mp4$/i, '.jpg')} autoPlay controls playsInline />
             )}
             <div className="lightbox-footer">
               <a href={whatsappLink} target="_blank" rel="noreferrer" className="btn-cinematic-glow" style={{ padding: '12px 24px', fontSize: '1rem' }}>

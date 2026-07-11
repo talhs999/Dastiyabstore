@@ -2,14 +2,14 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
-export default function VisitorTracker() {
+export default function VisitorTracker({ enabled = false }: { enabled?: boolean }) {
   const pathname = usePathname();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [geoData, setGeoData] = useState<{ ip: string; city: string; country: string } | null>(null);
 
   // 1. Initialize Session and fetch IP/Location
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_ENABLE_VISITOR_TRACKING !== "true") return;
+    if (!enabled) return;
 
     // Generate/retrieve session ID from sessionStorage (persists across page reloads in same tab)
     let sId = sessionStorage.getItem("visitor_session_id");
@@ -55,7 +55,7 @@ export default function VisitorTracker() {
 
   // 2. Perform Heartbeats and update Current Page
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_ENABLE_VISITOR_TRACKING !== "true") return;
+    if (!enabled) return;
     if (!sessionId || !geoData) return;
     
     // Do not track admin pages to keep analytics clean and secure

@@ -81,6 +81,7 @@ export default function AdminSettingsPage() {
   const [globalSaving, setGlobalSaving] = useState(false);
   const [globalFreeDeliveryActive, setGlobalFreeDeliveryActive] = useState(true);
   const [globalFreeDeliveryThreshold, setGlobalFreeDeliveryThreshold] = useState(3000);
+  const [liveTrackingEnabled, setLiveTrackingEnabled] = useState(false);
 
   // Notification states
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -377,6 +378,14 @@ export default function AdminSettingsPage() {
         setGlobalFreeDeliveryActive(data.is_active);
         setGlobalFreeDeliveryThreshold(data.threshold);
       }
+      
+      const trackingRes = await fetch("/api/admin/settings/store_settings?key=live_tracking_settings");
+      if (trackingRes.ok) {
+        const data = await trackingRes.json();
+        if (data && data.value !== undefined) {
+          setLiveTrackingEnabled(data.value.enabled ?? false);
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -393,6 +402,17 @@ export default function AdminSettingsPage() {
         body: JSON.stringify({ is_active: globalFreeDeliveryActive, threshold: globalFreeDeliveryThreshold })
       });
       if (!res.ok) throw new Error("Failed to save global settings");
+      
+      const trackingRes = await fetch("/api/admin/settings/store_settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key: "live_tracking_settings",
+          value: { enabled: liveTrackingEnabled }
+        })
+      });
+      if (!trackingRes.ok) throw new Error("Failed to save tracking settings");
+
       alert("General settings saved successfully!");
     } catch (e) {
       console.error(e);
@@ -946,6 +966,17 @@ export default function AdminSettingsPage() {
                       <input type="number" className="input" value={globalFreeDeliveryThreshold} onChange={(e) => setGlobalFreeDeliveryThreshold(Number(e.target.value))} style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} />
                     </div>
                   )}
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", background: "var(--gray-50)", borderRadius: 8, border: "1px solid var(--gray-200)" }}>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "var(--gray-900)" }}>Live Visitor Tracking</div>
+                      <div style={{ fontSize: 12, color: "var(--gray-500)" }}>Track currently active users on the site. Disable this during high-traffic load testing.</div>
+                    </div>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={liveTrackingEnabled} onChange={(e) => setLiveTrackingEnabled(e.target.checked)} />
+                      <span className="slider round"></span>
+                    </label>
+                  </div>
                 </div>
               </div>
 

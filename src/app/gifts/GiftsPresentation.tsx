@@ -84,19 +84,50 @@ export default function GiftsPresentation({ whatsappLink }: { whatsappLink: stri
     }
   };
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  useEffect(() => {
+    // Seamless loop fix for Safari/iOS
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const handleTimeUpdate = () => {
+      // Seek back slightly before the end to prevent the native loop flicker
+      if (video.duration && video.currentTime >= video.duration - 0.1) {
+        video.currentTime = 0.05;
+        video.play();
+      }
+    };
+    
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    return () => video.removeEventListener('timeupdate', handleTimeUpdate);
+  }, []);
+
   return (
     <div className="gifts-presentation">
       {/* SLIDE 1: Hero */}
       <section className="slide-section hero-slide">
-        <video 
-          autoPlay 
-          muted 
-          loop 
-          playsInline 
-          className="slide-bg-video"
-        >
-          <source src="https://res.cloudinary.com/zpbci6tf/video/upload/v1783783768/dastiyabstore/custom-gifts/ja90gomb5nmugxpf41bd.mp4" type="video/mp4" />
-        </video>
+        {/* Custom Poster Image for iOS object-fit bug */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+          <img 
+            src="https://res.cloudinary.com/zpbci6tf/video/upload/v1783802447/dastiyabstore/custom-gifts/irlvi0o0cbt0qf3qno59.jpg" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isVideoPlaying ? 0 : 1, transition: 'opacity 0.3s ease' }} 
+            alt="Gift Basket Preview" 
+          />
+          <video 
+            ref={videoRef}
+            autoPlay 
+            muted 
+            loop={false} /* Handled by JS */
+            playsInline 
+            onPlaying={() => setIsVideoPlaying(true)}
+            className="slide-bg-video"
+            style={{ opacity: isVideoPlaying ? 1 : 0, transition: 'opacity 0.3s ease' }}
+          >
+            <source src="https://res.cloudinary.com/zpbci6tf/video/upload/v1783802447/dastiyabstore/custom-gifts/irlvi0o0cbt0qf3qno59.mp4" type="video/mp4" />
+          </video>
+        </div>
         <div className="slide-overlay-dark"></div>
         <motion.div 
           className="slide-content text-center"
