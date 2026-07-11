@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     try {
       const { revalidateTag } = await import('next/cache');
-      revalidateTag('settings');
+      revalidateTag('settings', 'max');
     } catch (e) {
       console.error("Failed to revalidate cache", e);
     }
