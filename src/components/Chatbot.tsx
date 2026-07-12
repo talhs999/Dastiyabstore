@@ -145,7 +145,49 @@ export default function Chatbot() {
 
           {/* Messages Area */}
           <div style={{ flex: 1, padding: 16, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16, background: "var(--gray-50)" }}>
-            {messages.map((msg, i) => (
+            {messages.map((msg, i) => {
+              // Parse links in the format [Text](URL)
+              const formatMessage = (text: string) => {
+                const linkRegex = /\[(.*?)\]\((.*?)\)/g;
+                const parts: React.ReactNode[] = [];
+                let lastIndex = 0;
+                let match;
+                
+                while ((match = linkRegex.exec(text)) !== null) {
+                  if (match.index > lastIndex) {
+                    parts.push(text.substring(lastIndex, match.index));
+                  }
+                  parts.push(
+                    <a key={`link-${match.index}`} href={match[2]} target={match[2].startsWith('http') ? '_blank' : '_self'} rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 6, marginBottom: 6, marginRight: 6, padding: "6px 12px", background: msg.role === "user" ? "rgba(255,255,255,0.2)" : "var(--red)", color: "white", borderRadius: "12px", textDecoration: "none", fontSize: "12px", fontWeight: 600, border: "none" }}>
+                      {match[1]}
+                    </a>
+                  );
+                  lastIndex = linkRegex.lastIndex;
+                }
+                
+                if (lastIndex < text.length) {
+                  parts.push(text.substring(lastIndex));
+                }
+                
+                return parts.map((part, i) => {
+                  if (typeof part === 'string') {
+                    const boldRegex = /\*\*(.*?)\*\*/g;
+                    const subParts: React.ReactNode[] = [];
+                    let bLastIndex = 0;
+                    let bMatch;
+                    while ((bMatch = boldRegex.exec(part)) !== null) {
+                      if (bMatch.index > bLastIndex) subParts.push(part.substring(bLastIndex, bMatch.index));
+                      subParts.push(<strong key={`bold-${i}-${bMatch.index}`}>{bMatch[1]}</strong>);
+                      bLastIndex = boldRegex.lastIndex;
+                    }
+                    if (bLastIndex < part.length) subParts.push(part.substring(bLastIndex));
+                    return subParts.length > 0 ? subParts : part;
+                  }
+                  return part;
+                });
+              };
+
+              return (
               <div 
                 key={i} 
                 style={{ 
@@ -168,13 +210,15 @@ export default function Chatbot() {
                     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                     fontSize: 14,
                     lineHeight: 1.5,
-                    border: msg.role === "model" ? "1px solid var(--gray-200)" : "none"
+                    border: msg.role === "model" ? "1px solid var(--gray-200)" : "none",
+                    whiteSpace: "pre-wrap"
                   }}
                 >
-                  {msg.content}
+                  {formatMessage(msg.content)}
                 </div>
               </div>
-            ))}
+            );
+          })}
             {loading && (
               <div style={{ alignSelf: "flex-start", background: "white", padding: "12px 16px", borderRadius: "16px 16px 16px 4px", border: "1px solid var(--gray-200)" }}>
                 <Loader2 size={16} className="animate-spin" color="var(--gray-500)" />

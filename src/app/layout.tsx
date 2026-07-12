@@ -26,9 +26,21 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "DastiyabStore — Jo Chahiye, Wahi Dastiyab",
-  description: "Pakistan's premium online store for tech gadgets, home accessories & more. Cash on Delivery available. Neck fans, AirPods, laptop stands & more.",
-  keywords: "dastiyab store, pakistan online shopping, neck fan, airpods, laptop stand, earphones, COD",
+  metadataBase: new URL('https://dastiyabstore.com'),
+  title: {
+    default: "DastiyabStore — Jo Chahiye, Wahi Dastiyab",
+    template: "%s | DastiyabStore",
+  },
+  description: "Pakistan's premium online store for tech gadgets, home accessories, and customized gifts. Fast delivery across Pakistan with Cash on Delivery available.",
+  keywords: ["dastiyab store", "pakistan online shopping", "neck fan", "customized gifts", "tech gadgets", "home accessories", "COD", "karachi electronics"],
+  authors: [{ name: "DastiyabStore" }],
+  creator: "DastiyabStore",
+  publisher: "DastiyabStore",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",
@@ -36,8 +48,36 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "DastiyabStore — Jo Chahiye, Wahi Dastiyab",
-    description: "Premium gadgets & accessories. Fast delivery across Pakistan. COD available.",
+    description: "Premium gadgets, accessories, and customized gifts. Fast delivery across Pakistan. COD available.",
+    url: 'https://dastiyabstore.com',
+    siteName: 'DastiyabStore',
+    locale: 'en_PK',
     type: "website",
+    images: [
+      {
+        url: '/icon.png',
+        width: 800,
+        height: 600,
+        alt: 'DastiyabStore Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "DastiyabStore — Jo Chahiye, Wahi Dastiyab",
+    description: "Premium gadgets, accessories, and customized gifts. Fast delivery across Pakistan.",
+    images: ['/icon.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   verification: {
     google: "IwpEJoqgQmIi3hCd0CAu7Mx74w6MBkR9H_ZI6fHW76c",
@@ -185,6 +225,29 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             `,
           }}
         />
+        <Script id="schema-org" type="application/ld+json" strategy="beforeInteractive">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "DastiyabStore",
+              "url": "https://dastiyabstore.com",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://dastiyabstore.com/shop?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "DastiyabStore",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://dastiyabstore.com/icon.png"
+                }
+              }
+            }
+          `}
+        </Script>
         <SettingsProvider initialSettings={initialSettings}>
           <ToastProvider>
             <VisitorTracker enabled={initialSettings.liveTrackingEnabled} />

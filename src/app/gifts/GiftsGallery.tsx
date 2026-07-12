@@ -15,15 +15,15 @@ export default function GiftsGallery({ whatsappLink }: { whatsappLink: string })
 
   const galleryImages = [
     "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783615/dastiyabstore/custom-gifts/wecensozfeszyw4utbpl.jpg",
-    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783616/dastiyabstore/custom-gifts/jcck1qbdzd6xm8b64i7n.jpg",
     "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783617/dastiyabstore/custom-gifts/p6u2vy1ihohjqjo5lq5y.jpg",
-    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783618/dastiyabstore/custom-gifts/sdktonnjmbnnrwfxiaqo.jpg",
     "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783619/dastiyabstore/custom-gifts/waqtrcpkf5nkhx5ec30a.jpg",
-    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783620/dastiyabstore/custom-gifts/mdxltunwzugmu71wuolr.jpg",
-    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783621/dastiyabstore/custom-gifts/ehmmetotod6fsijpaewv.jpg",
+    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783616/dastiyabstore/custom-gifts/jcck1qbdzd6xm8b64i7n.jpg",
     "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783621/dastiyabstore/custom-gifts/rajdnx2huhwew0zyioqy.jpg",
-    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783622/dastiyabstore/custom-gifts/kb4qjvtfrmfkmbnqcsly.jpg",
+    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783618/dastiyabstore/custom-gifts/sdktonnjmbnnrwfxiaqo.jpg",
+    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783620/dastiyabstore/custom-gifts/mdxltunwzugmu71wuolr.jpg",
     "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783623/dastiyabstore/custom-gifts/lkxdxq8ohyjbzpejkqsd.jpg",
+    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783621/dastiyabstore/custom-gifts/ehmmetotod6fsijpaewv.jpg",
+    "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783622/dastiyabstore/custom-gifts/kb4qjvtfrmfkmbnqcsly.jpg",
     "https://res.cloudinary.com/zpbci6tf/image/upload/v1783783624/dastiyabstore/custom-gifts/i0dghuhexnk94rqehvv7.jpg"
   ];
 

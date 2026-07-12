@@ -172,7 +172,7 @@ export default function GiftsPresentation({ whatsappLink }: { whatsappLink: stri
             viewport={{ once: false, amount: 0.4 }}
           >
             <div className="glowing-circle"></div>
-            <img src="/images/gifts/gift-2.jpeg" alt="The Craft" className="philosophy-img" />
+            <img src="/images/gifts/gift-5.jpeg" alt="The Craft Basket" className="philosophy-img" />
           </motion.div>
         </div>
       </section>

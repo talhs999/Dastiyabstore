@@ -14,10 +14,26 @@ export async function POST(request: Request) {
     let modelName = 'gemini-1.5-flash';
     let enabled = true;
 
-    // 1. Fetch settings from DB
-    const setting = await prisma.storeSetting.findUnique({
-      where: { key: 'chatbot_settings' }
-    });
+    // 1. Fetch settings and products from DB
+    const [setting, freeDeliverySetting, dbProducts] = await Promise.all([
+      prisma.storeSetting.findUnique({ where: { key: 'chatbot_settings' } }),
+      prisma.storeSetting.findUnique({ where: { key: 'free_delivery_settings' } }),
+      prisma.product.findMany({ select: { category: { select: { name: true } } } })
+    ]);
+
+    const uniqueCategories = [...new Set(dbProducts.map(p => p.category?.name).filter(Boolean))];
+    const categoryInfo = uniqueCategories.length > 0 
+      ? `Our active product categories are: ${uniqueCategories.join(', ')}.`
+      : `We have various products available on our shop.`;
+
+    let deliveryInfo = "Standard delivery charges apply based on city.";
+    if (freeDeliverySetting && freeDeliverySetting.value) {
+      const fd = typeof freeDeliverySetting.value === 'string' ? JSON.parse(freeDeliverySetting.value) : freeDeliverySetting.value;
+      if (fd.is_active) {
+        deliveryInfo += ` Free delivery on orders above Rs.${fd.threshold}.`;
+      }
+    }
+
     if (setting && setting.value) {
       const parsed = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
       if (parsed.apiKey) apiKey = parsed.apiKey;
@@ -52,12 +68,14 @@ export async function POST(request: Request) {
 
     const systemPrompt = `You are a helpful, fast, and friendly customer support AI for an online store named 'DastiyabStore' in Pakistan. 
 Key Rules:
-- Products: Premium tech gadgets, home accessories, neck fans, AirPods, laptop stands, earphones.
-- Payment: Cash on Delivery (COD) is ONLY available for Karachi. For all other cities in Pakistan, we require advance payment via Bank Transfer, JazzCash, or EasyPaisa. Free delivery on orders above Rs.2000.
+- PRODUCTS INVENTORY: ${categoryInfo} If a customer asks for a specific item (e.g., "Neck fan", "iPhone", etc.), do NOT automatically say yes. You MUST say: "Please check our [Shop](/shop) page to see if it's currently available, or contact us on WhatsApp to confirm." Do NOT hallucinate or promise products we don't have.
+- NEW ARRIVALS: We just launched a premium "Customized Gifts" section! We handcraft beautiful gift baskets with luxury chocolates, flowers, and jewelry for every occasion. Direct users to the /gifts page.
+- Payment: Cash on Delivery (COD) is ONLY available for Karachi. For all other cities in Pakistan, we require advance payment via Bank Transfer, JazzCash, or EasyPaisa. ${deliveryInfo}
 - Returns: STRICTLY 5-Day Easy Returns policy. NEVER mention 7 days.
-- Contact: WhatsApp/Call at 0316-2975195.
+- Contact: If they need support or to confirm product availability, ALWAYS give them our number 0316-2975195 AND a clickable button using this exact format: [Chat on WhatsApp](https://wa.me/923162975195)
 - Address: H-151 Moinabad, Model Colony Phase 3 Malir, Karachi, 75100, Pakistan.
-- Tone: Keep responses VERY short, concise, and to the point. Use Roman Urdu if the customer speaks Roman Urdu.`;
+- Tone: Keep responses VERY short, concise, and to the point. Use Roman Urdu if the customer speaks Roman Urdu.
+- LINKS: Whenever you want to guide a customer to a page, you MUST use markdown links like this: [Shop](/shop), [Gifts](/gifts). This will render as a clickable button in the chat.`;
 
     const chatParams = {
       history: [

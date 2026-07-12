@@ -641,6 +641,96 @@ export default function HomeClient({ initialData }: { initialData: any }) {
         </div>
       </section>
 
+      {/* ── CUSTOMIZED GIFTS SECTION ── */}
+      <section style={{ padding: "80px 0", background: "linear-gradient(to bottom, #fff5f5, #fffcf0)", overflow: "hidden", position: "relative" }}>
+        {/* Abstract background accents */}
+        <div style={{ position: "absolute", top: -100, right: -100, width: 400, height: 400, background: "radial-gradient(circle, rgba(220,38,38,0.06) 0%, transparent 70%)", borderRadius: "50%", zIndex: 0 }} />
+        <div style={{ position: "absolute", bottom: -100, left: -100, width: 500, height: 500, background: "radial-gradient(circle, rgba(234,179,8,0.06) 0%, transparent 70%)", borderRadius: "50%", zIndex: 0 }} />
+        
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", flexDirection: "column", gap: 48, position: "relative", zIndex: 1 }}>
+          {/* Header */}
+          <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto", padding: "0 24px" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 12, background: "rgba(220,38,38,0.08)", padding: "6px 16px", borderRadius: 20 }}>
+              <Heart size={14} color="var(--red)" fill="var(--red)" />
+              <span style={{ color: "var(--red)", fontWeight: 800, fontSize: 12, textTransform: "uppercase", letterSpacing: 2 }}>Premium & Customized</span>
+            </div>
+            <h2 style={{ color: "var(--gray-900)", fontSize: "clamp(36px, 5vw, 56px)", fontWeight: 900, lineHeight: 1.1, marginBottom: 16 }}>
+              The Perfect <span className="gradient-text">Gift</span> <br/>For Every Occasion
+            </h2>
+            <p style={{ color: "var(--gray-600)", fontSize: "clamp(15px, 2vw, 18px)", marginBottom: 32, lineHeight: 1.6 }}>
+              Surprise your loved ones with our beautifully crafted, customized gifts. From birthdays to anniversaries, we have something special for everyone.
+            </p>
+            <Link href="/gifts" className="btn-red" style={{ display: "inline-flex", padding: "16px 36px", fontSize: 16, textDecoration: "none", boxShadow: "0 10px 25px rgba(220,38,38,0.25)" }}>
+              Explore Gifts Collection <ArrowRight size={18} style={{ marginLeft: 8 }} />
+            </Link>
+          </div>
+          
+          {/* Auto-scrolling Image Marquee */}
+          <div className="gifts-marquee-wrapper" style={{ overflow: "hidden", width: "100%" }}>
+            <style>{`
+              @keyframes scrollMarquee {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(calc(-280px * 11 - 16px * 11)); }
+              }
+              .gifts-marquee {
+                animation: scrollMarquee 40s linear infinite;
+                will-change: transform;
+              }
+              .gifts-marquee:hover {
+                animation-play-state: paused;
+              }
+              .gift-img-card {
+                width: 280px;
+                height: 380px;
+                border-radius: 20px;
+                overflow: hidden;
+                position: relative;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                border: 1px solid rgba(0,0,0,0.05);
+              }
+              .gift-img-card:hover {
+                transform: translateY(-12px) scale(1.03);
+                border-color: rgba(220,38,38,0.2);
+                box-shadow: 0 20px 40px rgba(220,38,38,0.15);
+              }
+              @media (max-width: 768px) {
+                .gift-img-card {
+                  width: 220px;
+                  height: 300px;
+                }
+                @keyframes scrollMarquee {
+                  0% { transform: translateX(0); }
+                  100% { transform: translateX(calc(-220px * 11 - 16px * 11)); }
+                }
+              }
+            `}</style>
+            
+            <div className="gifts-marquee" style={{ display: "flex", gap: 16, width: "max-content", padding: "20px 0" }}>
+              {/* Array of 11 images, duplicated to create a seamless loop */}
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((num, i) => (
+                <Link href="/gifts" key={i} className="gift-img-card">
+                  <Image 
+                    src={`/images/gifts/gift-${num}.jpeg`} 
+                    alt={`Customized Gift ${num}`} 
+                    fill 
+                    sizes="(max-width: 768px) 220px, 280px" 
+                    style={{ objectFit: "cover" }} 
+                  />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)" }} />
+                  <div style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ color: "white", fontWeight: 700, fontSize: 14 }}>Premium Box</span>
+                      <span style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)", padding: "4px 8px", borderRadius: 12, color: "white", fontSize: 11, fontWeight: 600 }}>Gift Set</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── WHY CHOOSE US ── */}
       <section style={{ padding: "80px 24px", background: "white" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>

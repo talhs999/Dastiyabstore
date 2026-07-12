@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Package, FolderTree, ShoppingCart, 
   Users, Star, Settings, LogOut, MessageSquare, LayoutList, Activity,
-  Menu, X, Grid3X3, UserCircle, BarChart
+  Menu, X, Grid3X3, UserCircle, BarChart, RefreshCw
 } from "lucide-react";
 
 import { useToast } from "@/components/ui/Toast";
@@ -171,6 +171,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push("/login");
   };
 
+  const handleClearCache = async () => {
+    try {
+      showToast("Clearing website cache...", "info");
+      const res = await fetch('/api/admin/clear-cache', { method: 'POST' });
+      if (res.ok) {
+        showToast("Cache cleared! Live site updated.", "success");
+      } else {
+        showToast("Failed to clear cache", "error");
+      }
+    } catch (err) {
+      showToast("Failed to clear cache", "error");
+    }
+  };
+
   if (!isAuthorized) return null; // Or a loading spinner
 
   const menuItems = [
@@ -254,6 +268,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         <div style={{ padding: "24px 16px", borderTop: "1px solid var(--gray-100)" }}>
+          <button onClick={handleClearCache} style={{
+            display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
+            width: "100%", border: "none", background: "none", cursor: "pointer",
+            fontWeight: 600, color: "var(--red)", transition: "color 0.2s ease"
+          }}>
+            <RefreshCw size={20} />
+            <span style={{ fontSize: 15 }}>Sync Live Site</span>
+          </button>
           <button onClick={handleSignOut} style={{
             display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
             width: "100%", border: "none", background: "none", cursor: "pointer",

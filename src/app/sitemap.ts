@@ -8,11 +8,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     '',
     '/shop',
+    '/gifts',
     '/about',
     '/contact',
+    '/faqs',
+    '/returns',
     '/account/wishlist',
     '/cart',
     '/checkout',
+    '/login',
+    '/register',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
@@ -20,17 +25,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1.0 : 0.8,
   }));
 
-  // Fetch dynamic product routes
+  // Fetch dynamic product and category routes
   let products: any[] = [];
+  let categories: any[] = [];
   try {
     products = await prisma.product.findMany({
-      select: {
-        slug: true,
-        created_at: true,
-      },
+      select: { slug: true, created_at: true },
+    });
+    categories = await prisma.category.findMany({
+      select: { slug: true },
     });
   } catch (error) {
-    console.error("Error fetching products for sitemap", error);
+    console.error("Error fetching data for sitemap", error);
   }
 
   const productRoutes = products.map((product) => ({
@@ -38,6 +44,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: product.created_at || new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.9,
+  }));
+
+  const categoryRoutes = categories.map((category) => ({
+    url: `${baseUrl}/shop/${category.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
   }));
 
   // Import blogs dynamically or use static data
@@ -49,5 +62,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...productRoutes, ...blogRoutes];
+  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...blogRoutes];
 }
