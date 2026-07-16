@@ -52,8 +52,28 @@ export default function AboutPage() {
       .catch(() => {});
   }, []);
 
+  const localBusinessSchema = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Dastiyab Store",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Moinabad, Model Colony Malir Cantonment",
+      "addressLocality": "Karachi",
+      "postalCode": "75100",
+      "addressCountry": "PK"
+    },
+    "telephone": "+92-316-2975195",
+    "email": "support@dastiyabstore.com",
+    "url": "https://dastiyabstore.com"
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
       {/* Hero */}
       <section style={{ background: "linear-gradient(135deg, #fff5f5 0%, #fff9e6 100%)", padding: "80px 24px" }}>
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>

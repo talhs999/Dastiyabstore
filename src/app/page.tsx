@@ -47,5 +47,25 @@ export default async function HomePage() {
     console.error('Error fetching homepage data on server:', error);
   }
 
-  return <HomeClient initialData={initialData} />;
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Dastiyab Store",
+    "url": "https://dastiyabstore.com",
+    "logo": "https://dastiyabstore.com/logo.png",
+    "sameAs": [
+      "https://www.facebook.com/DastiyabStore/",
+      "https://www.instagram.com/dastiyabstore"
+    ]
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      <HomeClient initialData={initialData} />
+    </>
+  );
 }

@@ -308,8 +308,32 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     showToast("Link copied to clipboard!");
   };
 
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.image,
+    "description": product.description,
+    "brand": {
+      "@type": "Brand",
+      "name": "Dastiyab Store"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://dastiyabstore.com/product/${product.slug || slug}`,
+      "priceCurrency": "PKR",
+      "price": product.price,
+      "availability": isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  };
+
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
       {/* Breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32, fontSize: 13, color: "var(--gray-500)", flexWrap: "wrap" }}>
         <a href="/" style={{ color: "var(--gray-500)", textDecoration: "none" }}>Home</a>
