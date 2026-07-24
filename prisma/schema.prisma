@@ -51,6 +51,7 @@ model Product {
   badges         Json?     @default("[]")
   trust_points   Json?     @default("[]")
   colors         Json?     @default("[]")
+  video_url      String?
   created_at     DateTime  @default(now())
   analytics_events ProductAnalyticsEvent[]
 

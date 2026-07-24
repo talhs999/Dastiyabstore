@@ -248,6 +248,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const images = [product.image, ...validImages].filter((img: string) => img && img.trim() !== "");
   if (images.length === 0) images.push("https://placehold.co/800x800?text=No+Image");
 
+  // Build gallery items: images + video (video goes after main image)
+  const productVideoUrl = product.video_url || null;
+  const galleryItems: { type: 'image' | 'video'; url: string }[] = [];
+  galleryItems.push({ type: 'image', url: images[0] });
+  if (productVideoUrl) {
+    galleryItems.push({ type: 'video', url: productVideoUrl });
+  }
+  for (let i = 1; i < images.length; i++) {
+    galleryItems.push({ type: 'image', url: images[i] });
+  }
+
   const productColors = Array.isArray(product.colors) ? product.colors : (typeof product.colors === 'string' ? (function() { try { return JSON.parse(product.colors); } catch { return []; } })() : (product.colors || []));
 
   const handleAdd = () => {
@@ -359,7 +370,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               borderRadius: "var(--radius-lg)", 
               background: "var(--gray-50)", 
               marginBottom: 12,
-              scrollBehavior: "smooth"
+              scrollBehavior: "smooth",
+              aspectRatio: "1 / 1",
+              width: "100%"
             }}
             onScroll={(e) => {
               const container = e.currentTarget;
@@ -368,24 +381,40 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             }}
           >
             <style>{`#product-slider::-webkit-scrollbar { display: none; }`}</style>
-            {images.map((img: string, i: number) => (
+            {galleryItems.map((item, i: number) => (
               <div 
                 key={i} 
                 style={{ 
                   flex: "0 0 100%", 
                   width: "100%", 
+                  height: "100%",
                   scrollSnapAlign: "start",
-                  position: "relative"
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
                 }}
               >
-                <img 
-                  src={img} 
-                  alt={product.name} 
-                  onClick={() => { setShowZoom(true); setZoomLevel(1); }} 
-                  style={{ width: "100%", height: "auto", display: "block", cursor: "zoom-in" }} 
-                  fetchPriority={i === 0 ? "high" : "auto"}
-                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x800?text=Invalid+Image'; }} 
-                />
+                {item.type === 'video' ? (
+                  <video 
+                    src={item.url} 
+                    autoPlay 
+                    muted 
+                    loop 
+                    playsInline 
+                    controls
+                    style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", background: "#000" }} 
+                  />
+                ) : (
+                  <img 
+                    src={item.url} 
+                    alt={product.name} 
+                    onClick={() => { setShowZoom(true); setZoomLevel(1); }} 
+                    style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", cursor: "zoom-in" }} 
+                    fetchPriority={i === 0 ? "high" : "auto"}
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x800?text=Invalid+Image'; }} 
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -401,18 +430,18 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           </button>
 
           {/* Dots Indicator for Mobile Swiping */}
-          {images.length > 1 && (
+          {galleryItems.length > 1 && (
             <div className="mobile-only" style={{ display: "flex", justifyContent: "center", gap: 6, position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)", zIndex: 10 }}>
-              {images.map((_, i) => (
+              {galleryItems.map((_, i) => (
                 <div key={i} style={{ width: activeImg === i ? 16 : 6, height: 6, borderRadius: 3, background: activeImg === i ? "var(--red)" : "rgba(0,0,0,0.2)", transition: "all 0.3s" }} />
               ))}
             </div>
           )}
 
           {/* Thumbnails */}
-          {images.length > 1 && (
+          {galleryItems.length > 1 && (
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12 }}>
-              {images.map((img: string, i: number) => (
+              {galleryItems.map((item, i: number) => (
                 <button key={i} onClick={() => {
                   setActiveImg(i);
                   const container = document.getElementById("product-slider");
@@ -421,9 +450,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   width: 72, height: 72, borderRadius: "var(--radius)", overflow: "hidden",
                   border: `2px solid ${activeImg === i ? "var(--red)" : "var(--gray-200)"}`,
                   cursor: "pointer", padding: 0, background: "var(--gray-50)",
-                  transition: "border-color 0.2s",
+                  transition: "border-color 0.2s", position: "relative",
                 }}>
-                  <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Invalid'; }} />
+                  {item.type === 'video' ? (
+                    <>
+                      <video src={item.url} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)" }}>
+                        <div style={{ width: 24, height: 24, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <div style={{ width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "8px solid var(--red)", marginLeft: 2 }} />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <img src={item.url} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Invalid'; }} />
+                  )}
                 </button>
               ))}
             </div>

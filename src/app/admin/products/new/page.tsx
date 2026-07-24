@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { ArrowLeft, Save, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Plus, Trash2, Video } from "lucide-react";
 import Link from "next/link";
 
 export default function AddProductPage() {
@@ -12,6 +12,8 @@ export default function AddProductPage() {
   const [specs, setSpecs] = useState<{ label: string; value: string }[]>([]);
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoUploading, setVideoUploading] = useState(false);
   
   const [badges, setBadges] = useState<{ text: string; type: string }[]>([
     { text: "", type: "yellow" }
@@ -172,6 +174,14 @@ export default function AddProductPage() {
         additionalImageUrls = [...additionalImageUrls, ...validUrls];
       }
 
+      // Upload video if selected
+      let videoUrl: string | null = null;
+      if (videoFile) {
+        setVideoUploading(true);
+        videoUrl = await uploadImage(videoFile);
+        setVideoUploading(false);
+      }
+
       const activeBadges = badges.filter(b => b.text.trim() !== "");
       const qtyVal = parseInt(formData.stock_quantity, 10);
       const calculatedQty = isNaN(qtyVal) ? 0 : qtyVal;
@@ -197,7 +207,8 @@ export default function AddProductPage() {
         specs: specs.filter(s => s.label.trim() !== "" || s.value.trim() !== ""),
         features: features.filter(f => f.trim() !== ""),
         trust_points: trustPoints.filter(tp => tp.text.trim() !== ""),
-        colors: colors
+        colors: colors,
+        video_url: videoUrl
       };
 
       const res = await fetch("/api/admin/products", {
@@ -325,6 +336,28 @@ export default function AddProductPage() {
                 />
               ))}
             </div>
+          </div>
+          {/* Product Video Upload */}
+          <div>
+            <label className="label" style={{ display: "flex", alignItems: "center", gap: 8 }}><Video size={16} color="var(--red)" /> Product Video (Optional)</label>
+            <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: -8, marginBottom: 12 }}>Upload a short product demo video. It will appear in the product image gallery alongside photos.</p>
+            <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+              <input type="file" accept="video/mp4,video/webm,video/mov" onChange={e => {
+                if (e.target.files && e.target.files[0]) {
+                  setVideoFile(e.target.files[0]);
+                }
+              }} />
+              {videoFile && (
+                <button type="button" onClick={() => setVideoFile(null)} style={{ background: "var(--red)", color: "white", border: "none", borderRadius: "var(--radius-sm)", padding: "6px 12px", cursor: "pointer", fontSize: 13, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <Trash2 size={14} /> Remove
+                </button>
+              )}
+            </div>
+            {videoFile && (
+              <div style={{ marginTop: 12, borderRadius: 8, overflow: "hidden", border: "1px solid var(--gray-200)", maxWidth: 320 }}>
+                <video src={URL.createObjectURL(videoFile)} controls style={{ width: "100%", display: "block" }} />
+              </div>
+            )}
           </div>
           <div>
             <label className="label">Description *</label>
