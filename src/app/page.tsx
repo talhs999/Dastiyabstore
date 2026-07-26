@@ -65,6 +65,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
       />
+      <h1 className="sr-only">DastiyabStore - Pakistan's Premium Online Store</h1>
       <HomeClient initialData={initialData} />
     </>
   );

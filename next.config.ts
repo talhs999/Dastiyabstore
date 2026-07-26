@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
+process.env.VIPS_CONCURRENCY = "2";
+process.env.UV_THREADPOOL_SIZE = "4";
+
 const nextConfig: NextConfig = {
+  experimental: {
+    cpus: 1,
+    workerThreads: false,
+  },
   images: {
     remotePatterns: [
       {
