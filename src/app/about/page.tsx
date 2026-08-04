@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Award, Target, Users, ShoppingBag, Heart } from "lucide-react";
-import * as Icons from "lucide-react";
 
 const defaultTeam = [
   { name: "Yousuf Ahmed Khan", role: "Co-Founder & CEO", image: "" },

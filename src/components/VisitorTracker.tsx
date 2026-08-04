@@ -111,8 +111,8 @@ export default function VisitorTracker({ enabled = false }: { enabled?: boolean 
     // Trigger pulse immediately on mount / path change
     sendPulse();
 
-    // Pulse every 10 seconds to keep session active
-    const pulseInterval = setInterval(sendPulse, 10000);
+    // Pulse every 30 seconds to keep session active (was 10s, reduced for performance)
+    const pulseInterval = setInterval(sendPulse, 30000);
 
     return () => {
       clearInterval(pulseInterval);

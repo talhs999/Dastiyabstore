@@ -196,6 +196,7 @@ export default function Navbar() {
 
             {/* Mobile Menu Toggle */}
             <button
+              aria-label="Toggle mobile menu"
               id="mobile-menu-btn"
               onClick={() => setMobileOpen(true)}
               style={{ display: "none", background: "none", border: "none", cursor: "pointer", color: "var(--gray-700)", padding: 4 }}
@@ -235,7 +236,7 @@ export default function Navbar() {
                     outline: "none", color: "var(--gray-900)",
                   }}
                 />
-                <button type="submit" style={{
+                <button type="submit" aria-label="Search" style={{
                   padding: "10px 18px", background: "var(--red)", border: "none",
                   cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
                   color: "white", fontSize: 14, fontWeight: 600,
@@ -272,7 +273,7 @@ export default function Navbar() {
                       <div style={{ fontSize: 13, fontWeight: 700, color: "var(--red)" }}>Rs. {p.price.toLocaleString()}</div>
                     </Link>
                   ))}
-                  <button onClick={handleSearch} style={{
+                  <button onClick={handleSearch} aria-label="Search mobile" style={{
                     width: "100%", padding: 12, background: "var(--gray-50)",
                     border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
                     color: "var(--red)", textAlign: "center"
@@ -287,6 +288,7 @@ export default function Navbar() {
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
               {/* Mobile Search */}
               <button
+                aria-label="Wishlist"
                 id="mobile-search-btn"
                 onClick={() => setSearchOpen(!searchOpen)}
                 className="mobile-only icon-btn"
@@ -319,6 +321,7 @@ export default function Navbar() {
 
               {/* Cart */}
               <button
+                aria-label="Cart"
                 id="cart-btn"
                 onClick={() => setCartOpen(!cartOpen)}
                 style={{
@@ -357,7 +360,7 @@ export default function Navbar() {
                   onChange={e => setSearchQuery(e.target.value)}
                   style={{ flex: 1, padding: "10px 16px", border: "none", background: "transparent", fontSize: 14, fontFamily: "inherit", outline: "none", color: "var(--gray-900)" }}
                 />
-                <button type="submit" style={{ padding: "10px 16px", height: "100%", background: "var(--red)", border: "none", cursor: "pointer", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <button type="submit" aria-label="Search desktop" style={{ padding: "10px 16px", height: "100%", background: "var(--red)", border: "none", cursor: "pointer", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Search size={16} />
                 </button>
               </form>
@@ -389,7 +392,7 @@ export default function Navbar() {
                       <div style={{ fontSize: 13, fontWeight: 700, color: "var(--red)" }}>Rs. {p.price.toLocaleString()}</div>
                     </Link>
                   ))}
-                  <button onClick={handleSearch} style={{
+                  <button onClick={handleSearch} aria-label="Search desktop trigger" style={{
                     width: "100%", padding: 12, background: "var(--gray-50)",
                     border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
                     color: "var(--red)", textAlign: "center"
@@ -458,7 +461,7 @@ export default function Navbar() {
                 <h3 style={{ fontWeight: 800, fontSize: 18 }}>My Cart</h3>
                 <p style={{ fontSize: 13, color: "var(--gray-500)" }}>{totalItems} item{totalItems !== 1 ? "s" : ""}</p>
               </div>
-              <button onClick={() => setCartOpen(false)} style={{ background: "var(--gray-100)", border: "none", cursor: "pointer", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <button aria-label="Close cart" onClick={() => setCartOpen(false)} style={{ background: "var(--gray-100)", border: "none", cursor: "pointer", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <X size={18} />
               </button>
             </div>
@@ -488,12 +491,12 @@ export default function Navbar() {
                         )}
                         <p style={{ color: "var(--red)", fontWeight: 700, fontSize: 15 }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                          <button onClick={() => updateQuantity(item.id, item.color, Math.max(1, item.quantity - 1))} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Minus size={12} /></button>
+                          <button aria-label="Decrease quantity" onClick={() => updateQuantity(item.id, item.color, Math.max(1, item.quantity - 1))} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Minus size={12} /></button>
                           <span style={{ fontSize: 13, fontWeight: 600 }}>{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, item.color, item.quantity + 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Plus size={12} /></button>
+                          <button aria-label="Increase quantity" onClick={() => updateQuantity(item.id, item.color, item.quantity + 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Plus size={12} /></button>
                         </div>
                       </div>
-                      <button onClick={() => removeFromCart(item.id, item.color)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", alignSelf: "flex-start" }}>
+                      <button aria-label="Remove item" onClick={() => removeFromCart(item.id, item.color)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", alignSelf: "flex-start" }}>
                         <X size={16} />
                       </button>
                     </div>
@@ -537,7 +540,7 @@ export default function Navbar() {
                   <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
                 </span>
               </div>
-              <button onClick={() => setMobileOpen(false)} style={{ background: "var(--gray-100)", border: "none", cursor: "pointer", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <button aria-label="Close mobile menu" onClick={() => setMobileOpen(false)} style={{ background: "var(--gray-100)", border: "none", cursor: "pointer", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <X size={18} />
               </button>
             </div>

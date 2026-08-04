@@ -200,10 +200,10 @@ export default function Footer() {
               </p>
               <div style={{ display: "flex", gap: 16 }}>
                 {[
-                  { icon: <FacebookIcon />, href: contact?.facebook },
-                  { icon: <InstagramIcon />, href: contact?.instagram },
-                  { icon: <TwitterIcon />, href: contact?.twitter },
-                  { icon: <YoutubeIcon />, href: contact?.youtube },
+                  { icon: <FacebookIcon />, href: contact?.facebook, label: "Facebook" },
+                  { icon: <InstagramIcon />, href: contact?.instagram, label: "Instagram" },
+                  { icon: <TwitterIcon />, href: contact?.twitter, label: "Twitter" },
+                  { icon: <YoutubeIcon />, href: contact?.youtube, label: "YouTube" },
                 ].filter(s => s.href && s.href !== "#" && s.href !== "").map((s, i) => {
                   let validHref = s.href as string;
                   if (validHref.startsWith("#") && validHref.length > 1) {
@@ -213,7 +213,7 @@ export default function Footer() {
                     validHref = "https://" + validHref;
                   }
                   return (
-                    <a key={i} href={validHref} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gray-500)", transition: "color 0.2s" }} 
+                    <a key={i} href={validHref} target="_blank" rel="noopener noreferrer" aria-label={s.label} style={{ color: "var(--gray-500)", transition: "color 0.2s" }} 
                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-500)"}>
                       {s.icon}

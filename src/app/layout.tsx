@@ -3,12 +3,10 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { ToastProvider } from "@/components/ui/Toast";
 import VisitorTracker from "@/components/VisitorTracker";
 import { SettingsProvider } from "@/components/SettingsProvider";
-import WhatsAppButton from "@/components/WhatsAppButton";
-import Chatbot from "@/components/Chatbot";
+import { LazyFooter, LazyWhatsAppButton, LazyChatbot } from "@/components/LazyComponents";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
@@ -19,7 +17,7 @@ const inter = Inter({
 });
 
 const poppins = Poppins({ 
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  weight: ['400', '600', '700'],
   subsets: ["latin"], 
   variable: '--font-poppins',
   display: 'swap',
@@ -186,13 +184,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
       <head>
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://connect.facebook.net" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
         <Script
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           src="https://www.googletagmanager.com/gtag/js?id=G-ZFKEG15ZRC"
         />
         <Script
           id="google-analytics"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -209,7 +213,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </noscript>
         <Script
           id="fb-pixel"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
               !function(f,b,e,v,n,t,s)
@@ -256,9 +260,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main style={{ flex: 1 }}>
               {children}
             </main>
-            <div className="no-print"><Footer /></div>
-            <div className="no-print"><WhatsAppButton /></div>
-            <div className="no-print"><Chatbot /></div>
+            <div className="no-print"><LazyFooter /></div>
+            <div className="no-print"><LazyWhatsAppButton /></div>
+            <div className="no-print"><LazyChatbot /></div>
           </div>
           </ToastProvider>
         </SettingsProvider>

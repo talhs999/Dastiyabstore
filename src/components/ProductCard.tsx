@@ -79,6 +79,7 @@ export default function ProductCard({ product, view = "grid" }: { product: Produ
 
         {/* Wishlist */}
         <button
+          aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
           onClick={e => {
             e.preventDefault();
             if (isInWishlist(product.id)) {
@@ -140,7 +141,7 @@ export default function ProductCard({ product, view = "grid" }: { product: Produ
               >
                 <ShoppingCart size={14} /> Add to Cart
               </button>
-              <button style={{ width: 36, height: 36, background: "white", border: "none", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-sm)" }}>
+              <button aria-label="Quick view" style={{ width: 36, height: 36, background: "white", border: "none", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "var(--shadow-sm)" }}>
                 <Eye size={15} color="var(--gray-600)" />
               </button>
             </div>

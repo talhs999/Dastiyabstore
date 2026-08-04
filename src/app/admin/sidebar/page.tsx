@@ -1,11 +1,29 @@
 "use client";
-import { useState, useEffect } from "react";
-import * as Icons from "lucide-react";
-import { Search, Edit, X, Save, Eye } from "lucide-react";
+import { useState, useEffect, type ComponentType } from "react";
+import {
+  Search, Edit, X, Save, Eye, Package,
+  Headphones, Wind, Fan, Laptop, Smartphone, Cpu,
+  Music, Watch, Camera, Zap, Monitor, Speaker,
+  Mouse, Keyboard, Tv, Mic, Printer, Gamepad2,
+  Battery, Bluetooth, Wifi, Usb, Power, Radio,
+  Server, Tablet, Video, Clock, Heart, Star,
+  Gift, ShoppingBag, ShoppingCart, Tag
+} from "lucide-react";
 
+const iconMap: Record<string, ComponentType<any>> = {
+  Search, Edit, X, Save, Eye, Package,
+  Headphones, Wind, Fan, Laptop, Smartphone, Cpu,
+  Music, Watch, Camera, Zap, Monitor, Speaker,
+  Mouse, Keyboard, Tv, Mic, Printer, Gamepad2,
+  Battery, Bluetooth, Wifi, Usb, Power, Radio,
+  Server, Tablet, Video, Clock, Heart, Star,
+  Gift, ShoppingBag, ShoppingCart, Tag,
+  // Aliases for backwards compatibility with database values
+  Gamepad: Gamepad2,
+};
 
 function DynamicIcon({ name, size = 20, color }: { name: string, size?: number, color?: string }) {
-  const Icon = (Icons as any)[name] || Icons.Package;
+  const Icon = iconMap[name] || Package;
   return <Icon size={size} color={color} />;
 }
 

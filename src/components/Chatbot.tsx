@@ -81,6 +81,7 @@ export default function Chatbot() {
     <>
       {/* Floating Button */}
       <button 
+        aria-label="Toggle chatbot"
         className="chatbot-floating-btn"
         onClick={() => setIsOpen(!isOpen)}
         style={{
@@ -263,6 +264,7 @@ export default function Chatbot() {
             />
             <button 
               type="submit" 
+              aria-label="Send message"
               disabled={loading || !input.trim()}
               style={{
                 width: 42,

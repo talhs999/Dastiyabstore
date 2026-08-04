@@ -1,20 +1,28 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ComponentType } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
-import * as Icons from "lucide-react";
 import {
   ArrowRight, ChevronRight, ChevronLeft, Truck, RotateCcw, Shield, Headphones,
   Star, Zap, Package, Wind, Laptop, Monitor, Home, ShoppingCart,
-  TrendingUp, Award, Heart, Menu, Fan, Smartphone, Cpu, LayoutGrid, Music
+  TrendingUp, Award, Heart, Menu, Fan, Smartphone, Cpu, LayoutGrid, Music,
+  Gamepad2, Camera, Gift, Tv, Bluetooth, Watch, Plug, Lightbulb, Wrench
 } from "lucide-react";
 import { useSettings } from "@/components/SettingsProvider";
 import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
 
+// Curated icon map — avoids importing the entire lucide-react library (~150KB)
+const iconMap: Record<string, ComponentType<any>> = {
+  ArrowRight, ChevronRight, ChevronLeft, Truck, RotateCcw, Shield, Headphones,
+  Star, Zap, Package, Wind, Laptop, Monitor, Home, ShoppingCart,
+  TrendingUp, Award, Heart, Menu, Fan, Smartphone, Cpu, LayoutGrid, Music,
+  Gamepad2, Camera, Gift, Tv, Bluetooth, Watch, Plug, Lightbulb, Wrench,
+};
+
 function DynamicIcon({ name, size = 20 }: { name: string, size?: number }) {
-  const Icon = (Icons as any)[name] || Icons.Package;
+  const Icon = iconMap[name] || Package;
   return <Icon size={size} />;
 }
 
@@ -72,10 +80,11 @@ function InstagramCarousel({ posts }: { posts: any[] }) {
     >
       {posts.length > 1 && (
         <button 
+          aria-label="Scroll left"
           onClick={scrollLeft}
           style={{ position: "absolute", left: -10, top: "50%", transform: "translateY(-50%)", zIndex: 10, background: "white", border: "1px solid var(--gray-200)", borderRadius: "50%", width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
         >
-          <Icons.ChevronLeft size={24} color="var(--gray-700)" />
+          <ChevronLeft size={24} color="var(--gray-700)" />
         </button>
       )}
 
@@ -90,6 +99,7 @@ function InstagramCarousel({ posts }: { posts: any[] }) {
             background: "white"
           }}>
             <iframe
+              title={`Instagram post ${post.shortcode}`}
               src={`https://www.instagram.com/p/${post.shortcode}/embed`}
               width="100%"
               height="540"
@@ -106,6 +116,7 @@ function InstagramCarousel({ posts }: { posts: any[] }) {
             background: "white"
           }}>
             <iframe
+              title={`Instagram post copy ${post.shortcode}`}
               src={`https://www.instagram.com/p/${post.shortcode}/embed`}
               width="100%"
               height="540"
@@ -119,10 +130,11 @@ function InstagramCarousel({ posts }: { posts: any[] }) {
 
       {posts.length > 1 && (
         <button 
+          aria-label="Scroll right"
           onClick={scrollRight}
           style={{ position: "absolute", right: -10, top: "50%", transform: "translateY(-50%)", zIndex: 10, background: "white", border: "1px solid var(--gray-200)", borderRadius: "50%", width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
         >
-          <Icons.ChevronRight size={24} color="var(--gray-700)" />
+          <ChevronRight size={24} color="var(--gray-700)" />
         </button>
       )}
     </div>
@@ -552,7 +564,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
         }}>
           {(dynamicStats || stats).map((s: any, i: number) => {
             const iconName = s.icon || "Heart";
-            const IconComp = (Icons as any)[iconName] || Icons.Heart;
+            const IconComp = iconMap[iconName] || Heart;
             const target = dynamicStats ? parseFloat(s.value) : s.target;
             const suffix = dynamicStats ? s.suffix : s.suffix;
             const decimals = dynamicStats ? (s.value && s.value.includes(".") ? 1 : 0) : (s.decimals || 0);
