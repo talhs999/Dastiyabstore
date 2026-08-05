@@ -22,7 +22,10 @@ type GlobalSettings = {
     categories: { label: string; href: string }[];
     support: { label: string; href: string }[];
   };
-  promoBanner: string[];
+  promoBanner: {
+    texts: string[];
+    bgColor: string;
+  };
 };
 
 const defaultSettings: GlobalSettings = {
@@ -62,11 +65,14 @@ const defaultSettings: GlobalSettings = {
       { label: "Terms & Conditions", href: "/terms" },
     ],
   },
-  promoBanner: [
-    "Cash on Delivery Available in Karachi",
-    "Easy Returns within 5 Days",
-    "100% Authentic Products"
-  ]
+  promoBanner: {
+    texts: [
+      "Cash on Delivery Available in Karachi",
+      "Easy Returns within 5 Days",
+      "100% Authentic Products"
+    ],
+    bgColor: "var(--red)"
+  }
 };
 
 const SettingsContext = createContext<GlobalSettings>(defaultSettings);

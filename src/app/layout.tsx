@@ -119,11 +119,14 @@ const getGlobalSettings = unstable_cache(
         { label: "Terms & Conditions", href: "/terms" },
       ],
     };
-    let promoBannerSettings = [
-      "Cash on Delivery Available in Karachi",
-      "Easy Returns within 5 Days",
-      "100% Authentic Products"
-    ];
+    let promoBannerSettings: { texts: string[], bgColor: string } = {
+      texts: [
+        "Cash on Delivery Available in Karachi",
+        "Easy Returns within 5 Days",
+        "100% Authentic Products"
+      ],
+      bgColor: "var(--red)"
+    };
     let liveTrackingEnabled = false;
 
     try {
@@ -152,7 +155,12 @@ const getGlobalSettings = unstable_cache(
         where: { key: 'promo_banner_settings' }
       });
       if (pbSetting && pbSetting.value) {
-        promoBannerSettings = typeof pbSetting.value === 'string' ? JSON.parse(pbSetting.value) : pbSetting.value as any;
+        let parsed = typeof pbSetting.value === 'string' ? JSON.parse(pbSetting.value) : pbSetting.value as any;
+        if (Array.isArray(parsed)) {
+          promoBannerSettings = { texts: parsed, bgColor: 'var(--red)' };
+        } else {
+          promoBannerSettings = parsed;
+        }
       }
 
       const trackingSetting = await prisma.storeSetting.findUnique({

@@ -26,7 +26,7 @@ const categories = [
 ];
 
 export default function Navbar() {
-  const { freeDelivery, promoBanner = [] } = useSettings();
+  const { freeDelivery, promoBanner = { texts: [], bgColor: "var(--red)" } } = useSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -164,14 +164,14 @@ export default function Navbar() {
   return (
     <>
       {/* Announcement Bar */}
-      <div className="announcement-bar">
+      <div className="announcement-bar" style={{ backgroundColor: promoBanner.bgColor || "var(--red)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 32 }}>
           <div className="animate-marquee" style={{ display: "flex", width: "fit-content", animation: "marquee 20s linear infinite" }}>
             {[
               ...(freeDelivery?.is_active ? [`Free Delivery on orders above Rs. ${freeDelivery.threshold}`] : []),
-              ...promoBanner,
+              ...(promoBanner.texts || []),
               ...(freeDelivery?.is_active ? [`Free Delivery on orders above Rs. ${freeDelivery.threshold}`] : []),
-              ...promoBanner
+              ...(promoBanner.texts || [])
             ].map((t, i) => (
               <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8, marginRight: 64, whiteSpace: "nowrap" }}>
                 <Truck size={14} />

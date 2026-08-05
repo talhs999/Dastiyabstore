@@ -181,6 +181,7 @@ export default function AdminSettingsPage() {
   const [loadingPromoBanner, setLoadingPromoBanner] = useState(true);
   const [savingPromoBanner, setSavingPromoBanner] = useState(false);
   const [promoBannerText, setPromoBannerText] = useState("Cash on Delivery Available in Karachi, Easy Returns within 5 Days, 100% Authentic Products");
+  const [promoBannerBgColor, setPromoBannerBgColor] = useState("#E63946");
 
   const tabs = [
     { label: "General", icon: <Store size={18} /> },
@@ -218,9 +219,13 @@ export default function AdminSettingsPage() {
       const data = await res.json();
       if (data && data.value) {
         try {
-          const bannerArr = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
-          if (Array.isArray(bannerArr)) {
-            setPromoBannerText(bannerArr.join(", "));
+          const parsed = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+          if (Array.isArray(parsed)) {
+            setPromoBannerText(parsed.join(", "));
+            setPromoBannerBgColor("#E63946");
+          } else if (parsed && parsed.texts) {
+            setPromoBannerText(parsed.texts.join(", "));
+            setPromoBannerBgColor(parsed.bgColor || "#E63946");
           }
         } catch (e) {
           console.error("Failed to parse promo banner settings", e);
@@ -238,7 +243,7 @@ export default function AdminSettingsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         key: "promo_banner_settings",
-        value: textArray
+        value: { texts: textArray, bgColor: promoBannerBgColor }
       })
     });
     setSavingPromoBanner(false);
@@ -1995,8 +2000,29 @@ export default function AdminSettingsPage() {
                       value={promoBannerText} 
                       onChange={e => setPromoBannerText(e.target.value)} 
                       placeholder="Cash on Delivery Available in Karachi, Easy Returns within 5 Days, 100% Authentic Products" 
-                      style={{ resize: "vertical" }} 
+                      style={{ resize: "vertical", marginBottom: 24 }} 
                     />
+                    
+                    <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Banner Background Color</h3>
+                    <p style={{ fontSize: 13, color: "var(--gray-500)", marginBottom: 16 }}>
+                      Choose the background color for the top banner. You can pick Green for 14 August or keep it Red.
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                      <input 
+                        type="color" 
+                        value={promoBannerBgColor.startsWith("var") ? "#E63946" : promoBannerBgColor} 
+                        onChange={e => setPromoBannerBgColor(e.target.value)}
+                        style={{ width: 64, height: 40, padding: 2, cursor: "pointer", border: "1px solid var(--gray-200)", borderRadius: 8 }}
+                      />
+                      <input 
+                        type="text" 
+                        className="input" 
+                        value={promoBannerBgColor} 
+                        onChange={e => setPromoBannerBgColor(e.target.value)} 
+                        placeholder="#E63946 or var(--red)"
+                        style={{ width: 200 }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
