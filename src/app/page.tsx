@@ -42,7 +42,11 @@ export default async function HomePage() {
     });
     const siteReviews = siteReviewsSetting ? siteReviewsSetting.value : null;
 
-    initialData = { featured, bestSellers, categories, instagram, bannerSlides, promoBanner, bentoGrid, statsStrip, siteReviews };
+    const bundles = await prisma.product.findMany({
+      where: { is_bundle: true }
+    });
+
+    initialData = { featured, bestSellers, categories, instagram, bannerSlides, promoBanner, bentoGrid, statsStrip, siteReviews, bundles };
   } catch (error) {
     console.error('Error fetching homepage data on server:', error);
   }

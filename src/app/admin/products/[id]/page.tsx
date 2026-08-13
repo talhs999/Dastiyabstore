@@ -48,6 +48,7 @@ export default function EditProductPage() {
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
+    buying_cost: "",
     price: "",
     original_price: "",
     image: "",
@@ -83,6 +84,7 @@ export default function EditProductPage() {
         setFormData({
           name: prodData.name,
           slug: prodData.slug,
+          buying_cost: prodData.buying_cost !== undefined && prodData.buying_cost !== null ? prodData.buying_cost.toString() : "",
           price: prodData.price.toString(),
           original_price: prodData.original_price ? prodData.original_price.toString() : "",
           image: prodData.image,
@@ -254,6 +256,7 @@ export default function EditProductPage() {
       const product = {
         name: formData.name,
         slug: formData.slug,
+        buying_cost: formData.buying_cost ? parseFloat(formData.buying_cost) : 0,
         price: parseFloat(formData.price),
         original_price: formData.original_price ? parseFloat(formData.original_price) : null,
         image: mainImageUrl,
@@ -324,9 +327,13 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 24 }}>
           <div>
-            <label className="label">Price (Rs) *</label>
+            <label className="label">Buying Cost (Rs)</label>
+            <input className="input" type="number" style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} value={formData.buying_cost} onChange={e => setFormData({ ...formData, buying_cost: e.target.value })} />
+          </div>
+          <div>
+            <label className="label">Sale Price (Rs) *</label>
             <input className="input" type="number" required style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)" }} value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
           </div>
           <div>

@@ -35,6 +35,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const { freeDelivery } = useSettings();
   const { slug } = use(params);
   const [product, setProduct] = useState<any>(null);
+  const [bundleSubItems, setBundleSubItems] = useState<any[]>([]);
   const [loadingProduct, setLoadingProduct] = useState(true);
 
   const [qty, setQty] = useState(1);
@@ -114,6 +115,23 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
           setReviews(data.reviews || []);
           setQnaList(data.qna || []);
+
+          if (mapped.is_bundle && Array.isArray(mapped.bundle_items) && mapped.bundle_items.length > 0) {
+            try {
+              const subItemsRes = await fetch(`/api/products?ids=${mapped.bundle_items.join(',')}`);
+              if (subItemsRes.ok) {
+                const subItems = await subItemsRes.json();
+                setBundleSubItems(subItems);
+                
+                // If any subitem is out of stock, mark bundle as out of stock
+                if (subItems.some((item: any) => !item.in_stock || item.stock_quantity <= 0)) {
+                  setProduct((prev: any) => ({ ...prev, inStock: false }));
+                }
+              }
+            } catch (err) {
+              console.error("Error fetching bundle subitems:", err);
+            }
+          }
 
           // Trigger Facebook Pixel ViewContent Event
           if (data.product && typeof window !== "undefined" && (window as any).fbq) {
@@ -560,6 +578,36 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             </div>
           ) : (
             <>
+              {/* Bundle Sub-items Preview */}
+              {product.is_bundle && bundleSubItems.length > 0 && (
+                <div style={{ marginBottom: 24, padding: "16px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "var(--radius-lg)" }}>
+                  <label className="label" style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--red)" }}>
+                    <Zap size={16} fill="var(--yellow)" color="var(--yellow)" />
+                    This Bundle Includes:
+                  </label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+                    {bundleSubItems.map(item => (
+                      <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "white", padding: 8, borderRadius: 8, boxShadow: "var(--shadow-sm)" }}>
+                        <img src={item.image} alt={item.name} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 6 }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, fontSize: 14, color: "var(--gray-900)", lineHeight: 1.2 }}>{item.name}</div>
+                          <div style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 2 }}>
+                            {item.in_stock ? (
+                              <span style={{ color: "#16a34a" }}>In Stock</span>
+                            ) : (
+                              <span style={{ color: "var(--red)" }}>Out of Stock</span>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: "var(--gray-700)", paddingRight: 8 }}>
+                          Rs. {item.price.toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Color Selection */}
               {productColors && productColors.length > 0 && (
                 <div style={{ marginBottom: 24 }}>

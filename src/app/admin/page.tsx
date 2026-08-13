@@ -7,9 +7,14 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalProfit, setTotalProfit] = useState(0);
+  const [totalBuyingCost, setTotalBuyingCost] = useState(0);
+  const [totalCourierPaid, setTotalCourierPaid] = useState(0);
+  
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [productsCount, setProductsCount] = useState(0);
   const [revenueChange, setRevenueChange] = useState(0);
+  const [profitChange, setProfitChange] = useState(0);
   const [activeChange, setActiveChange] = useState(0);
   const [productsChange, setProductsChange] = useState(0);
   const [customersChange, setCustomersChange] = useState(0);
@@ -38,11 +43,34 @@ export default function AdminDashboard() {
       return Math.round(((current - previous) / previous) * 100);
     };
 
+    const calculateCostDetails = (orders: any[]) => {
+      let buyingCost = 0;
+      let courierPaid = 0;
+      orders.forEach(order => {
+        const orderItems = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+        buyingCost += orderItems.reduce((costAcc: number, item: any) => costAcc + ((item.buying_cost || 0) * (item.quantity || 1)), 0);
+        courierPaid += (order.delivery_paid || 0);
+      });
+      return { buyingCost, courierPaid };
+    };
+
+    const calculateProfit = (orders: any[]) => {
+      const { buyingCost, courierPaid } = calculateCostDetails(orders);
+      return orders.reduce((acc, order) => acc + (order.total || 0), 0) - buyingCost - courierPaid;
+    };
+
     if (ordersData) {
       setOrders(ordersData);
       
       const rev = ordersData.reduce((acc: any, order: any) => acc + (order.total || 0), 0);
       setTotalRevenue(rev);
+
+      const profit = calculateProfit(ordersData);
+      setTotalProfit(profit);
+      
+      const { buyingCost, courierPaid } = calculateCostDetails(ordersData);
+      setTotalBuyingCost(buyingCost);
+      setTotalCourierPaid(courierPaid);
       
       const uniqueEmails = new Set(ordersData.map((o: any) => o.email).filter(Boolean));
       setTotalCustomers(uniqueEmails.size);
@@ -58,6 +86,11 @@ export default function AdminDashboard() {
       const revCurrent = currentPeriodOrders.reduce((acc: any, order: any) => acc + (order.total || 0), 0);
       const revPrevious = previousPeriodOrders.reduce((acc: any, order: any) => acc + (order.total || 0), 0);
       setRevenueChange(calculatePercentageChange(revCurrent, revPrevious));
+
+      // Profit Change
+      const profCurrent = calculateProfit(currentPeriodOrders);
+      const profPrevious = calculateProfit(previousPeriodOrders);
+      setProfitChange(calculatePercentageChange(profCurrent, profPrevious));
 
       // Active Orders Change
       const activeCurrent = currentPeriodOrders.filter((o: any) => o.status !== "delivered" && o.status !== "cancelled").length;
@@ -93,6 +126,13 @@ export default function AdminDashboard() {
       value: `Rs ${totalRevenue.toLocaleString()}`, 
       icon: <DollarSign size={20} color="var(--gray-500)" />,
       change: revenueChange 
+    },
+    { 
+      label: "TOTAL PROFIT", 
+      value: `Rs ${totalProfit.toLocaleString()}`, 
+      icon: <DollarSign size={20} color="#10b981" />,
+      change: profitChange,
+      color: "#10b981"
     },
     { 
       label: "ACTIVE ORDERS", 
@@ -150,62 +190,87 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 32 }}>
-        {/* Recent Orders */}
-        <div style={{ background: "white", borderRadius: "var(--radius-lg)", border: "1px solid var(--gray-200)", overflow: "hidden" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid var(--gray-100)" }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--gray-900)" }}>Recent Orders</h2>
-            <Link href="/admin/orders" style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-500)", textDecoration: "none", textTransform: "uppercase" }}>View All</Link>
+      {/* Financial Summary */}
+      <div style={{ background: "white", borderRadius: "var(--radius-lg)", border: "1px solid var(--gray-200)", padding: 24, marginBottom: 40, boxShadow: "var(--shadow-sm)" }}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)", marginBottom: 20 }}>Financial Summary (Excel View)</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 24 }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", marginBottom: 8 }}>Total Order Value</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "var(--gray-900)" }}>Rs {totalRevenue.toLocaleString()}</div>
           </div>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", marginBottom: 8 }}>Total Buying Cost</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "var(--red)" }}>Rs {totalBuyingCost.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", marginBottom: 8 }}>Courier Delivery Paid</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "var(--red)" }}>Rs {totalCourierPaid.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", marginBottom: 8 }}>Net Margin / Profit</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#10b981" }}>Rs {totalProfit.toLocaleString()}</div>
+          </div>
+          <div style={{ borderLeft: "1px dashed var(--gray-200)", paddingLeft: 24 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", marginBottom: 8 }}>Margin %</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#10b981" }}>
+              {totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : "0"}%
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", marginBottom: 8 }}>Avg Order Value (AOV)</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "var(--blue)" }}>
+              Rs {orders.length > 0 ? Math.round(totalRevenue / orders.length).toLocaleString() : "0"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Detailed Orders Breakdown */}
+      <div style={{ background: "white", borderRadius: "var(--radius-lg)", border: "1px solid var(--gray-200)", overflow: "hidden" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid var(--gray-100)" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--gray-900)" }}>Orders Breakdown</h2>
+          <Link href="/admin/orders" style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-500)", textDecoration: "none", textTransform: "uppercase" }}>View All</Link>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: 900 }}>
             <thead>
               <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--gray-100)" }}>
                 <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Order ID</th>
+                <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Date</th>
                 <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Customer</th>
-                <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Status</th>
-                <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Amount</th>
+                <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Revenue</th>
+                <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Buying Cost</th>
+                <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Courier Paid</th>
+                <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Net Margin</th>
+                <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase" }}>Margin %</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} style={{ padding: 24, textAlign: "center", color: "var(--gray-500)" }}>Loading...</td></tr>
-              ) : orders.slice(0, 5).map(o => (
-                <tr key={o.id} style={{ borderBottom: "1px solid var(--gray-100)" }}>
-                  <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 600, color: "var(--gray-900)" }}>...{o.id.split("-")[0]}</td>
-                  <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--gray-700)" }}>{o.first_name} {o.last_name || ''}</td>
-                  <td style={{ padding: "16px 24px" }}>
-                    <span style={{ 
-                      padding: "4px 10px", borderRadius: 12, fontSize: 12, fontWeight: 700, textTransform: "uppercase",
-                      background: o.status === 'Pending' ? '#fef3c7' : o.status === 'Completed' ? '#d1fae5' : '#fee2e2',
-                      color: o.status === 'Pending' ? '#b45309' : o.status === 'Completed' ? '#047857' : '#b91c1c'
-                    }}>
-                      {o.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 700, color: "var(--gray-900)" }}>Rs {(o.total || 0).toLocaleString()}</td>
-                </tr>
-              ))}
+                <tr><td colSpan={8} style={{ padding: 24, textAlign: "center", color: "var(--gray-500)" }}>Loading...</td></tr>
+              ) : orders.slice(0, 10).map(o => {
+                const orderItems = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
+                const buyingCost = orderItems.reduce((acc: number, item: any) => acc + ((item.buying_cost || 0) * (item.quantity || 1)), 0);
+                const courierPaid = o.delivery_paid || 0;
+                const revenue = o.total || 0;
+                const margin = revenue - buyingCost - courierPaid;
+                const marginPercent = revenue > 0 ? ((margin / revenue) * 100).toFixed(1) : "0";
+
+                return (
+                  <tr key={o.id} style={{ borderBottom: "1px solid var(--gray-100)" }}>
+                    <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 600, color: "var(--gray-900)" }}>...{o.id.split("-")[0]}</td>
+                    <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--gray-600)" }}>{new Date(o.created_at).toLocaleDateString()}</td>
+                    <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--gray-700)" }}>{o.first_name} {o.last_name || ''}</td>
+                    <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 700, color: "var(--gray-900)" }}>Rs {revenue.toLocaleString()}</td>
+                    <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--red)" }}>Rs {buyingCost.toLocaleString()}</td>
+                    <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--red)" }}>Rs {courierPaid.toLocaleString()}</td>
+                    <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 700, color: "#10b981" }}>Rs {margin.toLocaleString()}</td>
+                    <td style={{ padding: "16px 24px", fontSize: 14, fontWeight: 700, color: "#10b981" }}>{marginPercent}%</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-
-        {/* Quick Actions */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--gray-900)", marginBottom: 8 }}>Quick Actions</h2>
-          <Link href="/admin/products" style={{ 
-            display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", 
-            background: "var(--gray-900)", color: "white", borderRadius: "var(--radius-lg)", textDecoration: "none", fontWeight: 600, transition: "opacity 0.2s" 
-          }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 12 }}><Package size={18} /> Add New Product</span>
-            <ArrowUpRight size={18} />
-          </Link>
-          <Link href="/admin/orders" style={{ 
-            display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", 
-            background: "white", border: "1px solid var(--gray-200)", color: "var(--gray-900)", borderRadius: "var(--radius-lg)", textDecoration: "none", fontWeight: 600, transition: "background 0.2s" 
-          }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 12 }}><ShoppingCart size={18} /> View All Orders</span>
-            <ArrowUpRight size={18} />
-          </Link>
         </div>
       </div>
     </div>

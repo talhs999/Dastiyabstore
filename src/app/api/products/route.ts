@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const isFeatured = searchParams.get('is_featured');
     const search = searchParams.get('search');
     const ids = searchParams.get('ids');
+    const isBundle = searchParams.get('is_bundle');
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
     
     let whereClause: any = {};
@@ -16,6 +17,9 @@ export async function GET(request: Request) {
     }
     if (isFeatured === 'true') {
       whereClause.is_featured = true;
+    }
+    if (isBundle === 'true') {
+      whereClause.is_bundle = true;
     }
     if (ids) {
       whereClause.id = { in: ids.split(',') };

@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const isBundle = searchParams.get('is_bundle');
+
     const products = await prisma.product.findMany({
+      where: isBundle === 'true' ? { is_bundle: true } : { is_bundle: false },
       orderBy: { created_at: 'desc' },
       include: {
         category: {

@@ -600,6 +600,33 @@ export default function HomeClient({ initialData }: { initialData: any }) {
         </div>
       </section>
 
+      {/* ── FEATURED BUNDLES ── */}
+      {initialData?.bundles && initialData.bundles.length > 0 && (
+        <section style={{ padding: "72px 24px", background: "linear-gradient(to bottom, var(--gray-50), white)" }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+            <div className="header-flex" style={{ marginBottom: 40 }}>
+              <div>
+                <span className="badge badge-yellow" style={{ fontSize: 11, marginBottom: 8, display: "inline-flex", gap: 4 }}><Award size={11} /> Special Offers</span>
+                <h2 style={{ fontSize: "clamp(26px, 3vw, 38px)", fontWeight: 800, color: "var(--gray-900)" }}>
+                  🔥 Featured <span style={{ color: "var(--red)" }}>Bundles</span>
+                </h2>
+                <p style={{ color: "var(--gray-500)", marginTop: 4 }}>Save big when you buy them together!</p>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 24 }}>
+              {initialData.bundles.map((bundle: any) => (
+                <div style={{ position: "relative" }} key={bundle.id}>
+                  <div style={{ position: "absolute", top: -10, right: -10, zIndex: 10, background: "var(--yellow)", color: "var(--black)", padding: "4px 12px", borderRadius: 20, fontWeight: 900, fontSize: 12, boxShadow: "0 4px 12px rgba(250, 204, 21, 0.4)", transform: "rotate(3deg)" }}>
+                    BUNDLE & SAVE
+                  </div>
+                  <ProductCard product={bundle} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── PROMO BANNER ── */}
       {promoBanner?.enabled && (
       <section style={{ padding: "0 24px" }}>

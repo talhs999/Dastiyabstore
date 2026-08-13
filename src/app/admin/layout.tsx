@@ -190,6 +190,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const menuItems = [
     { label: "Dashboard", href: "/admin", icon: <LayoutDashboard size={20} /> },
     { label: "Products", href: "/admin/products", icon: <Package size={20} /> },
+    { label: "Bundles", href: "/admin/bundles", icon: <Package size={20} /> },
     { label: "Categories", href: "/admin/categories", icon: <FolderTree size={20} /> },
     { label: "Orders", href: "/admin/orders", icon: <ShoppingCart size={20} /> },
     { label: "Customers", href: "/admin/customers", icon: <Users size={20} /> },

@@ -631,8 +631,68 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              {/* Cost Summary */}
+              {/* Cost & Profit Margin Summary */}
               <div style={{ background: "var(--gray-50)", borderRadius: 12, padding: 18, border: "1px solid var(--gray-200)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 800, color: "var(--gray-800)", textTransform: "uppercase", letterSpacing: 0.5, margin: 0 }}>Profit / Margin Settings</h4>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`/api/admin/orders/${activeOrder.id}`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            delivery_paid: activeOrder.delivery_paid,
+                            items: activeOrder.order_items
+                          })
+                        });
+                        if (res.ok) {
+                          alert("Profit margins saved successfully!");
+                          setOrders(orders.map(o => o.id === activeOrder.id ? { ...o, delivery_paid: activeOrder.delivery_paid, items: JSON.stringify(activeOrder.order_items) } : o));
+                        } else alert("Failed to save.");
+                      } catch (err) { alert("Error saving."); }
+                    }}
+                    style={{ background: "var(--gray-900)", color: "white", border: "none", padding: "4px 10px", borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                  >SAVE</button>
+                </div>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+                  {activeOrder.order_items?.map((item: any, idx: number) => (
+                    <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 12, color: "var(--gray-600)", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: 8 }}>{item.product_name} (Cost)</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ fontSize: 12, color: "var(--gray-500)" }}>Rs</span>
+                        <input
+                          type="number"
+                          style={{ width: 70, padding: "4px 8px", fontSize: 12, border: "1px solid var(--gray-300)", borderRadius: 4, textAlign: "right" }}
+                          value={item.buying_cost || 0}
+                          onChange={(e) => {
+                            const newItems = [...activeOrder.order_items];
+                            newItems[idx].buying_cost = parseFloat(e.target.value) || 0;
+                            setActiveOrder({ ...activeOrder, order_items: newItems });
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px dashed var(--gray-200)", paddingTop: 12 }}>
+                    <span style={{ fontSize: 12, color: "var(--gray-600)" }}>Courier Delivery Paid</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ fontSize: 12, color: "var(--gray-500)" }}>Rs</span>
+                      <input
+                        type="number"
+                        style={{ width: 70, padding: "4px 8px", fontSize: 12, border: "1px solid var(--gray-300)", borderRadius: 4, textAlign: "right" }}
+                        value={activeOrder.delivery_paid || 0}
+                        onChange={(e) => {
+                          setActiveOrder({ ...activeOrder, delivery_paid: parseFloat(e.target.value) || 0 });
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ height: 1, background: "var(--gray-200)", margin: "16px 0" }} />
+
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--gray-600)", marginBottom: 8 }}>
                   <span>Subtotal</span>
                   <span style={{ fontWeight: 600 }}>Rs {activeOrder.subtotal?.toLocaleString()}</span>
@@ -641,10 +701,26 @@ export default function AdminOrdersPage() {
                   <span>Shipping Fee</span>
                   <span style={{ fontWeight: 600 }}>{activeOrder.shipping_fee === 0 ? "FREE" : `Rs ${activeOrder.shipping_fee}`}</span>
                 </div>
-                <div style={{ height: 1, background: "var(--gray-200)", margin: "10px 0" }} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: "var(--gray-900)" }}>Grand Total</span>
-                  <span style={{ fontSize: 18, fontWeight: 900, color: "var(--red)" }}>Rs {activeOrder.total_amount?.toLocaleString()}</span>
+                {activeOrder.discount_amount > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--red)", marginBottom: 8 }}>
+                    <span>Discount</span>
+                    <span style={{ fontWeight: 600 }}>- Rs {activeOrder.discount_amount?.toLocaleString()}</span>
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: "var(--gray-900)" }}>Final Revenue</span>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: "var(--gray-900)" }}>Rs {activeOrder.total_amount?.toLocaleString()}</span>
+                </div>
+                
+                <div style={{ background: "var(--gray-900)", borderRadius: 8, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", color: "white" }}>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>NET MARGIN</span>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: "#10b981" }}>
+                    Rs {(
+                      (activeOrder.total_amount || 0) 
+                      - (activeOrder.order_items?.reduce((acc: number, item: any) => acc + ((item.buying_cost || 0) * (item.quantity || 1)), 0) || 0)
+                      - (activeOrder.delivery_paid || 0)
+                    ).toLocaleString()}
+                  </span>
                 </div>
               </div>
 

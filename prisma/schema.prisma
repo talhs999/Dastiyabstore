@@ -52,6 +52,10 @@ model Product {
   trust_points   Json?     @default("[]")
   colors         Json?     @default("[]")
   video_url      String?
+  is_bundle      Boolean   @default(false)
+  bundle_items   Json?     @default("[]")
+  bundle_discount_pc Float?
+  buying_cost    Float?    @default(0)
   created_at     DateTime  @default(now())
   analytics_events ProductAnalyticsEvent[]
 
@@ -83,6 +87,7 @@ model Order {
   discount_amount  Float?
   coupon_code      String?
   order_notes      String?  @db.Text
+  delivery_paid    Float?   @default(0)
 
   @@map("orders")
 }

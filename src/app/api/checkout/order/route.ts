@@ -5,6 +5,26 @@ export async function POST(request: Request) {
   try {
     const { order: orderData, items } = await request.json();
 
+    // Fetch buying costs for all items to snapshot them
+    const productIds = items.map((item: any) => item.product_id).filter(Boolean);
+    const dbProducts = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, buying_cost: true }
+    });
+
+    const productsMap = new Map(dbProducts.map(p => [p.id, p.buying_cost]));
+
+    const enrichedItems = items.map((item: any) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      product_image: item.product_image,
+      price: item.price,
+      quantity: item.quantity,
+      color: item.color,
+      colorHex: item.colorHex,
+      buying_cost: item.product_id ? (productsMap.get(item.product_id) || 0) : 0
+    }));
+
     // Nested create
     const newOrder = await prisma.order.create({
       data: {
@@ -21,15 +41,7 @@ export async function POST(request: Request) {
         discount_amount: orderData.discount_amount,
         coupon_code: orderData.coupon_code,
         order_notes: orderData.order_notes,
-        items: items.map((item: any) => ({
-          product_id: item.product_id,
-          product_name: item.product_name,
-          product_image: item.product_image,
-          price: item.price,
-          quantity: item.quantity,
-          color: item.color,
-          colorHex: item.colorHex
-        }))
+        items: enrichedItems
       }
     });
 
