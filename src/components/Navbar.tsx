@@ -159,7 +159,7 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
 
-  if (pathname.startsWith("/admin")) return null;
+  if (pathname.startsWith("/admin") || pathname.startsWith("/vendor")) return null;
 
   return (
     <>
@@ -211,7 +211,7 @@ export default function Navbar() {
                 <Image src="/icon.png" alt="Dastiyab Store Logo" fill sizes="48px" style={{ objectFit: "contain" }} />
               </div>
               <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
-                <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
+                <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "var(--yellow-dark)" }}>Store</span>
               </span>
             </Link>
 
@@ -477,7 +477,7 @@ export default function Navbar() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {items.map((item, index) => (
-                    <div key={`${item.id}-${item.color || index}`} style={{ display: "flex", gap: 12, padding: 12, background: "var(--gray-50)", borderRadius: "var(--radius)" }}>
+                    <div key={`${item.id}-${item.color || index}-${item.size || ""}`} style={{ display: "flex", gap: 12, padding: 12, background: "var(--gray-50)", borderRadius: "var(--radius)" }}>
                       <div style={{ position: "relative", width: 64, height: 64 }}>
                         <Image src={item.image} alt={item.name} fill sizes="64px" style={{ objectFit: "cover", borderRadius: 8 }} />
                       </div>
@@ -489,14 +489,17 @@ export default function Navbar() {
                             <span style={{ fontSize: 12, color: "var(--gray-500)" }}>{item.color}</span>
                           </div>
                         )}
+                        {item.size && (
+                          <div style={{ display: "inline-block", fontSize: 12, color: "var(--gray-500)", marginLeft: item.color ? 8 : 0, marginBottom: 4 }}>Size: <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>{item.size}</span></div>
+                        )}
                         <p style={{ color: "var(--red)", fontWeight: 700, fontSize: 15 }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                          <button aria-label="Decrease quantity" onClick={() => updateQuantity(item.id, item.color, Math.max(1, item.quantity - 1))} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Minus size={12} /></button>
+                          <button aria-label="Decrease quantity" onClick={() => updateQuantity(item.id, item.color, item.size, Math.max(1, item.quantity - 1))} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Minus size={12} /></button>
                           <span style={{ fontSize: 13, fontWeight: 600 }}>{item.quantity}</span>
-                          <button aria-label="Increase quantity" onClick={() => updateQuantity(item.id, item.color, item.quantity + 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Plus size={12} /></button>
+                          <button aria-label="Increase quantity" onClick={() => updateQuantity(item.id, item.color, item.size, item.quantity + 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--gray-200)", background: "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--gray-600)" }}><Plus size={12} /></button>
                         </div>
                       </div>
-                      <button aria-label="Remove item" onClick={() => removeFromCart(item.id, item.color)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", alignSelf: "flex-start" }}>
+                      <button aria-label="Remove item" onClick={() => removeFromCart(item.id, item.color, item.size)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", alignSelf: "flex-start" }}>
                         <X size={16} />
                       </button>
                     </div>
@@ -537,7 +540,7 @@ export default function Navbar() {
                   <Image src="/icon.png" alt="Dastiyab Store Logo" fill sizes="40px" style={{ objectFit: "contain" }} />
                 </div>
                 <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
-                  <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
+                  <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "var(--yellow-dark)" }}>Store</span>
                 </span>
               </div>
               <button aria-label="Close mobile menu" onClick={() => setMobileOpen(false)} style={{ background: "var(--gray-100)", border: "none", cursor: "pointer", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>

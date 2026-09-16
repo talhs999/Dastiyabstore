@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Package, FolderTree, ShoppingCart, 
   Users, Star, Settings, LogOut, MessageSquare, LayoutList, Activity,
-  Menu, X, Grid3X3, UserCircle, BarChart, RefreshCw
+  Menu, X, Grid3X3, UserCircle, BarChart, RefreshCw, Store
 } from "lucide-react";
 
 import { useToast } from "@/components/ui/Toast";
@@ -193,6 +193,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "Bundles", href: "/admin/bundles", icon: <Package size={20} /> },
     { label: "Categories", href: "/admin/categories", icon: <FolderTree size={20} /> },
     { label: "Orders", href: "/admin/orders", icon: <ShoppingCart size={20} /> },
+    { label: "Vendors", href: "/admin/vendors", icon: <Store size={20} /> },
     { label: "Customers", href: "/admin/customers", icon: <Users size={20} /> },
     { label: "Reviews", href: "/admin/reviews", icon: <Star size={20} /> },
     { label: "Q&A", href: "/admin/qna", icon: <MessageSquare size={20} /> },
@@ -237,7 +238,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
             <img src="/icon.png" alt="Dastiyab Admin Logo" style={{ height: 40, width: 40, objectFit: "contain", flexShrink: 0, marginLeft: -6 }} />
             <span style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
-              <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "#FFB703" }}>Admin</span>
+              <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "var(--yellow-dark)" }}>Admin</span>
             </span>
           </div>
           <button 
@@ -305,7 +306,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", gap: 4 }}>
             <img src="/icon.png" alt="Dastiyab Admin Logo" style={{ height: 32, width: 32, objectFit: "contain", flexShrink: 0 }} />
             <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
-              <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "#FFB703" }}>Admin</span>
+              <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "var(--yellow-dark)" }}>Admin</span>
             </span>
           </div>
           <div style={{ width: 24 }} /> {/* placeholder for balance */}

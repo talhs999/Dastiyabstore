@@ -10,6 +10,9 @@ export default async function ShopPage() {
       include: {
         category: {
           select: { name: true, slug: true }
+        },
+        store: {
+          select: { id: true, name: true, slug: true }
         }
       },
       orderBy: { created_at: 'desc' }
@@ -36,7 +39,16 @@ export default async function ShopPage() {
       features: p.features,
       isFeatured: p.is_featured,
       isBestSeller: p.is_best_seller,
+      createdAt: p.created_at ? p.created_at.toISOString() : new Date().toISOString(),
+      store: p.store ? { id: p.store.id, name: p.store.name, slug: p.store.slug } : null,
     }));
+
+    // Shuffle array for "Recommended" default sort
+    for (let i = products.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [products[i], products[j]] = [products[j], products[i]];
+    }
+
   } catch (err) {
     console.error("Error fetching products on server:", err);
   }

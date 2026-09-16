@@ -8,6 +8,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Store {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String     @unique
+  logo        String?
+  banner      String?
+  description String?    @db.Text
+  owner_id    String     @unique
+  owner       Customer   @relation(fields: [owner_id], references: [id])
+  is_active   Boolean    @default(true)
+  
+  // Vendor SMTP Settings
+  smtp_host     String?
+  smtp_port     Int?
+  smtp_user     String?
+  smtp_pass     String?
+  smtp_from     String?
+
+  created_at  DateTime   @default(now())
+  
+  products    Product[]
+  categories  Category[]
+  shipping    ShippingRule[]
+  coupons     Coupon[]
+  orders      Order[]
+
+  @@map("stores")
+}
+
 model Category {
   id                    String    @id @default(uuid())
   name                  String
@@ -21,6 +50,8 @@ model Category {
   is_in_header          Boolean   @default(false)
   header_badge          String?
   created_at            DateTime  @default(now())
+  store_id              String?
+  store                 Store?    @relation(fields: [store_id], references: [id])
   products              Product[]
 
   @@map("categories")
@@ -42,6 +73,8 @@ model Product {
   in_stock       Boolean   @default(true)
   category_id    String?
   category       Category? @relation(fields: [category_id], references: [id])
+  store_id       String?
+  store          Store?    @relation(fields: [store_id], references: [id])
   description    String?   @db.Text
   specs          Json      @default("[]")
   features       Json      @default("[]")
@@ -51,11 +84,14 @@ model Product {
   badges         Json?     @default("[]")
   trust_points   Json?     @default("[]")
   colors         Json?     @default("[]")
+  sizes          Json?     @default("[]")
   video_url      String?
   is_bundle      Boolean   @default(false)
   bundle_items   Json?     @default("[]")
   bundle_discount_pc Float?
   buying_cost    Float?    @default(0)
+  free_delivery_karachi Boolean @default(false)
+  free_delivery_nationwide Boolean @default(false)
   created_at     DateTime  @default(now())
   analytics_events ProductAnalyticsEvent[]
 
@@ -67,6 +103,8 @@ model Order {
   customer_id      String?
   total            Float
   status           String   @default("pending")
+  store_id         String?
+  store            Store?   @relation(fields: [store_id], references: [id])
   payment_method   String
   shipping_address Json?
   email            String?
@@ -104,6 +142,7 @@ model Customer {
   reset_token        String?   @db.Text
   reset_token_expiry DateTime?
   created_at         DateTime  @default(now())
+  store              Store?
 
   @@map("customers")
 }
@@ -127,6 +166,8 @@ model Coupon {
   max_uses             Int      @default(0)
   used_count           Int      @default(0)
   created_at           DateTime @default(now())
+  store_id             String?
+  store                Store?   @relation(fields: [store_id], references: [id])
 
   @@map("coupons")
 }
@@ -161,6 +202,8 @@ model ShippingRule {
   estimated_days          String
   is_active               Boolean  @default(true)
   created_at              DateTime @default(now())
+  store_id                String?
+  store                   Store?   @relation(fields: [store_id], references: [id])
 
   @@map("shipping_rules")
 }

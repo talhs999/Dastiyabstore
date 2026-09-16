@@ -5,8 +5,14 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const featured = await prisma.product.findMany({ where: { is_featured: true } });
-    const bestSellers = await prisma.product.findMany({ where: { is_best_seller: true } });
+    const featured = await prisma.product.findMany({ 
+      where: { is_featured: true },
+      include: { store: { select: { id: true, name: true, slug: true } } }
+    });
+    const bestSellers = await prisma.product.findMany({ 
+      where: { is_best_seller: true },
+      include: { store: { select: { id: true, name: true, slug: true } } }
+    });
     const categories = await prisma.category.findMany({ 
       where: { is_in_sidebar: true },
       orderBy: { created_at: 'asc' } 

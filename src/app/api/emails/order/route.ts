@@ -60,6 +60,28 @@ export async function POST(req: Request) {
       }
     }
 
+    // Fetch vendor store if applicable
+    let vendorStore = null;
+    if (order.store_id) {
+      vendorStore = await prisma.store.findUnique({
+        where: { id: order.store_id },
+        include: { owner: true }
+      });
+    }
+
+    let vendorHasSmtp = false;
+    if (vendorStore && vendorStore.smtp_host && vendorStore.smtp_user && vendorStore.smtp_pass) {
+      vendorHasSmtp = true;
+      smtpSettings = {
+        host: vendorStore.smtp_host,
+        port: vendorStore.smtp_port || 465,
+        user: vendorStore.smtp_user,
+        password: vendorStore.smtp_pass,
+        senderName: vendorStore.name,
+        adminEmail: vendorStore.smtp_from || vendorStore.smtp_user // Fallback to user email for admin notifications
+      };
+    }
+
     // 2. Set up Nodemailer Transporter
     const transporter = nodemailer.createTransport({
       host: smtpSettings.host,
@@ -164,7 +186,11 @@ export async function POST(req: Request) {
                 ${item.product_image ? `<img src="${item.product_image}" alt="${item.product_name}" width="50" height="50" style="object-fit: contain; margin-right: 12px; border-radius: 4px; border: 1px solid #e5e7eb;" />` : ""}
                 <div>
                   <div style="font-weight: 700; color: #1f2937; font-size: 14px;">${item.product_name}</div>
-                  <div style="font-size: 12px; color: #6b7280;">Qty: ${item.quantity}</div>
+                  <div style="font-size: 12px; color: #6b7280; display: flex; gap: 8px;">
+                    <span>Qty: ${item.quantity}</span>
+                    ${item.color ? `<span>Color: ${item.color}</span>` : ""}
+                    ${item.size ? `<span>Size: ${item.size}</span>` : ""}
+                  </div>
                 </div>
               </div>
             </td>

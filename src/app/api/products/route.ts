@@ -30,6 +30,9 @@ export async function GET(request: Request) {
       include: {
         category: {
           select: { name: true, slug: true }
+        },
+        store: {
+          select: { name: true, slug: true }
         }
       },
       orderBy: { created_at: 'desc' }

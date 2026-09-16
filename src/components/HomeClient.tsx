@@ -105,6 +105,7 @@ function InstagramCarousel({ posts }: { posts: any[] }) {
               height="540"
               frameBorder="0"
               scrolling="no"
+              loading="lazy"
               style={{ border: "none", background: "white", display: "block" }}
             />
           </div>
@@ -122,6 +123,7 @@ function InstagramCarousel({ posts }: { posts: any[] }) {
               height="540"
               frameBorder="0"
               scrolling="no"
+              loading="lazy"
               style={{ border: "none", background: "white", display: "block" }}
             />
           </div>
@@ -546,7 +548,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
         {/* Slide indicators */}
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 24px 32px", display: "flex", justifyContent: "flex-start", alignItems: "center", gap: 8 }}>
           {banners.map((_: any, i: number) => (
-            <button key={i} onClick={() => setActiveSlide(i)} style={{
+            <button key={i} aria-label={`Go to slide ${i + 1}`} onClick={() => setActiveSlide(i)} style={{
               width: i === activeSlide ? 28 : 8, height: 8, borderRadius: 4,
               background: i === activeSlide ? "var(--red)" : "var(--gray-300)",
               border: "none", cursor: "pointer", transition: "all 0.3s ease", padding: 0,
@@ -595,7 +597,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
             </Link>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 24 }}>
-            {featured.map((product: any) => <ProductCard key={product.id} product={product} />)}
+            {featured.map((product: any, index: number) => <ProductCard key={product.id} product={product} priority={index < 4} />)}
           </div>
         </div>
       </section>
@@ -1001,10 +1003,10 @@ export default function HomeClient({ initialData }: { initialData: any }) {
           
           {siteReviews.length > 0 && (
             <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 32 }}>
-              <button onClick={() => scrollReviews("left")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
+              <button aria-label="Previous review" onClick={() => scrollReviews("left")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
                 <ChevronLeft size={20} />
               </button>
-              <button onClick={() => scrollReviews("right")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
+              <button aria-label="Next review" onClick={() => scrollReviews("right")} style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}>
                 <ChevronRight size={20} />
               </button>
             </div>

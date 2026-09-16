@@ -11,13 +11,18 @@ export interface CartItem {
   quantity: number;
   color?: string;
   colorHex?: string;
+  size?: string;
+  freeDeliveryKarachi?: boolean;
+  freeDeliveryNationwide?: boolean;
+  storeId?: string;
+  storeName?: string;
 }
 
 interface CartStore {
   items: CartItem[];
   addToCart: (item: Omit<CartItem, "quantity">) => void;
-  removeFromCart: (id: string, color?: string) => void;
-  updateQuantity: (id: string, color: string | undefined, qty: number) => void;
+  removeFromCart: (id: string, color?: string, size?: string) => void;
+  updateQuantity: (id: string, color: string | undefined, size: string | undefined, qty: number) => void;
   clearCart: () => void;
 }
 
@@ -45,24 +50,24 @@ const useCartStore = create<CartStore>()(
               body: JSON.stringify({ productId: item.id })
             }).catch(e => console.error("Analytics tracking failed", e));
           }
-          const existing = state.items.find((i) => i.id === item.id && i.color === item.color);
+          const existing = state.items.find((i) => i.id === item.id && i.color === item.color && i.size === item.size);
           if (existing) {
             return {
               items: state.items.map((i) =>
-                (i.id === item.id && i.color === item.color) ? { ...i, quantity: Math.min(i.quantity + 1, 5) } : i
+                (i.id === item.id && i.color === item.color && i.size === item.size) ? { ...i, quantity: Math.min(i.quantity + 1, 5) } : i
               ),
             };
           }
           return { items: [...state.items, { ...item, quantity: 1 }] };
         }),
-      removeFromCart: (id, color) =>
-        set((state) => ({ items: state.items.filter((i) => !(i.id === id && i.color === color)) })),
-      updateQuantity: (id, color, qty) =>
+      removeFromCart: (id, color, size) =>
+        set((state) => ({ items: state.items.filter((i) => !(i.id === id && i.color === color && i.size === size)) })),
+      updateQuantity: (id, color, size, qty) =>
         set((state) => {
           if (qty < 1) return state;
           return {
             items: state.items.map((i) =>
-              (i.id === id && i.color === color) ? { ...i, quantity: Math.min(qty, 5) } : i
+              (i.id === id && i.color === color && i.size === size) ? { ...i, quantity: Math.min(qty, 5) } : i
             ),
           };
         }),

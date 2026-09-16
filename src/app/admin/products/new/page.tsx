@@ -20,6 +20,7 @@ export default function AddProductPage() {
   ]);
   const [features, setFeatures] = useState<string[]>([""]);
   const [colors, setColors] = useState<{name: string, hex: string}[]>([]);
+  const [sizes, setSizes] = useState<string[]>([]);
 
   const PREDEFINED_COLORS = [
     { name: "Black", hex: "#000000" },
@@ -60,7 +61,9 @@ export default function AddProductPage() {
     in_stock: true,
     stock_quantity: "10",
     is_featured: false,
-    is_best_seller: false
+    is_best_seller: false,
+    free_delivery_karachi: false,
+    free_delivery_nationwide: false
   });
 
   useEffect(() => {
@@ -131,6 +134,15 @@ export default function AddProductPage() {
   const handleRemoveFeature = (index: number) => {
     setFeatures(features.filter((_, i) => i !== index));
   };
+
+    // Sizes handlers
+  const handleAddSize = () => setSizes([...sizes, ""]);
+  const handleSizeChange = (index: number, val: string) => {
+    const newSizes = [...sizes];
+    newSizes[index] = val;
+    setSizes(newSizes);
+  };
+  const handleRemoveSize = (index: number) => setSizes(sizes.filter((_, i) => i !== index));
 
   // Colors handlers
   const handleToggleColor = (color: {name: string, hex: string}) => {
@@ -206,9 +218,12 @@ export default function AddProductPage() {
         stock_quantity: calculatedQty,
         is_featured: formData.is_featured,
         is_best_seller: formData.is_best_seller,
+        free_delivery_karachi: formData.free_delivery_karachi,
+        free_delivery_nationwide: formData.free_delivery_nationwide,
         specs: specs.filter(s => s.label.trim() !== "" || s.value.trim() !== ""),
         features: features.filter(f => f.trim() !== ""),
         trust_points: trustPoints.filter(tp => tp.text.trim() !== ""),
+        sizes: sizes.filter(s => s.trim() !== ""),
         colors: colors,
         video_url: videoUrl
       };
@@ -404,6 +419,30 @@ export default function AddProductPage() {
               );
             })}
           </div>
+        </div>
+
+        
+        {/* Sizes Section */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+            <label className="label" style={{ marginBottom: 0 }}>Available Sizes</label>
+            <button type="button" onClick={handleAddSize} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--red)", background: "var(--red-light)", padding: "6px 12px", borderRadius: 6, border: "none", cursor: "pointer" }}>
+              <Plus size={14} /> Add Size
+            </button>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: -12 }}>Add sizes available for this product (e.g. S, M, L, 32). Leave empty if there are no size options.</p>
+          {sizes.length > 0 && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
+              {sizes.map((size, index) => (
+                <div key={index} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input className="input" placeholder="e.g. S, M, L" value={size} onChange={e => handleSizeChange(index, e.target.value)} style={{ flex: 1, padding: 10, background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: 8 }} />
+                  <button type="button" onClick={() => handleRemoveSize(index)} style={{ color: "var(--gray-500)", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Badges Section */}
@@ -824,6 +863,17 @@ export default function AddProductPage() {
               <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontWeight: 600 }}>
                 <input type="checkbox" checked={formData.is_best_seller} onChange={e => setFormData({ ...formData, is_best_seller: e.target.checked })} style={{ width: 18, height: 18 }} />
                 Best Seller
+              </label>
+            </div>
+            <label className="label" style={{ marginBottom: 12, marginTop: 24 }}>Shipping Settings</label>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontWeight: 600 }}>
+                <input type="checkbox" checked={formData.free_delivery_karachi} onChange={e => setFormData({ ...formData, free_delivery_karachi: e.target.checked })} style={{ width: 18, height: 18 }} />
+                Free Delivery (Karachi)
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontWeight: 600 }}>
+                <input type="checkbox" checked={formData.free_delivery_nationwide} onChange={e => setFormData({ ...formData, free_delivery_nationwide: e.target.checked })} style={{ width: 18, height: 18 }} />
+                Free Delivery (Out of City)
               </label>
             </div>
           </div>

@@ -9,7 +9,8 @@ export async function POST(request: Request) {
 
     // Try matching by email
     let user = await prisma.customer.findFirst({
-      where: { email: cleanEmail, password: cleanPassword }
+      where: { email: cleanEmail, password: cleanPassword },
+      include: { store: true }
     });
 
 

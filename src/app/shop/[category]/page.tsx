@@ -12,7 +12,10 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   // Fetch products on the server! No more client-side useEffect bugs.
   const products = await prisma.product.findMany({
     where: { category: { slug: categorySlug } },
-    include: { category: { select: { name: true, slug: true } } },
+    include: { 
+      category: { select: { name: true, slug: true } },
+      store: { select: { id: true, name: true, slug: true } }
+    },
     orderBy: { created_at: 'desc' }
   });
 
@@ -39,7 +42,15 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     features: p.features,
     isFeatured: p.is_featured,
     isBestSeller: p.is_best_seller,
+    createdAt: p.created_at ? p.created_at.toISOString() : new Date().toISOString(),
+    store: p.store ? { id: p.store.id, name: p.store.name, slug: p.store.slug } : null,
   }));
+
+  // Shuffle array for "Recommended" default sort
+  for (let i = mappedProducts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [mappedProducts[i], mappedProducts[j]] = [mappedProducts[j], mappedProducts[i]];
+  }
 
   return (
     <Suspense fallback={<div style={{ padding: "100px 40px", textAlign: "center", color: "var(--gray-500)", fontSize: 16 }}>Loading Category...</div>}>

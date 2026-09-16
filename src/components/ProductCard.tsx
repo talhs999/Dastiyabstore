@@ -23,7 +23,7 @@ interface Product {
   [key: string]: any;
 }
 
-export default function ProductCard({ product, view = "grid" }: { product: Product; view?: "grid" | "list" }) {
+export default function ProductCard({ product, view = "grid", priority = false }: { product: Product; view?: "grid" | "list"; priority?: boolean }) {
   const { addToCart } = useCart();
   const { showToast } = useToast();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -34,7 +34,16 @@ export default function ProductCard({ product, view = "grid" }: { product: Produ
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    addToCart({ id: product.id, name: product.name, price: product.price, image: product.image });
+    addToCart({ 
+      id: product.id, 
+      name: product.name, 
+      price: product.price, 
+      image: product.image,
+      freeDeliveryKarachi: product.free_delivery_karachi,
+      freeDeliveryNationwide: product.free_delivery_nationwide,
+      storeId: product.store?.id || "dastiyab",
+      storeName: product.store?.name || "Dastiyab Store"
+    });
     showToast(`${product.name} added to cart!`);
   };
 
@@ -110,15 +119,13 @@ export default function ProductCard({ product, view = "grid" }: { product: Produ
           overflow: "hidden",
           aspectRatio: "1 / 1"
         }}>
-          <img
+          <Image
             src={product.image || "https://placehold.co/400x400?text=No+Image"}
             alt={product.name}
+            fill
+            priority={priority}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
               objectFit: "cover",
               transition: "transform 0.5s ease"
             }}
@@ -153,6 +160,12 @@ export default function ProductCard({ product, view = "grid" }: { product: Produ
           <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--gray-900)", marginBottom: 6, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {product.name}
           </h3>
+          {/* Store Info */}
+          {product.store && (
+            <div style={{ fontSize: 11, color: "var(--gray-500)", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
+              Sold by <Link href={`/store/${product.store.slug}`} style={{ color: "var(--red)", fontWeight: 600, textDecoration: "none" }}>{product.store.name}</Link>
+            </div>
+          )}
           {/* Stars */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
             <div className="stars">

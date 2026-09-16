@@ -36,7 +36,7 @@ export default function CartPage() {
           {/* Cart Items */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {items.map((item, index) => (
-              <div key={`${item.id}-${item.color || index}`} className="cart-item" style={{ background: "white", borderRadius: "var(--radius-lg)", padding: "16px", boxShadow: "var(--shadow-sm)", border: "1px solid var(--gray-200)", display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+              <div key={`${item.id}-${item.color || index}-${item.size || ""}`} className="cart-item" style={{ background: "white", borderRadius: "var(--radius-lg)", padding: "16px", boxShadow: "var(--shadow-sm)", border: "1px solid var(--gray-200)", display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
                 
                 {/* Image and Details */}
                 <div style={{ display: "flex", gap: 16, flex: "1 1 250px", alignItems: "center" }}>
@@ -51,6 +51,9 @@ export default function CartPage() {
                         <span style={{ fontSize: 13, color: "var(--gray-500)", fontWeight: 500 }}>{item.color}</span>
                       </div>
                     )}
+                    {item.size && (
+                      <div style={{ fontSize: 13, color: "var(--gray-500)", fontWeight: 500, marginBottom: 6 }}>Size: <span style={{ fontWeight: 700, color: "var(--gray-900)" }}>{item.size}</span></div>
+                    )}
                     <p style={{ color: "var(--red)", fontWeight: 800, fontSize: 16 }}>Rs. {item.price.toLocaleString()}</p>
                   </div>
                 </div>
@@ -58,13 +61,13 @@ export default function CartPage() {
                 {/* Quantity and Total */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flex: "1 1 200px", gap: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--gray-50)", padding: "4px 8px", borderRadius: 8, border: "1px solid var(--gray-200)" }}>
-                    <button onClick={() => updateQuantity(item.id, item.color, item.quantity - 1)} className="qty-btn" style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "var(--gray-600)" }}><Minus size={16} /></button>
+                    <button onClick={() => updateQuantity(item.id, item.color, item.size, item.quantity - 1)} className="qty-btn" style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "var(--gray-600)" }}><Minus size={16} /></button>
                     <span style={{ fontWeight: 700, fontSize: 15, minWidth: 24, textAlign: "center", color: "var(--gray-900)" }}>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.color, item.quantity + 1)} className="qty-btn" style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "var(--gray-600)" }}><Plus size={16} /></button>
+                    <button onClick={() => updateQuantity(item.id, item.color, item.size, item.quantity + 1)} className="qty-btn" style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "var(--gray-600)" }}><Plus size={16} /></button>
                   </div>
                   <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
                     <p style={{ fontWeight: 800, fontSize: 17, color: "var(--gray-900)" }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
-                    <button onClick={() => removeFromCart(item.id, item.color)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--red)", marginTop: 4, padding: "4px 0", display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
+                    <button onClick={() => removeFromCart(item.id, item.color, item.size)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--red)", marginTop: 4, padding: "4px 0", display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600 }}>
                       <Trash2 size={14} /> Remove
                     </button>
                   </div>

@@ -17,7 +17,11 @@ export async function GET(request: Request, context: any) {
           { id: slug },
           { slug: slug }
         ]
-      } : { slug: slug }
+      } : { slug: slug },
+      include: {
+        category: true,
+        store: { select: { id: true, name: true, slug: true } }
+      }
     });
 
     if (!product) {

@@ -212,7 +212,7 @@ export default function AdminOrdersPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       <img src="/icon.png" alt="Dastiyab Store Logo" style={{ height: 56, width: 56, objectFit: "contain", flexShrink: 0, marginLeft: -8 }} />
                       <span style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
-                        <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "#FFB703" }}>Store</span>
+                        <span style={{ color: "var(--red)" }}>Dastiyab</span><span style={{ color: "var(--yellow-dark)" }}>Store</span>
                       </span>
                     </div>
                     <p style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 4 }}>Karachi, Pakistan | Support: 0316-2975195</p>
@@ -259,7 +259,16 @@ export default function AdminOrdersPage() {
                   <tbody>
                     {order.order_items?.map((item: any, i: number) => (
                       <tr key={i} style={{ borderBottom: "1px solid var(--gray-200)" }}>
-                        <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 600, color: "var(--gray-800)" }}>{item.product_name}</td>
+                        <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 600, color: "var(--gray-800)" }}>
+                            {item.product_name}
+                            {(item.color || item.size) && (
+                              <div style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 500, marginTop: 2 }}>
+                                {item.color ? `Color: ${item.color}` : ""}
+                                {item.color && item.size ? " | " : ""}
+                                {item.size ? `Size: ${item.size}` : ""}
+                              </div>
+                            )}
+                          </td>
                         <td style={{ padding: "10px 12px", fontSize: 12, color: "var(--gray-700)", textAlign: "center" }}>{item.quantity}</td>
                         <td style={{ padding: "10px 12px", fontSize: 12, color: "var(--gray-700)", textAlign: "right" }}>Rs {item.price.toLocaleString()}</td>
                         <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "var(--gray-900)", textAlign: "right" }}>Rs {(item.price * item.quantity).toLocaleString()}</td>
@@ -619,6 +628,11 @@ export default function AdminOrdersPage() {
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
                             <div style={{ width: 10, height: 10, borderRadius: "50%", background: item.colorHex || "#ccc", border: "1px solid var(--gray-200)" }}></div>
                             <span style={{ fontSize: 11, color: "var(--gray-500)" }}>{item.color}</span>
+                          </div>
+                        )}
+                        {item.size && (
+                          <div style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 2, fontWeight: 500 }}>
+                            Size: <span style={{ fontWeight: 700 }}>{item.size}</span>
                           </div>
                         )}
                         <div style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 2 }}>Qty: {item.quantity} × Rs {item.price.toLocaleString()}</div>

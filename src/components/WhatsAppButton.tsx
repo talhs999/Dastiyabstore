@@ -8,6 +8,7 @@ export default function WhatsAppButton() {
       href="https://wa.me/923162975195" 
       target="_blank" 
       rel="noopener noreferrer"
+      aria-label="Chat on WhatsApp"
       style={{
         position: "fixed",
         bottom: 24,

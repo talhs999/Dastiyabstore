@@ -6,7 +6,6 @@ import ProductCard from "@/components/ProductCard";
 import ShopSidebar from "@/components/ShopSidebar";
 import Link from "next/link";
 
-const sortOptions = ["Newest First", "Price: Low to High", "Price: High to Low", "Most Popular", "Top Rated"];
 
 const categoryMap: Record<string, string> = {
   "neck-fan": "Neck Fan",
@@ -19,13 +18,18 @@ const categoryMap: Record<string, string> = {
   "kitchen-accessiories": "Kitchen Accessories",
 };
 
+const sortOptions = ["Recommended", "Newest First", "Price: Low to High", "Price: High to Low", "Most Popular", "Top Rated"];
+
 export default function CategoryClient({ categorySlug, initialProducts }: { categorySlug: string, initialProducts: any[] }) {
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [sort, setSort] = useState("Newest First");
+  const [sort, setSort] = useState("Recommended");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const searchParams = useSearchParams();
   const categoryName = categoryMap[categorySlug] || categorySlug.replace("-", " ");
+
+  // Make sure we have a valid array even if initialProducts is undefined/null
+  const dbProducts = initialProducts || [];
 
   const filteredProducts = useMemo(() => {
     const q = searchParams.get("q")?.toLowerCase();
@@ -34,9 +38,21 @@ export default function CategoryClient({ categorySlug, initialProducts }: { cate
     const rating = searchParams.get("rating") ? Number(searchParams.get("rating")) : 0;
     const tags = searchParams.get("tags") ? searchParams.get("tags")!.split(",") : [];
 
-    let filtered = initialProducts.filter(p => {
+    let filtered = dbProducts.filter(p => {
       // Search query
-      if (q && !p.name.toLowerCase().includes(q) && !p.description.toLowerCase().includes(q)) return false;
+      if (q) {
+        const searchTerms = q.split(/\s+/).filter(Boolean);
+        const nameClean = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const descClean = p.description ? p.description.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        
+        const matchesAll = searchTerms.every(term => {
+          const termClean = term.replace(/[^a-z0-9]/g, '');
+          if (!termClean) return true;
+          return nameClean.includes(termClean) || descClean.includes(termClean);
+        });
+        if (!matchesAll) return false;
+      }
+      
       // Price range
       if (p.price < min || p.price > max) return false;
       // Rating
@@ -54,13 +70,21 @@ export default function CategoryClient({ categorySlug, initialProducts }: { cate
     });
 
     // Sorting
-    if (sort === "Price: Low to High") filtered.sort((a, b) => a.price - b.price);
-    else if (sort === "Price: High to Low") filtered.sort((a, b) => b.price - a.price);
-    else if (sort === "Most Popular") filtered.sort((a, b) => b.reviews - a.reviews);
-    else if (sort === "Top Rated") filtered.sort((a, b) => b.rating - a.rating);
+    if (sort === "Newest First") {
+      filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    } else if (sort === "Price: Low to High") {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sort === "Price: High to Low") {
+      filtered.sort((a, b) => b.price - a.price);
+    } else if (sort === "Most Popular") {
+      filtered.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+    } else if (sort === "Top Rated") {
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+    // For "Recommended", we don't sort at all. We just use the randomized order provided by the server!
 
     return filtered;
-  }, [initialProducts, searchParams, sort]);
+  }, [dbProducts, searchParams, sort]);
 
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 24px" }}>

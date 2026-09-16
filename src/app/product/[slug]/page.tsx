@@ -40,6 +40,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   const [qty, setQty] = useState(1);
   const [selectedColor, setSelectedColor] = useState<{name: string, hex: string} | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("description");
   const [activeImg, setActiveImg] = useState(0);
   const [showShare, setShowShare] = useState(false);
@@ -111,6 +112,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           } catch(e) {}
           if (parsedColors.length === 1) {
             setSelectedColor(parsedColors[0]);
+          }
+
+          let parsedSizes = [];
+          try {
+             parsedSizes = Array.isArray(mapped.sizes) ? mapped.sizes : (typeof mapped.sizes === 'string' ? JSON.parse(mapped.sizes) : []);
+          } catch(e) {}
+          if (parsedSizes.length === 1) {
+            setSelectedSize(parsedSizes[0]);
           }
 
           setReviews(data.reviews || []);
@@ -278,10 +287,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   }
 
   const productColors = Array.isArray(product.colors) ? product.colors : (typeof product.colors === 'string' ? (function() { try { return JSON.parse(product.colors); } catch { return []; } })() : (product.colors || []));
+  const productSizes = Array.isArray(product.sizes) ? product.sizes : (typeof product.sizes === "string" ? (function() { try { return JSON.parse(product.sizes); } catch { return []; } })() : (product.sizes || []));
 
   const handleAdd = () => {
     if (productColors.length > 0 && !selectedColor) {
       showToast("Please select a color first", "error");
+      return;
+    }
+
+    if (productSizes.length > 0 && !selectedSize) {
+      showToast("Please select a size first", "error");
       return;
     }
     for (let i = 0; i < qty; i++) {
@@ -291,10 +306,23 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         price: product.price, 
         image: product.image,
         color: selectedColor?.name,
-        colorHex: selectedColor?.hex
+        colorHex: selectedColor?.hex,
+        size: selectedSize || undefined,
+        freeDeliveryKarachi: product.free_delivery_karachi,
+        freeDeliveryNationwide: product.free_delivery_nationwide,
+        storeId: product.store?.id || "dastiyab",
+        storeName: product.store?.name || "Dastiyab Store"
       });
     }
     showToast(`${qty}x ${product.name} ${selectedColor ? `(${selectedColor.name}) ` : ''}added!`);
+    if (typeof window !== "undefined") {
+      (window as any).fbq?.('track', 'AddToCart', {
+        value: product.price * qty,
+        currency: 'PKR',
+        content_ids: [product.id],
+        content_type: 'product',
+      });
+    }
   };
 
   const handleBuyNow = () => {
@@ -302,6 +330,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       showToast("Please select a color first", "error");
       return;
     }
+
+    if (productSizes.length > 0 && !selectedSize) {
+      showToast("Please select a size first", "error");
+      return;
+    }
     for (let i = 0; i < qty; i++) {
       addToCart({ 
         id: product.id, 
@@ -309,7 +342,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         price: product.price, 
         image: product.image,
         color: selectedColor?.name,
-        colorHex: selectedColor?.hex
+        colorHex: selectedColor?.hex,
+        size: selectedSize || undefined,
+        freeDeliveryKarachi: product.free_delivery_karachi,
+        freeDeliveryNationwide: product.free_delivery_nationwide,
+        storeId: product.store?.id || "dastiyab",
+        storeName: product.store?.name || "Dastiyab Store"
       });
     }
     router.push("/checkout");
@@ -521,6 +559,20 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             )}
           </div>
 
+          {/* Free Delivery Showcase */}
+          {(product.free_delivery_karachi || product.free_delivery_nationwide) && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24, padding: "12px 16px", background: "#fef2f2", border: "1px dashed var(--red)", borderRadius: "var(--radius)", color: "var(--red)" }}>
+              <Truck size={20} style={{ flexShrink: 0 }} />
+              <div style={{ fontSize: 14, fontWeight: 700 }}>
+                {product.free_delivery_karachi && product.free_delivery_nationwide 
+                  ? "Free Delivery Available Across Pakistan!" 
+                  : product.free_delivery_karachi 
+                    ? "Free Delivery Available in Karachi!" 
+                    : "Free Delivery Available Nationwide (Excl. Karachi)"}
+              </div>
+            </div>
+          )}
+
           {/* Availability */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
             <CheckCircle size={16} color={!isOutOfStock ? "#16a34a" : "var(--gray-400)"} />
@@ -634,6 +686,40 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                         <span style={{ fontSize: 14, fontWeight: selectedColor?.name === color.name ? 600 : 500, color: selectedColor?.name === color.name ? "var(--blue)" : "var(--gray-700)" }}>
                           {color.name}
                         </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+                            {/* Size Selection */}
+              {productSizes && productSizes.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <label className="label">Size <span style={{ color: "var(--red)" }}>*</span></label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                    {productSizes.map((size: string) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: 48,
+                          height: 48,
+                          padding: "0 16px",
+                          borderRadius: "var(--radius)",
+                          border: `2px solid ${selectedSize === size ? "var(--red)" : "var(--gray-200)"}`,
+                          background: selectedSize === size ? "var(--red)" : "white",
+                          color: selectedSize === size ? "white" : "var(--gray-700)",
+                          fontWeight: selectedSize === size ? 700 : 600,
+                          fontSize: 15,
+                          cursor: "pointer",
+                          boxShadow: selectedSize === size ? "0 4px 12px rgba(220, 38, 38, 0.2)" : "var(--shadow-sm)",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        {size}
                       </button>
                     ))}
                   </div>

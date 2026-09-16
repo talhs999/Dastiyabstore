@@ -69,7 +69,7 @@ export default function Footer() {
     fetchSetting();
   }, []);
 
-  if (pathname.startsWith("/admin")) return null;
+  if (pathname.startsWith("/admin") || pathname.startsWith("/vendor")) return null;
 
   const isGiftsPage = pathname.startsWith("/gifts");
 
@@ -192,7 +192,7 @@ export default function Footer() {
                 <Image src="/icon.png" alt="Dastiyab Store Logo" fill sizes="56px" style={{ objectFit: "contain" }} />
               </div>
                 <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.5px", whiteSpace: "nowrap" }}>
-                  <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "#FFB703" }}>Store</span>
+                  <span style={{ color: "var(--red)" }}>Dastiyab</span> <span style={{ color: "var(--yellow-dark)" }}>Store</span>
                 </span>
               </div>
               <p style={{ color: "var(--gray-600)", fontSize: 14, lineHeight: 1.8, marginBottom: 32 }}>
@@ -236,6 +236,13 @@ export default function Footer() {
                     </Link>
                   </li>
                 ))}
+                <li>
+                  <Link href="/vendor-login" style={{ color: "var(--gray-600)", textDecoration: "none", fontSize: 14, transition: "color 0.2s" }} 
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--yellow)"} 
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--gray-600)"}>
+                    Vendor Login
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -286,7 +293,7 @@ export default function Footer() {
                       <MapPin size={16} /> View on Google Maps
                     </Link>
                     <div style={{ borderRadius: 8, overflow: "hidden", border: "1px solid var(--gray-200)" }}>
-                      <iframe src={contact.mapIframe} width="100%" height="120" style={{ border: 0, display: "block" }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                      <iframe title="Google Maps Location" src={contact.mapIframe} width="100%" height="120" style={{ border: 0, display: "block" }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
                     </div>
                   </li>
                 )}

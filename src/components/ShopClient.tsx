@@ -6,11 +6,11 @@ import ProductCard from "@/components/ProductCard";
 import ShopSidebar from "@/components/ShopSidebar";
 import { products } from "@/data/products";
 
-const sortOptions = ["Newest First", "Price: Low to High", "Price: High to Low", "Most Popular", "Top Rated"];
+const sortOptions = ["Recommended", "Newest First", "Price: Low to High", "Price: High to Low", "Most Popular", "Top Rated"];
 
 function ShopContent({ initialProducts }: { initialProducts: any[] }) {
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [sort, setSort] = useState("Newest First");
+  const [sort, setSort] = useState("Recommended");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Use initialProducts directly, no need for useEffect fetch fallback
@@ -57,10 +57,18 @@ function ShopContent({ initialProducts }: { initialProducts: any[] }) {
     });
 
     // Sorting
-    if (sort === "Price: Low to High") filtered.sort((a, b) => a.price - b.price);
-    else if (sort === "Price: High to Low") filtered.sort((a, b) => b.price - a.price);
-    else if (sort === "Most Popular") filtered.sort((a, b) => b.reviews - a.reviews);
-    else if (sort === "Top Rated") filtered.sort((a, b) => b.rating - a.rating);
+    if (sort === "Newest First") {
+      filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    } else if (sort === "Price: Low to High") {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sort === "Price: High to Low") {
+      filtered.sort((a, b) => b.price - a.price);
+    } else if (sort === "Most Popular") {
+      filtered.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+    } else if (sort === "Top Rated") {
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+    // For "Recommended", we don't sort at all. We just use the randomized order provided by the server!
 
     return filtered;
   }, [dbProducts, searchParams, sort]);

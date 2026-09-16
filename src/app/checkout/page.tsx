@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { CheckCircle, User, MapPin, Phone, Mail, Zap, Truck, Shield, ChevronRight, Loader2, Landmark } from "lucide-react";
+import { CheckCircle, User, MapPin, Phone, Mail, Zap, Truck, Shield, ChevronRight, Loader2, Landmark, Store } from "lucide-react";
 import { useCart } from "@/store/cartStore";
 import { useSettings } from "@/components/SettingsProvider";
 
@@ -267,29 +267,46 @@ export default function CheckoutPage() {
     }
   }, [form.city, selectedPaymentMethod, paymentSettings]);
 
-  // 2. Recalculate Shipping Fee dynamically
+  // Store Grouping for Multi-Vendor
+  const groupedStores = useMemo(() => {
+    const groups: Record<string, { storeId: string, storeName: string, items: any[], subtotal: number, shippingFee: number, explanation: string }> = {};
+    items.forEach(item => {
+      const sId = item.storeId || "dastiyab";
+      if (!groups[sId]) {
+        groups[sId] = { storeId: sId, storeName: item.storeName || "Dastiyab Store", items: [], subtotal: 0, shippingFee: 0, explanation: "" };
+      }
+      groups[sId].items.push(item);
+      groups[sId].subtotal += (item.price * item.quantity);
+    });
+    return Object.values(groups);
+  }, [items]);
+
+  const [storeShipping, setStoreShipping] = useState<Record<string, { fee: number, explanation: string }>>({});
+
+  // 2. Recalculate Shipping Fee dynamically per store
   useEffect(() => {
     if (!form.city) {
       setShippingFee(0);
       setShippingExplanation("Select city to calculate shipping.");
       setEstimatedDays("2-3 Business Days");
+      setStoreShipping({});
       return;
     }
 
     // Find rule for selected city
     let rule = shippingRules.find(r => r.city.toLowerCase() === form.city.toLowerCase());
-    
-    // Fallback to Default rule if city rule not found
     if (!rule) {
       rule = shippingRules.find(r => r.city.toLowerCase() === "default") || 
              shippingRules.find(r => r.name.toLowerCase().includes("default")) ||
              DEFAULT_SHIPPING_RULES[1];
     }
-
     if (!rule) {
-      setShippingFee(250);
+      setShippingFee(250 * groupedStores.length);
       setShippingExplanation("Standard countrywide shipping applied.");
       setEstimatedDays("3-5 Business Days");
+      const temp: any = {};
+      groupedStores.forEach(s => temp[s.storeId] = { fee: 250, explanation: "Standard countrywide shipping" });
+      setStoreShipping(temp);
       return;
     }
 
@@ -301,61 +318,65 @@ export default function CheckoutPage() {
     const freeMaxKm = rule.free_delivery_km !== null && rule.free_delivery_km !== undefined ? Number(rule.free_delivery_km) : null;
     const freeAreasList = rule.free_areas ? rule.free_areas.split(",").map((a: string) => a.trim().toLowerCase()) : [];
 
-    // Calculate distance for Karachi local rule
     let distance = 0;
     if (form.city.toLowerCase() === "karachi") {
       const areaObj = karachiAreas.find(a => a.name === selectedArea);
       distance = areaObj ? areaObj.distance : 0;
     }
 
-    let isFree = false;
-    let explanation = "";
+    let totalShipping = 0;
+    const newStoreShipping: Record<string, { fee: number, explanation: string }> = {};
 
-    // 1. Check if area is in the "always free delivery" list (regardless of order amount)
-    if (freeAreasList.length > 0 && form.city.toLowerCase() === "karachi") {
-      const areaNameToCheck = selectedArea.toLowerCase();
-      const isInFreeArea = freeAreasList.some((fa: string) => areaNameToCheck.includes(fa) || fa.includes(areaNameToCheck));
-      if (isInFreeArea) {
+    groupedStores.forEach(store => {
+      let isFree = false;
+      let explanation = "";
+
+      // Product level overrides
+      const hasKarachiFreeItem = store.items.some((item: any) => item.freeDeliveryKarachi);
+      const hasNationwideFreeItem = store.items.some((item: any) => item.freeDeliveryNationwide);
+      const isKarachiCity = form.city.toLowerCase() === "karachi";
+
+      if ((isKarachiCity && (hasKarachiFreeItem || hasNationwideFreeItem)) || (!isKarachiCity && hasNationwideFreeItem)) {
         isFree = true;
-        explanation = `Free delivery — your area is eligible for free shipping!`;
-      }
-    }
-
-    // 2. Check free delivery by order threshold (for areas not already free)
-    if (!isFree && totalPrice >= freeThreshold) {
-      let kmEligible = true;
-
-      // Check if distance is restricted for free shipping
-      if (freeMaxKm !== null && distance > freeMaxKm) {
-        kmEligible = false;
+        explanation = `Free delivery for this store!`;
       }
 
-      if (kmEligible) {
-        isFree = true;
-        explanation = `Free shipping applied (Order above Rs. ${freeThreshold.toLocaleString()})`;
+      // Area always free
+      if (!isFree && freeAreasList.length > 0 && form.city.toLowerCase() === "karachi") {
+        const areaNameToCheck = selectedArea.toLowerCase();
+        if (freeAreasList.some((fa: string) => areaNameToCheck.includes(fa) || fa.includes(areaNameToCheck))) {
+          isFree = true;
+          explanation = `Free delivery to your area!`;
+        }
+      }
+
+      // Threshold check
+      if (!isFree && store.subtotal >= freeThreshold) {
+        if (freeMaxKm === null || distance <= freeMaxKm) {
+          isFree = true;
+          explanation = `Free shipping (Store order > Rs. ${freeThreshold.toLocaleString()})`;
+        } else {
+          explanation = `Store order > Rs. ${freeThreshold.toLocaleString()}, but restricted within ${freeMaxKm} km.`;
+        }
+      } else if (!isFree && freeThreshold < Infinity) {
+        explanation = `Add Rs. ${(freeThreshold - store.subtotal).toLocaleString()} more from this store for Free Shipping.`;
+      }
+
+      if (isFree) {
+        newStoreShipping[store.storeId] = { fee: 0, explanation };
       } else {
-        explanation = `Order above Rs. ${freeThreshold.toLocaleString()}, but free shipping is restricted within ${freeMaxKm} km.`;
+        const hasPerKm = rule.per_km_fee !== null && rule.per_km_fee !== undefined && Number(rule.per_km_fee) > 0;
+        const calculatedFee = hasPerKm ? baseFee + (perKmFee * distance) : baseFee;
+        totalShipping += calculatedFee;
+        newStoreShipping[store.storeId] = { fee: calculatedFee, explanation: `Rs. ${calculatedFee} (${explanation})` };
       }
-    } else if (!isFree && freeThreshold < Infinity) {
-      explanation = `Add Rs. ${(freeThreshold - totalPrice).toLocaleString()} more for Free Shipping.`;
-    }
+    });
 
-    if (isFree) {
-      setShippingFee(0);
-      setShippingExplanation(explanation);
-    } else {
-      // Only apply per-km fee if the rule explicitly has a non-null, non-zero per_km_fee
-      const hasPerKm = rule.per_km_fee !== null && rule.per_km_fee !== undefined && Number(rule.per_km_fee) > 0;
-      const calculatedFee = hasPerKm ? baseFee + (perKmFee * distance) : baseFee;
-      setShippingFee(calculatedFee);
-      
-      let breakdown = `Base rate: Rs. ${baseFee}`;
-      if (hasPerKm && distance > 0) {
-        breakdown += ` + Rs. ${perKmFee}/km × ${distance} km (Total: Rs. ${calculatedFee})`;
-      }
-      setShippingExplanation(`${breakdown}. ${explanation}`);
-    }
-  }, [form.city, selectedArea, customDistance, totalPrice, shippingRules]);
+    setStoreShipping(newStoreShipping);
+    setShippingFee(totalShipping);
+    setShippingExplanation(`Total shipping fee across ${groupedStores.length} store(s).`);
+
+  }, [form.city, selectedArea, customDistance, totalPrice, shippingRules, groupedStores]);
 
   // Handle Coupon Application
   const handleApplyCoupon = async () => {
@@ -375,6 +396,18 @@ export default function CheckoutPage() {
         setAppliedCoupon(null);
       } else {
         const data = await res.json();
+        
+        // Validate vendor coupon against cart items
+        if (data.store_id) {
+          const hasStoreItem = items.some(item => item.storeId === data.store_id);
+          if (!hasStoreItem) {
+            setCouponError("This coupon is only valid for a specific store's items which are not in your cart.");
+            setAppliedCoupon(null);
+            setVerifyingCoupon(false);
+            return;
+          }
+        }
+        
         setAppliedCoupon(data);
         setCouponError("");
       }
@@ -391,11 +424,26 @@ export default function CheckoutPage() {
   };
 
   // Calculate discount
-  const discountAmount = appliedCoupon 
-    ? (appliedCoupon.discount_type === "percentage" 
-        ? Math.round(totalPrice * (appliedCoupon.discount_value / 100))
-        : appliedCoupon.discount_value)
-    : 0;
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.store_id) {
+      // Vendor Coupon: Only apply to items belonging to this vendor
+      const eligibleItemsTotal = items
+        .filter(item => item.storeId === appliedCoupon.store_id)
+        .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      
+      if (eligibleItemsTotal > 0) {
+        discountAmount = appliedCoupon.discount_type === "percentage"
+          ? Math.round(eligibleItemsTotal * (appliedCoupon.discount_value / 100))
+          : Math.min(appliedCoupon.discount_value, eligibleItemsTotal);
+      }
+    } else {
+      // Global Coupon: Apply to total price
+      discountAmount = appliedCoupon.discount_type === "percentage" 
+          ? Math.round(totalPrice * (appliedCoupon.discount_value / 100))
+          : Math.min(appliedCoupon.discount_value, totalPrice);
+    }
+  }
 
   const handleOrder = async () => {
     if (items.length === 0) return;
@@ -433,7 +481,8 @@ export default function CheckoutPage() {
           price: item.price,
           quantity: item.quantity,
           color: item.color,
-          colorHex: item.colorHex
+          colorHex: item.colorHex,
+          store_id: item.storeId || null
         }))
       };
 
@@ -445,15 +494,6 @@ export default function CheckoutPage() {
 
       if (!res.ok) throw new Error("Failed to create order");
       const savedOrder = await res.json();
-
-      // 4. Send order confirmation email asynchronously
-      fetch("/api/emails/order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ order: { ...orderPayload.order, ...savedOrder }, items: savedOrder.items })
-      }).catch(err => console.error("Failed to trigger order confirmation email:", err));
 
       // 5. Trigger Facebook Pixel Purchase Event
       if (typeof window !== "undefined" && (window as any).fbq) {
@@ -831,27 +871,49 @@ export default function CheckoutPage() {
         <div style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 24, border: "1px solid var(--gray-200)", boxShadow: "var(--shadow-md)", position: "sticky", top: 100, alignSelf: "start" }}>
           <h2 style={{ fontWeight: 800, fontSize: 18, marginBottom: 20 }}>Order Summary</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
-            {items.map((item, index) => (
-              <div key={`${item.id}-${item.color || index}`} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <div style={{ position: "relative", width: 64, height: 64 }}>
-                  <div style={{ width: "100%", height: "100%", borderRadius: "var(--radius)", background: "var(--gray-50)", border: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                    <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/64x64?text=Invalid+Image'; }} />
-                  </div>
-                  <div style={{ position: "absolute", top: -8, right: -8, background: "var(--gray-500)", color: "white", width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, zIndex: 10 }}>
-                    {item.quantity}
-                  </div>
+            {groupedStores.map((store, sIndex) => (
+              <div key={store.storeId} style={{ marginBottom: sIndex < groupedStores.length - 1 ? 16 : 0, paddingBottom: sIndex < groupedStores.length - 1 ? 16 : 0, borderBottom: sIndex < groupedStores.length - 1 ? "1px dashed var(--gray-200)" : "none" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                  <Store size={14} /> Sold by: <span style={{ color: "var(--red)" }}>{store.storeName}</span>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)" }}>{item.name}</p>
-                  {item.color && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, marginBottom: 2 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: item.colorHex || "#ccc", border: "1px solid var(--gray-200)" }}></div>
-                      <span style={{ fontSize: 11, color: "var(--gray-500)" }}>{item.color}</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {store.items.map((item, index) => (
+                    <div key={`${item.id}-${item.color || index}-${item.size || ''}`} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      <div style={{ position: "relative", width: 64, height: 64 }}>
+                        <div style={{ width: "100%", height: "100%", borderRadius: "var(--radius)", background: "var(--gray-50)", border: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                          <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/64x64?text=Invalid+Image'; }} />
+                        </div>
+                        <div style={{ position: "absolute", top: -8, right: -8, background: "var(--gray-500)", color: "white", width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, zIndex: 10 }}>
+                          {item.quantity}
+                        </div>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)" }}>{item.name}</p>
+                        {item.color && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, marginBottom: 2 }}>
+                            <div style={{ width: 10, height: 10, borderRadius: "50%", background: item.colorHex || "#ccc", border: "1px solid var(--gray-200)" }}></div>
+                            <span style={{ fontSize: 11, color: "var(--gray-500)" }}>{item.color}</span>
+                          </div>
+                        )}
+                        {item.size && (
+                          <div style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 2, marginBottom: 2 }}>
+                            Size: <span style={{ fontWeight: 600, color: "var(--gray-700)" }}>{item.size}</span>
+                          </div>
+                        )}
+                        <p style={{ fontSize: 12, color: "var(--gray-500)" }}>Qty: {item.quantity}</p>
+                      </div>
+                      <p style={{ fontWeight: 700, fontSize: 14 }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
                     </div>
-                  )}
-                  <p style={{ fontSize: 12, color: "var(--gray-500)" }}>Qty: {item.quantity}</p>
+                  ))}
                 </div>
-                <p style={{ fontWeight: 700, fontSize: 14 }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
+                {storeShipping[store.storeId] && (
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 12, background: "var(--gray-50)", padding: 8, borderRadius: 6 }}>
+                    <span style={{ color: "var(--gray-600)" }}>Shipping Fee</span>
+                    <span style={{ fontWeight: 600, color: storeShipping[store.storeId].fee === 0 ? "#16a34a" : "var(--gray-900)" }}>
+                      {storeShipping[store.storeId].fee === 0 ? "FREE" : `Rs. ${storeShipping[store.storeId].fee.toLocaleString()}`}
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -4,24 +4,28 @@ import * as LucideIcons from "lucide-react";
 
 // Curated list of icons
 const ICON_NAMES = [
-  // Tech & Gadgets (35)
+  // Tech & Gadgets
   "Laptop", "Smartphone", "Monitor", "Watch", "Headphones", "Speaker", "Tv", 
   "Camera", "Gamepad2", "Mouse", "Keyboard", "Printer", "Router", "Cpu", 
   "Battery", "Cable", "Zap", "Power", "Mic", "Video", "Tablet", 
   "Radio", "HardDrive", "Usb", "Bluetooth", "Plug", "Cast", "Server", 
   "Database", "Save", "Download", "Cloud", "Wifi", "Terminal", "Code",
 
-  // E-Commerce & Shipping (20)
+  // E-Commerce & Shipping
   "Package", "ShoppingBag", "ShoppingCart", "Gift", "Truck", "CreditCard", "Wallet", 
   "Banknote", "Percent", "Tag", "Tags", "Store", "Barcode", "Receipt", 
   "Ticket", "Archive", "Box", "MapPin", "Navigation", "Compass",
 
-  // Home, Lifestyle & Fashion (20)
+  // Home, Lifestyle & Fashion
   "Home", "Coffee", "Briefcase", "Glasses", "Shirt", "Umbrella", "Scissors", 
   "Tool", "Wrench", "Hammer", "Sun", "Moon", "Flame", "Snowflake", 
   "Droplet", "Activity", "Book", "Car", "Bike", "Plane",
 
-  // UI & General (25)
+  // Beauty, Health & Wellness
+  "Sparkles", "Palette", "Brush", "Paintbrush", "Wand2", "Flower", "Flower2",
+  "Smile", "Hand", "Droplets", "Feather", "Stethoscope",
+
+  // UI & General
   "Heart", "Star", "ThumbsUp", "MessageCircle", "Send", "Share", "Search", 
   "Settings", "Link", "Bookmark", "Check", "Plus", "Info", "AlertCircle", 
   "Bell", "Eye", "Lock", "Shield", "User", "Users", "Key", 
@@ -72,12 +76,12 @@ export default function IconPicker({ value, onChange }: { value: string, onChang
           width: 250, padding: 12, zIndex: 100,
           display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 
         }}>
-          {ICON_NAMES.map(name => {
+          {ICON_NAMES.map((name, index) => {
             const Icon = (LucideIcons as any)[name];
             if (!Icon) return null;
             return (
               <button
-                key={name}
+                key={`${name}-${index}`}
                 type="button"
                 title={name}
                 onClick={() => {
