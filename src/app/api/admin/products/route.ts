@@ -58,6 +58,14 @@ export async function POST(request: Request) {
       delete data.category_id;
     }
 
+    // Handle store_id mapping for Prisma
+    if ('store_id' in data) {
+      if (data.store_id) {
+        data.store = { connect: { id: data.store_id } };
+      }
+      delete data.store_id;
+    }
+
     const newProduct = await prisma.product.create({
       data: data
     });

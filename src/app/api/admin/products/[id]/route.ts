@@ -43,6 +43,16 @@ export async function PUT(request: Request, context: any) {
       delete data.category_id;
     }
 
+    // Handle store_id mapping for Prisma
+    if ('store_id' in data) {
+      if (data.store_id) {
+        data.store = { connect: { id: data.store_id } };
+      } else {
+        data.store = { disconnect: true };
+      }
+      delete data.store_id;
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: data

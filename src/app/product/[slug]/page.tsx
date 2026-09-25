@@ -268,6 +268,10 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const isProductInStock = product.in_stock !== undefined ? product.in_stock : (product.inStock !== undefined ? product.inStock : true);
   const stockQty = product.stock_quantity !== undefined ? product.stock_quantity : (product.stockQuantity !== undefined ? product.stockQuantity : 10);
   const isOutOfStock = !isProductInStock || stockQty <= 0;
+  const totalReviews = reviews.length > 0 ? reviews.length : (product.reviews || 0);
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((acc: number, r: any) => acc + (r.rating || 0), 0) / reviews.length)
+    : (product.rating || 0);
   
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
   const rawImages = typeof product.images === 'string' ? (function() { try { return JSON.parse(product.images); } catch { return []; } })() : (product.images || []);
@@ -543,9 +547,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           {/* Rating */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
             <div className="stars">
-              {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} fill={s <= product.rating ? "var(--yellow)" : "none"} color={s <= product.rating ? "var(--yellow)" : "var(--gray-300)"} />)}
+              {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} fill={totalReviews > 0 && s <= Math.round(avgRating) ? "var(--yellow)" : "none"} color={totalReviews > 0 && s <= Math.round(avgRating) ? "var(--yellow)" : "var(--gray-300)"} />)}
             </div>
-            <span style={{ fontSize: 14, color: "var(--gray-600)", fontWeight: 500 }}>{product.rating}/5 ({product.reviews} reviews)</span>
+            <span style={{ fontSize: 14, color: "var(--gray-600)", fontWeight: 500 }}>{totalReviews > 0 ? `${avgRating.toFixed(1)}/5 (${totalReviews} ${totalReviews === 1 ? 'review' : 'reviews'})` : "No reviews yet"}</span>
           </div>
 
           {/* Price */}
