@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import nodemailer from 'nodemailer';
 
 export async function GET() {
   try {
@@ -44,7 +45,6 @@ export async function PUT(request: Request) {
     });
 
     if (status === "SHIPPED") {
-      const nodemailer = require("nodemailer");
       const orders = await prisma.order.findMany({
         where: { id: { in: idArray } }
       });
