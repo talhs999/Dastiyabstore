@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build --webpack",
+    "build": "node -e \"const fs=require('fs'); if(fs.existsSync('.env.production') && !fs.existsSync('.env')){fs.copyFileSync('.env.production', '.env');}\" && prisma generate && next build --webpack",
     "build:prod": "node -e \"const fs=require('fs'); if(fs.existsSync('.env.production')){fs.copyFileSync('.env.production', '.env');}\" && prisma generate && next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "node -e \"const fs=require('fs'); if(fs.existsSync('.env.production') && !fs.existsSync('.env')){fs.copyFileSync('.env.production', '.env');}\" && prisma generate"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
