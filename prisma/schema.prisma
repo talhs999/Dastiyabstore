@@ -127,6 +127,7 @@ model Order {
   coupon_code      String?
   order_notes      String?  @db.Text
   delivery_paid    Float?   @default(0)
+  rider_name       String?
 
   @@map("orders")
 }

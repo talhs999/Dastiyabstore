@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, Package, Clock, Heart, User, MapPin, LogOut, ShoppingBag, Loader2 } from "lucide-react";
+import { ChevronRight, Package, Clock, Heart, User, MapPin, LogOut, ShoppingBag, Loader2, Truck } from "lucide-react";
 
 const statusColors: Record<string, string> = { 
   Pending: "var(--yellow-dark)", 
@@ -91,6 +91,7 @@ export default function AccountOrdersPage() {
             <div style={{ padding: 8 }}>
               {[
                 { label: "My Orders", href: "/account/orders", icon: <ShoppingBag size={16} />, active: true },
+                { label: "Track Order", href: "/track-order", icon: <Truck size={16} /> },
                 { label: "Wishlist", href: "/account/wishlist", icon: <Heart size={16} /> },
               ].map(item => (
                 <Link key={item.label} href={item.href} style={{

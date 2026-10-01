@@ -234,6 +234,7 @@ export default function AdminOrdersPage() {
                       <div>Order ID: <strong>{order.id.split("-")[0].toUpperCase()}</strong></div>
                       <div>Date: {formattedDate}</div>
                       <div>Payment Method: <strong>{order.payment_method || "COD"}</strong></div>
+                      {order.rider_name && <div>Delivery Rider: <strong>🛵 {order.rider_name}</strong></div>}
                     </div>
                   </div>
                   <div>
@@ -478,6 +479,11 @@ export default function AdminOrdersPage() {
                       <div style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
                         {o.customer_email || o.customer_phone}
                       </div>
+                      {o.rider_name && (
+                        <div style={{ fontSize: 11, color: "#166534", background: "#dcfce7", display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 6px", borderRadius: 4, marginTop: 4, fontWeight: 700 }}>
+                          🛵 Rider: {o.rider_name}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: "16px 24px", fontSize: 14, color: "var(--gray-700)", fontWeight: 500 }}>
                       {o.order_items?.length || 0}
@@ -610,6 +616,14 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
                   )}
+                  {activeOrder.rider_name && (
+                    <div style={{ borderTop: "1px solid var(--gray-200)", paddingTop: 8, marginTop: 4 }}>
+                      <span style={{ fontSize: 11, color: "var(--gray-400)" }}>Assigned Delivery Rider</span>
+                      <div style={{ fontSize: 13, color: "var(--gray-800)", marginTop: 2, fontWeight: 700 }}>
+                        🛵 {activeOrder.rider_name}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -657,12 +671,13 @@ export default function AdminOrdersPage() {
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
                             delivery_paid: activeOrder.delivery_paid,
+                            rider_name: activeOrder.rider_name,
                             items: activeOrder.order_items
                           })
                         });
                         if (res.ok) {
-                          alert("Profit margins saved successfully!");
-                          setOrders(orders.map(o => o.id === activeOrder.id ? { ...o, delivery_paid: activeOrder.delivery_paid, items: JSON.stringify(activeOrder.order_items) } : o));
+                          alert("Order settings and rider saved successfully!");
+                          setOrders(orders.map(o => o.id === activeOrder.id ? { ...o, delivery_paid: activeOrder.delivery_paid, rider_name: activeOrder.rider_name, items: JSON.stringify(activeOrder.order_items) } : o));
                         } else alert("Failed to save.");
                       } catch (err) { alert("Error saving."); }
                     }}
@@ -699,6 +714,23 @@ export default function AdminOrdersPage() {
                         value={activeOrder.delivery_paid || 0}
                         onChange={(e) => {
                           setActiveOrder({ ...activeOrder, delivery_paid: parseFloat(e.target.value) || 0 });
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px dashed var(--gray-200)", paddingTop: 12 }}>
+                    <div>
+                      <span style={{ fontSize: 12, color: "var(--gray-800)", fontWeight: 700 }}>Delivery Rider Name</span>
+                      <p style={{ fontSize: 11, color: "var(--gray-400)", margin: 0 }}>Assign rider to this order</p>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <input
+                        type="text"
+                        placeholder="e.g. Asif (Rider)"
+                        style={{ width: 140, padding: "5px 8px", fontSize: 12, border: "1px solid var(--gray-300)", borderRadius: 4 }}
+                        value={activeOrder.rider_name || ""}
+                        onChange={(e) => {
+                          setActiveOrder({ ...activeOrder, rider_name: e.target.value });
                         }}
                       />
                     </div>

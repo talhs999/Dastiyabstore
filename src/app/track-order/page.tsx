@@ -1,18 +1,27 @@
 "use client";
-import { useState } from "react";
-import { Search, Package, MapPin, Truck, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Search, Package, MapPin, Truck, CheckCircle, Loader2, AlertCircle, ChevronRight, User } from "lucide-react";
 
-export default function TrackOrderPage() {
+function TrackOrderContent() {
+  const searchParams = useSearchParams();
   const [orderNumber, setOrderNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
+  const [hasCustomerSession, setHasCustomerSession] = useState(false);
 
-  const handleTrack = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const input = orderNumber.trim().toLowerCase();
-    if (!input) return;
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setHasCustomerSession(!!localStorage.getItem("customer_session"));
+    }
+  }, []);
+
+  const fetchOrder = async (queryId: string) => {
+    const clean = queryId.replace(/^#/, "").trim().toLowerCase();
+    if (!clean) return;
 
     setLoading(true);
     setError("");
@@ -20,7 +29,7 @@ export default function TrackOrderPage() {
     setItems([]);
 
     try {
-      const res = await fetch(`/api/orders/${input}`);
+      const res = await fetch(`/api/orders/${clean}`);
       if (!res.ok) {
         throw new Error("Order not found");
       }
@@ -36,6 +45,19 @@ export default function TrackOrderPage() {
     }
   };
 
+  useEffect(() => {
+    const idFromUrl = searchParams.get("id") || searchParams.get("orderId");
+    if (idFromUrl) {
+      setOrderNumber(idFromUrl);
+      fetchOrder(idFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchOrder(orderNumber);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending': return "var(--yellow-dark)";
@@ -48,21 +70,39 @@ export default function TrackOrderPage() {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "60px 24px", minHeight: "65vh" }}>
-      <div style={{ textAlign: "center", marginBottom: 40 }}>
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px 60px", minHeight: "65vh" }}>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "var(--gray-500)", marginBottom: 28, flexWrap: "wrap" }}>
+        <Link href="/" style={{ color: "var(--gray-500)", textDecoration: "none" }}>Home</Link>
+        <ChevronRight size={14} />
+        {hasCustomerSession ? (
+          <>
+            <Link href="/account/orders" style={{ color: "var(--gray-500)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <User size={13} /> My Account
+            </Link>
+            <ChevronRight size={14} />
+          </>
+        ) : null}
+        <span style={{ color: "var(--gray-900)", fontWeight: 600 }}>Track Order</span>
+      </div>
+
+      <div style={{ textAlign: "center", marginBottom: 36 }}>
+        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: "50%", background: "#fff0f0", color: "var(--red)", marginBottom: 16 }}>
+          <Truck size={28} />
+        </div>
         <h1 style={{ fontSize: 32, fontWeight: 900, color: "var(--gray-900)", marginBottom: 12 }}>Track Your Order</h1>
         <p style={{ color: "var(--gray-500)", fontSize: 15, maxWidth: 500, margin: "0 auto" }}>
-          Enter your order number below to check the current status of your shipment.
+          Enter your Order ID (e.g. <code style={{ background: "var(--gray-100)", padding: "2px 6px", borderRadius: 4, fontWeight: 600 }}>#550e8400</code>) below to check the real-time status of your shipment.
         </p>
       </div>
 
-      <div style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 32, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)", marginBottom: 32 }}>
-        <form onSubmit={handleTrack} style={{ display: "flex", gap: 12 }}>
-          <div style={{ flex: 1, position: "relative" }}>
+      <div style={{ background: "white", borderRadius: "var(--radius-lg)", padding: 28, boxShadow: "var(--shadow-md)", border: "1px solid var(--gray-200)", marginBottom: 32 }}>
+        <form onSubmit={handleTrack} style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 260, position: "relative" }}>
             <Search size={20} color="var(--gray-400)" style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)" }} />
             <input 
               type="text" 
-              placeholder="Enter Order Number (e.g. 550e8400-e29b-...)" 
+              placeholder="Enter Order Number (e.g. 550e8400...)" 
               value={orderNumber}
               onChange={e => setOrderNumber(e.target.value)}
               style={{ width: "100%", padding: "14px 16px 14px 48px", borderRadius: "var(--radius)", border: "2px solid var(--gray-200)", fontSize: 15, fontFamily: "inherit", outline: "none", transition: "border-color 0.2s" }}
@@ -70,13 +110,13 @@ export default function TrackOrderPage() {
               onBlur={e => e.target.style.borderColor = "var(--gray-200)"}
             />
           </div>
-          <button type="submit" disabled={loading} className="btn-red" style={{ padding: "0 32px" }}>
-            {loading ? <Loader2 size={20} className="animate-spin" /> : "Track"}
+          <button type="submit" disabled={loading} className="btn-red" style={{ padding: "0 32px", height: 50, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            {loading ? <Loader2 size={20} className="animate-spin" /> : <><Truck size={18} /> Track Order</>}
           </button>
         </form>
 
         {error && (
-          <div className="animate-fade-up" style={{ marginTop: 24, padding: 16, background: "#fef2f2", color: "var(--red)", borderRadius: "var(--radius)", display: "flex", alignItems: "center", gap: 12, border: "1px solid #fecaca" }}>
+          <div className="animate-fade-up" style={{ marginTop: 20, padding: 16, background: "#fef2f2", color: "var(--red)", borderRadius: "var(--radius)", display: "flex", alignItems: "center", gap: 12, border: "1px solid #fecaca" }}>
             <AlertCircle size={20} />
             <span style={{ fontWeight: 500 }}>{error}</span>
           </div>
@@ -93,7 +133,7 @@ export default function TrackOrderPage() {
                 <p style={{ fontSize: 13, color: "var(--gray-500)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Order Status</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
                   <h2 style={{ fontSize: 24, fontWeight: 800, color: getStatusColor(order.status) }}>{order.status}</h2>
-                  {order.status === 'Delivered' && <CheckCircle size={24} color="#16a34a" />}
+                  {order.status?.toLowerCase() === 'delivered' && <CheckCircle size={24} color="#16a34a" />}
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -137,9 +177,11 @@ export default function TrackOrderPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {items.map((item: any, idx: number) => (
                   <div key={idx} style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                    <img src={item.product_image} alt={item.product_name} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, background: "var(--gray-50)" }} />
+                    <img src={item.product_image || "https://placehold.co/64x64?text=Item"} alt={item.product_name} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, background: "var(--gray-50)" }} />
                     <div style={{ flex: 1 }}>
                       <p style={{ fontWeight: 600, color: "var(--gray-900)" }}>{item.product_name}</p>
+                      {item.color && <p style={{ fontSize: 12, color: "var(--gray-500)" }}>Color: {item.color}</p>}
+                      {item.size && <p style={{ fontSize: 12, color: "var(--gray-500)" }}>Size: {item.size}</p>}
                       <p style={{ fontSize: 13, color: "var(--gray-500)" }}>Qty: {item.quantity}</p>
                     </div>
                     <p style={{ fontWeight: 700 }}>Rs. {(item.price * item.quantity).toLocaleString()}</p>
@@ -151,5 +193,17 @@ export default function TrackOrderPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TrackOrderPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader2 size={32} className="animate-spin" color="var(--red)" />
+      </div>
+    }>
+      <TrackOrderContent />
+    </Suspense>
   );
 }

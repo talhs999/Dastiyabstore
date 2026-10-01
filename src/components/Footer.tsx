@@ -72,6 +72,7 @@ export default function Footer() {
   if (pathname.startsWith("/admin") || pathname.startsWith("/vendor")) return null;
 
   const isGiftsPage = pathname.startsWith("/gifts");
+  const isProductPage = pathname.startsWith("/product/");
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +108,7 @@ export default function Footer() {
   return (
     <footer>
       {/* Trust Bar */}
-      {!isGiftsPage && (
+      {!isGiftsPage && !isProductPage && (
         <div style={{ background: "var(--gray-50)", padding: "40px 24px" }}>
           <div style={{ maxWidth: 1280, margin: "0 auto" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24 }}>

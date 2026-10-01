@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+import { DEFAULT_SITE_REVIEWS } from '@/data/siteReviews';
+
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const setting = await prisma.storeSetting.findUnique({
@@ -9,12 +13,14 @@ export async function GET() {
     
     if (setting && setting.value) {
       const parsed = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
-      return NextResponse.json(parsed);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return NextResponse.json(parsed);
+      }
     }
     
-    return NextResponse.json([]);
+    return NextResponse.json(DEFAULT_SITE_REVIEWS);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+    return NextResponse.json(DEFAULT_SITE_REVIEWS);
   }
 }
 

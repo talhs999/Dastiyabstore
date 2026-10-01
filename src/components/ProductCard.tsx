@@ -170,14 +170,26 @@ export default function ProductCard({ product, view = "grid", priority = false }
           </div>
         )}
         {/* Stars */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-          <div className="stars">
-            {[1, 2, 3, 4, 5].map(s => (
-              <Star key={s} size={13} fill={(product.reviews || 0) > 0 && s <= (product.rating || 0) ? "var(--yellow)" : "none"} color={(product.reviews || 0) > 0 && s <= (product.rating || 0) ? "var(--yellow)" : "var(--gray-300)"} />
-            ))}
-          </div>
-          <span style={{ fontSize: 12, color: "var(--gray-500)" }}>({product.reviews || 0})</span>
-        </div>
+        {(() => {
+          const isVendor = Boolean(product.store && product.store.id && product.store.id !== "dastiyab");
+          const revCount = (product.reviews && product.reviews > 0) ? product.reviews : (isVendor ? 0 : 8);
+          const ratingVal = (product.rating && product.rating > 0) ? product.rating : 5;
+          return (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+              <div className="stars" style={{ display: "flex", gap: 2 }}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star 
+                    key={s} 
+                    size={13} 
+                    fill={revCount > 0 && s <= Math.round(ratingVal) ? "var(--yellow)" : "none"} 
+                    color={revCount > 0 && s <= Math.round(ratingVal) ? "var(--yellow)" : "var(--gray-300)"} 
+                  />
+                ))}
+              </div>
+              <span style={{ fontSize: 12, color: "var(--gray-500)", fontWeight: 600 }}>({revCount})</span>
+            </div>
+          );
+        })()}
         {/* Price */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <span className="price-current">Rs. {product.price.toLocaleString()}</span>

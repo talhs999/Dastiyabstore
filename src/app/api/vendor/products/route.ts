@@ -80,16 +80,38 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const store_id = searchParams.get('store_id');
     
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
+    const cleanId = decodeURIComponent(id).trim();
+
+    // Verify product exists
+    const existing = await prisma.product.findUnique({
+      where: { id: cleanId }
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    // If store_id is provided, verify ownership
+    if (store_id && existing.store_id && existing.store_id !== store_id) {
+      return NextResponse.json({ error: 'Unauthorized to delete this product' }, { status: 403 });
+    }
+
+    // Safely delete associated relations first to avoid foreign key / orphan issues
+    await prisma.productReview.deleteMany({ where: { product_id: cleanId } }).catch(() => {});
+    await prisma.productQna.deleteMany({ where: { product_id: cleanId } }).catch(() => {});
+    await prisma.productAnalyticsEvent.deleteMany({ where: { productId: cleanId } }).catch(() => {});
+
     await prisma.product.delete({
-      where: { id }
+      where: { id: cleanId }
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Failed to delete product' }, { status: 500 });
   }
 }

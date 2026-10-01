@@ -41,6 +41,8 @@ export default function Navbar() {
 
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [accountHref, setAccountHref] = useState("/login");
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [customerUser, setCustomerUser] = useState<any>(null);
   const [dbCategories, setDbCategories] = useState<any[]>([]);
 
   useEffect(() => {
@@ -73,10 +75,17 @@ export default function Navbar() {
       const customerSession = typeof window !== "undefined" && localStorage.getItem("customer_session");
       if (adminSession) {
         setAccountHref("/admin");
+        setCustomerUser({ name: "Admin", role: "admin" });
       } else if (customerSession) {
         setAccountHref("/account/orders");
+        try {
+          setCustomerUser(JSON.parse(customerSession));
+        } catch {
+          setCustomerUser({ name: "Customer" });
+        }
       } else {
         setAccountHref("/login");
+        setCustomerUser(null);
       }
     };
     checkSessions();
@@ -313,11 +322,110 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Account */}
-              <Link href={accountHref} className="icon-btn tooltip-wrap desktop-only" style={{ textDecoration: "none", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", color: "var(--gray-700)", transition: "all var(--transition)" }}>
-                <User size={22} />
-                <span className="tooltip">Account</span>
-              </Link>
+              {/* Account Dropdown */}
+              <div 
+                className="desktop-only" 
+                style={{ position: "relative" }}
+                onMouseEnter={() => setAccountMenuOpen(true)}
+                onMouseLeave={() => setAccountMenuOpen(false)}
+              >
+                <Link 
+                  href={accountHref} 
+                  className="icon-btn tooltip-wrap" 
+                  aria-label="Account"
+                  style={{ textDecoration: "none", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", color: "var(--gray-700)", transition: "all var(--transition)" }}
+                >
+                  <User size={22} />
+                  {!accountMenuOpen && <span className="tooltip">Account</span>}
+                </Link>
+
+                {accountMenuOpen && (
+                  <div 
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 4px)",
+                      right: 0,
+                      width: 220,
+                      background: "white",
+                      borderRadius: "var(--radius-lg)",
+                      boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
+                      border: "1px solid var(--gray-200)",
+                      padding: "8px",
+                      zIndex: 200,
+                    }}
+                  >
+                    {customerUser ? (
+                      <>
+                        <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--gray-100)", marginBottom: 4 }}>
+                          <p style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-900)", lineHeight: 1.2 }}>{customerUser.name || "My Account"}</p>
+                          <p style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 2 }}>{customerUser.role === "admin" ? "Admin Console" : "Customer Dashboard"}</p>
+                        </div>
+                        <Link 
+                          href={accountHref} 
+                          onClick={() => setAccountMenuOpen(false)}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 6, textDecoration: "none", color: "var(--gray-700)", fontSize: 13, fontWeight: 500, transition: "background 0.2s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <ShoppingBag size={16} color="var(--red)" /> {customerUser.role === "admin" ? "Admin Panel" : "My Orders"}
+                        </Link>
+                        <Link 
+                          href="/track-order" 
+                          onClick={() => setAccountMenuOpen(false)}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 6, textDecoration: "none", color: "var(--gray-900)", fontSize: 13, fontWeight: 600, transition: "background 0.2s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#fff0f0"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <Truck size={16} color="var(--red)" /> Track Order
+                        </Link>
+                        <Link 
+                          href="/account/wishlist" 
+                          onClick={() => setAccountMenuOpen(false)}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 6, textDecoration: "none", color: "var(--gray-700)", fontSize: 13, fontWeight: 500, transition: "background 0.2s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <Heart size={16} color="var(--red)" /> Wishlist
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--gray-100)", marginBottom: 4 }}>
+                          <p style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-800)" }}>Welcome to Dastiyab</p>
+                          <p style={{ fontSize: 11, color: "var(--gray-500)" }}>Orders, tracking & wishlist</p>
+                        </div>
+                        <Link 
+                          href="/login" 
+                          onClick={() => setAccountMenuOpen(false)}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 6, textDecoration: "none", color: "var(--red)", fontSize: 13, fontWeight: 700, transition: "background 0.2s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#fff0f0"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <LogIn size={16} /> Login / Register
+                        </Link>
+                        <Link 
+                          href="/track-order" 
+                          onClick={() => setAccountMenuOpen(false)}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 6, textDecoration: "none", color: "var(--gray-900)", fontSize: 13, fontWeight: 600, transition: "background 0.2s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#fff0f0"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <Truck size={16} color="var(--red)" /> Track Order
+                        </Link>
+                        <Link 
+                          href="/account/wishlist" 
+                          onClick={() => setAccountMenuOpen(false)}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 6, textDecoration: "none", color: "var(--gray-700)", fontSize: 13, fontWeight: 500, transition: "background 0.2s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "var(--gray-50)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <Heart size={16} color="var(--red)" /> Wishlist
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Cart */}
               <button
@@ -554,6 +662,7 @@ export default function Navbar() {
                 { label: "Shop All", href: "/shop", icon: <Package size={16} /> }, 
                 { label: "Wishlist", href: "/account/wishlist", icon: <Heart size={16} />, badge: wishlistItems.length > 0 ? wishlistItems.length : null },
                 { label: "My Account", href: accountHref, icon: <User size={16} /> },
+                { label: "Track Order", href: "/track-order", icon: <Truck size={16} /> },
                 { label: "Custom Gifts", href: "/gifts", icon: <Gift size={16} />, badge: "New" },
                 { label: "About Us", href: "/about", icon: <Star size={16} /> }, 
                 { label: "Contact", href: "/contact", icon: <Phone size={16} /> }

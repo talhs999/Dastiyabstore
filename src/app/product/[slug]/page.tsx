@@ -1,7 +1,7 @@
 "use client";
-import { use, useState, useEffect } from "react";
+import { use, useState, useEffect, useMemo, useRef } from "react";
 import { notFound, useRouter } from "next/navigation";
-import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Star, ChevronRight, Zap, CheckCircle, Minus, Plus, Link as LinkIcon, Maximize2, X, ZoomIn, ZoomOut, MessageCircle } from "lucide-react";
+import { ShoppingCart, Heart, Share2, Shield, Truck, RotateCcw, Headphones, Sparkles, Star, ChevronRight, ChevronLeft, Zap, CheckCircle, Minus, Plus, Link as LinkIcon, Maximize2, X, ZoomIn, ZoomOut, MessageCircle } from "lucide-react";
 import { FaWhatsapp, FaFacebook } from "react-icons/fa";
 import ProductCard from "@/components/ProductCard";
 import { products, getProductBySlug } from "@/data/products";
@@ -9,6 +9,7 @@ import { useCart } from "@/store/cartStore";
 import { useToast } from "@/components/ui/Toast";
 import { useWishlist } from "@/store/wishlistStore";
 import { useSettings } from "@/components/SettingsProvider";
+import { DEFAULT_SITE_REVIEWS } from "@/data/siteReviews";
 
 const renderTrustIcon = (iconName: string) => {
   const size = 18;
@@ -37,6 +38,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [product, setProduct] = useState<any>(null);
   const [bundleSubItems, setBundleSubItems] = useState<any[]>([]);
   const [loadingProduct, setLoadingProduct] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 
   const [qty, setQty] = useState(1);
   const [selectedColor, setSelectedColor] = useState<{name: string, hex: string} | null>(null);
@@ -51,11 +53,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   
   // Reviews state
   const [reviews, setReviews] = useState<any[]>([]);
-  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [siteReviews, setSiteReviews] = useState<any[]>(DEFAULT_SITE_REVIEWS);
+  const [loadingReviews, setLoadingReviews] = useState(false);
   const [reviewName, setReviewName] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const reviewsSliderRef = useRef<HTMLDivElement>(null);
 
   // QnA state
   const [qnaList, setQnaList] = useState<any[]>([]);
@@ -123,7 +127,24 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           }
 
           setReviews(data.reviews || []);
+          if (data.siteReviews && Array.isArray(data.siteReviews) && data.siteReviews.length > 0) {
+            setSiteReviews(data.siteReviews);
+          } else if (!data.product?.store_id) {
+            setSiteReviews(DEFAULT_SITE_REVIEWS);
+          }
           setQnaList(data.qna || []);
+
+          if (data.relatedProducts && Array.isArray(data.relatedProducts)) {
+            const mappedRelated = data.relatedProducts.map((p: any) => ({
+              ...p,
+              originalPrice: p.original_price,
+              badgeType: p.badge_type,
+              isNew: p.is_new,
+              inStock: p.in_stock,
+              stockQuantity: p.stock_quantity,
+            }));
+            setRelatedProducts(mappedRelated);
+          }
 
           if (mapped.is_bundle && Array.isArray(mapped.bundle_items) && mapped.bundle_items.length > 0) {
             try {
@@ -176,6 +197,79 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const isDastiyabProduct = Boolean(product && !product.store_id);
+
+  const combinedReviews = useMemo(() => {
+    if (!product) return [];
+    if (!isDastiyabProduct) {
+      return reviews.map((r: any) => ({
+        ...r,
+        name: r.customer_name || r.name,
+        text: r.review_text || r.text,
+        city: r.city || "Pakistan",
+        rating: r.rating || 5,
+        time: r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recent",
+        isOriginal: true,
+        product: product?.name
+      }));
+    }
+
+    // 1. Direct DB reviews for this product
+    const originalDbReviews = reviews.map((r: any) => ({
+      ...r,
+      name: r.customer_name || r.name,
+      text: r.review_text || r.text,
+      city: r.city || "Pakistan",
+      color: "#ef4444",
+      rating: r.rating || 5,
+      time: r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recent",
+      reply: r.reply_text || r.reply,
+      product: product?.name,
+      isOriginal: true,
+      isProductSpecific: true
+    }));
+
+    // 2. Filter siteReviews
+    const productSpecificSiteReviews: any[] = [];
+    const otherGeneralReviews: any[] = [];
+
+    siteReviews.forEach((sr: any) => {
+      const matchSlug = sr.productSlug && (sr.productSlug === product?.slug || decodeURIComponent(slug).includes(sr.productSlug));
+      const matchName = sr.product && product?.name && (
+        product.name.toLowerCase().includes(sr.product.toLowerCase().slice(0, 15)) ||
+        sr.product.toLowerCase().includes(product.name.toLowerCase().slice(0, 15))
+      );
+
+      if (matchSlug || matchName) {
+        productSpecificSiteReviews.push({
+          ...sr,
+          isOriginal: true,
+          isProductSpecific: true
+        });
+      } else {
+        otherGeneralReviews.push({
+          ...sr,
+          isOriginal: false,
+          isProductSpecific: false
+        });
+      }
+    });
+
+    // Original review for this product ALWAYS comes 1st!
+    return [
+      ...originalDbReviews,
+      ...productSpecificSiteReviews,
+      ...otherGeneralReviews
+    ];
+  }, [reviews, siteReviews, product, slug, isDastiyabProduct]);
+
+  const related = useMemo(() => {
+    if (relatedProducts.length > 0) return relatedProducts;
+    if (!product) return [];
+    const prodCat = product.category?.name || product.category;
+    return products.filter(p => (p.category === prodCat || p.category === product.category) && p.id !== product.id).slice(0, 8);
+  }, [relatedProducts, product]);
 
   if (loadingProduct) {
     return <div style={{ padding: "100px 40px", textAlign: "center", color: "var(--gray-500)", fontSize: 16 }}>Loading product details...</div>;
@@ -264,16 +358,33 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     }
     setSubmittingQna(false);
   };
+  const scrollProductReviews = (dir: "left" | "right") => {
+    if (reviewsSliderRef.current) {
+      reviewsSliderRef.current.scrollBy({
+        left: dir === "left" ? -550 : 550,
+        behavior: "smooth"
+      });
+    }
+  };
+
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : null;
   const isProductInStock = product.in_stock !== undefined ? product.in_stock : (product.inStock !== undefined ? product.inStock : true);
   const stockQty = product.stock_quantity !== undefined ? product.stock_quantity : (product.stockQuantity !== undefined ? product.stockQuantity : 10);
   const isOutOfStock = !isProductInStock || stockQty <= 0;
-  const totalReviews = reviews.length > 0 ? reviews.length : (product.reviews || 0);
-  const avgRating = reviews.length > 0
-    ? (reviews.reduce((acc: number, r: any) => acc + (r.rating || 0), 0) / reviews.length)
-    : (product.rating || 0);
-  
-  const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const totalReviews = isDastiyabProduct
+    ? (combinedReviews.length > 0 ? combinedReviews.length : 8)
+    : (reviews.length > 0 ? reviews.length : (product.reviews || 0));
+  const avgRating = isDastiyabProduct
+    ? (combinedReviews.length > 0 ? (combinedReviews.reduce((acc: number, r: any) => acc + (r.rating || 5), 0) / combinedReviews.length) : 4.9)
+    : (reviews.length > 0
+        ? (reviews.reduce((acc: number, r: any) => acc + (r.rating || 0), 0) / reviews.length)
+        : (product.rating || 5));
+  const trustFeatures = [
+    ...(freeDelivery?.is_active ? [{ icon: <Truck size={28} />, title: "Free Delivery", sub: `On orders Rs.${freeDelivery.threshold}+` }] : []),
+    { icon: <RotateCcw size={28} />, title: "Easy Returns", sub: "5-day return policy" },
+    { icon: <Shield size={28} />, title: "100% Secure", sub: "Trusted & verified" },
+    { icon: <Headphones size={28} />, title: "24/7 Support", sub: "Always here to help" },
+  ];
   const rawImages = typeof product.images === 'string' ? (function() { try { return JSON.parse(product.images); } catch { return []; } })() : (product.images || []);
   const validImages = (Array.isArray(rawImages) ? rawImages : []).filter((img: string) => img && img.trim() !== "");
   const images = [product.image, ...validImages].filter((img: string) => img && img.trim() !== "");
@@ -545,11 +656,30 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           </h1>
 
           {/* Rating */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <div className="stars">
-              {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} fill={totalReviews > 0 && s <= Math.round(avgRating) ? "var(--yellow)" : "none"} color={totalReviews > 0 && s <= Math.round(avgRating) ? "var(--yellow)" : "var(--gray-300)"} />)}
+          <div 
+            onClick={() => {
+              const el = document.getElementById("customer-reviews-section") || document.getElementById("product-tabs-section");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }}
+            style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, cursor: "pointer" }}
+            title="Click to view customer reviews"
+          >
+            <div className="stars" style={{ display: "flex", gap: 3 }}>
+              {[1, 2, 3, 4, 5].map(s => (
+                <Star 
+                  key={s} 
+                  size={16} 
+                  fill={totalReviews > 0 && s <= Math.round(avgRating) ? "var(--yellow)" : "none"} 
+                  color={totalReviews > 0 && s <= Math.round(avgRating) ? "var(--yellow)" : "var(--gray-300)"} 
+                />
+              ))}
             </div>
-            <span style={{ fontSize: 14, color: "var(--gray-600)", fontWeight: 500 }}>{totalReviews > 0 ? `${avgRating.toFixed(1)}/5 (${totalReviews} ${totalReviews === 1 ? 'review' : 'reviews'})` : "No reviews yet"}</span>
+            <span style={{ fontSize: 14, color: "var(--gray-700)", fontWeight: 600 }}>
+              {totalReviews > 0 ? `${avgRating.toFixed(1)}/5 (${totalReviews} Verified Reviews)` : "No reviews yet"}
+            </span>
+            <span style={{ fontSize: 12, color: "var(--red)", fontWeight: 700, textDecoration: "underline", marginLeft: 4 }}>
+              View Reviews ↓
+            </span>
           </div>
 
           {/* Price */}
@@ -798,7 +928,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       </div>
 
       {/* Tabs */}
-      <div style={{ marginBottom: 64 }}>
+      <div id="product-tabs-section" style={{ marginBottom: 64 }}>
         <div style={{ display: "flex", gap: 0, borderBottom: "2px solid var(--gray-200)", marginBottom: 32, overflowX: "auto" }}>
           {["description", "specs", "reviews", "qna"].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
@@ -808,7 +938,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               borderBottom: `2px solid ${activeTab === tab ? "var(--red)" : "transparent"}`,
               marginBottom: -2, transition: "all 0.2s", whiteSpace: "nowrap"
             }}>
-              {tab === "qna" ? "Q&A" : tab}
+              {tab === "reviews" ? `Customer Reviews (${totalReviews})` : (tab === "qna" ? "Q&A" : tab)}
             </button>
           ))}
         </div>
@@ -877,32 +1007,90 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
               {/* List */}
               <div style={{ display: "grid", gap: 16 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Customer Reviews ({reviews.length})</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--gray-900)" }}>Customer Reviews ({combinedReviews.length})</h3>
                 {loadingReviews ? (
                   <p style={{ color: "var(--gray-500)" }}>Loading reviews...</p>
-                ) : reviews.length === 0 ? (
+                ) : combinedReviews.length === 0 ? (
                   <p style={{ color: "var(--gray-500)", background: "var(--gray-50)", padding: 20, borderRadius: "var(--radius)", textAlign: "center" }}>No reviews yet. Be the first to review this product!</p>
                 ) : (
-                  reviews.map((r: any, i: number) => (
-                    <div key={i} style={{ background: "var(--gray-50)", borderRadius: "var(--radius)", padding: 20, border: "1px solid var(--gray-200)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                        <div>
-                          <span style={{ fontWeight: 700, color: "var(--gray-900)" }}>{r.customer_name}</span>
-                          <span style={{ fontSize: 12, color: "var(--gray-500)", marginLeft: 12 }}>{new Date(r.created_at).toLocaleDateString()}</span>
+                  combinedReviews.map((r: any, i: number) => {
+                    const isFirstOriginal = r.isOriginal && i === 0;
+                    return (
+                      <div key={i} style={{ 
+                        background: isFirstOriginal ? "#fffdf5" : "var(--gray-50)", 
+                        borderRadius: "var(--radius)", 
+                        padding: 20, 
+                        border: isFirstOriginal ? "2px solid #f59e0b" : "1px solid var(--gray-200)",
+                        position: "relative"
+                      }}>
+                        {isFirstOriginal && (
+                          <div style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                            background: "linear-gradient(90deg, #f59e0b, #d97706)",
+                            color: "white",
+                            fontSize: 11,
+                            fontWeight: 800,
+                            padding: "2px 8px",
+                            borderRadius: 6,
+                            marginBottom: 10
+                          }}>
+                            ⭐ VERIFIED PRODUCT REVIEW
+                          </div>
+                        )}
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                          <div>
+                            <span style={{ fontWeight: 700, color: "var(--gray-900)" }}>{r.name || r.customer_name}</span>
+                            <span style={{ fontSize: 12, color: "var(--gray-500)", marginLeft: 12 }}>{r.time || (r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recent")}</span>
+                          </div>
+                          <div className="stars">
+                            {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= (r.rating || 5) ? "var(--yellow)" : "none"} color={s <= (r.rating || 5) ? "var(--yellow)" : "var(--gray-300)"} />)}
+                          </div>
                         </div>
-                        <div className="stars">
-                          {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= r.rating ? "var(--yellow)" : "none"} color={s <= r.rating ? "var(--yellow)" : "var(--gray-300)"} />)}
-                        </div>
+                        <p style={{ color: "var(--gray-700)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>{r.text || r.review_text}</p>
+                        {r.reply && (
+                          <div style={{ marginTop: 12, padding: "12px 16px", background: "white", borderLeft: "3px solid var(--red)", borderRadius: "0 8px 8px 0" }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--red)", display: "block", marginBottom: 4 }}>DastiyabStore replied:</span>
+                            <p style={{ fontSize: 13, color: "var(--gray-600)", margin: 0 }}>{r.reply}</p>
+                          </div>
+                        )}
+                        {/* Attached Purchased Product Chip */}
+                        {r.productSlug && (
+                          <div style={{ marginTop: 14 }}>
+                            <a
+                              href={`/product/${r.productSlug}`}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 10,
+                                background: "#ffffff",
+                                padding: "6px 12px",
+                                borderRadius: 8,
+                                border: "1px solid #e2e8f0",
+                                textDecoration: "none",
+                                fontSize: 12,
+                                color: "#1e293b",
+                                fontWeight: 600,
+                                transition: "all 0.2s"
+                              }}
+                              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = "var(--red)")}
+                              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0")}
+                            >
+                              {r.productImage && (
+                                <img src={r.productImage} alt="" style={{ width: 28, height: 28, borderRadius: 4, objectFit: "cover" }} />
+                              )}
+                              <span>Purchased: <strong>{r.product || "Item"}</strong></span>
+                              {r.productPrice && (
+                                <span style={{ color: "var(--red)", fontWeight: 700 }}>• Rs. {Number(r.productPrice).toLocaleString()}</span>
+                              )}
+                              <ChevronRight size={13} color="#94a3b8" />
+                            </a>
+                          </div>
+                        )}
                       </div>
-                      <p style={{ color: "var(--gray-700)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>{r.review_text}</p>
-                      {r.reply_text && (
-                        <div style={{ marginTop: 12, padding: "12px 16px", background: "white", borderLeft: "3px solid var(--red)", borderRadius: "0 8px 8px 0" }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--red)", display: "block", marginBottom: 4 }}>DastiyabStore replied:</span>
-                          <p style={{ fontSize: 13, color: "var(--gray-600)", margin: 0 }}>{r.reply_text}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -970,14 +1158,413 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         )}
       </div>
 
-      {/* Related */}
-      {related.length > 0 && (
-        <div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: "var(--gray-900)", marginBottom: 24 }}>Related <span style={{ color: "var(--red)" }}>Products</span></h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }}>
-            {related.map(p => <ProductCard key={p.id} product={p} />)}
+      {/* ── DASTIYAB VERIFIED REVIEWS SLIDER (ONLY FOR DASTIYAB'S OWN PRODUCTS) ── */}
+      {isDastiyabProduct && combinedReviews.length > 0 && (
+        <div 
+          id="customer-reviews-section"
+          style={{
+            margin: "40px 0 64px 0",
+            background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 45%, #fde68a 100%)",
+            borderRadius: 20,
+            padding: "36px 32px",
+            color: "#1e293b",
+            border: "1.5px solid #fde68a",
+            boxShadow: "0 20px 45px -15px rgba(245, 158, 11, 0.28)",
+            position: "relative",
+            overflow: "hidden"
+          }}
+        >
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                {/* Google Logo */}
+                <svg width="22" height="22" viewBox="0 0 24 24">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                </svg>
+                <span style={{ color: "#b45309", fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: 1.5 }}>
+                  GOOGLE VERIFIED REVIEWS
+                </span>
+                <span style={{ fontSize: 11, background: "#ffffff", padding: "3px 10px", borderRadius: 12, color: "#92400e", fontWeight: 800, border: "1px solid #fde68a", boxShadow: "0 2px 6px rgba(180, 83, 9, 0.12)" }}>
+                  4.9 ★★★★★ ({combinedReviews.length} Reviews)
+                </span>
+              </div>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: "#0f172a", margin: 0, letterSpacing: "-0.5px" }}>
+                Customer Feedback & <span style={{ color: "var(--red)" }}>Reviews</span>
+              </h2>
+              <p style={{ fontSize: 13, color: "#78350f", marginTop: 4, margin: 0, fontWeight: 500 }}>
+                Real verified customer experiences from buyers across Pakistan
+              </p>
+            </div>
+
+            {/* Slider Controls */}
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button 
+                onClick={() => scrollProductReviews("left")} 
+                aria-label="Previous Reviews"
+                style={{ 
+                  width: 42, height: 42, borderRadius: "50%", background: "#ffffff", 
+                  border: "1px solid #fde68a", display: "flex", alignItems: "center", 
+                  justifyContent: "center", color: "#78350f", cursor: "pointer", transition: "0.2s",
+                  boxShadow: "0 4px 12px rgba(180, 83, 9, 0.12)"
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#fef3c7")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#ffffff")}
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button 
+                onClick={() => scrollProductReviews("right")} 
+                aria-label="Next Reviews"
+                style={{ 
+                  width: 42, height: 42, borderRadius: "50%", background: "#ffffff", 
+                  border: "1px solid #fde68a", display: "flex", alignItems: "center", 
+                  justifyContent: "center", color: "#78350f", cursor: "pointer", transition: "0.2s",
+                  boxShadow: "0 4px 12px rgba(180, 83, 9, 0.12)"
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#fef3c7")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#ffffff")}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Reviews Slider Track */}
+          <div 
+            ref={reviewsSliderRef}
+            style={{
+              display: "flex",
+              gap: 16,
+              overflowX: "auto",
+              scrollSnapType: "x mandatory",
+              paddingTop: 8,
+              paddingBottom: 16,
+              scrollbarWidth: "none",
+              msOverflowStyle: "none"
+            }}
+            className="product-reviews-slider"
+          >
+            <style>{`
+              .product-reviews-slider::-webkit-scrollbar { display: none; }
+            `}</style>
+            {combinedReviews.map((r: any, idx: number) => {
+              const isFirstOriginal = r.isOriginal && idx === 0;
+              return (
+                <div 
+                  key={idx}
+                  style={{
+                    flex: "0 0 255px",
+                    minWidth: "255px",
+                    maxWidth: "255px",
+                    scrollSnapAlign: "start",
+                    background: isFirstOriginal ? "#ffffff" : "#ffffff",
+                    borderRadius: 14,
+                    padding: "16px 14px",
+                    display: "flex",
+                    flexDirection: "column",
+                    position: "relative",
+                    border: isFirstOriginal ? "2px solid #f59e0b" : "1px solid rgba(251, 191, 36, 0.35)",
+                    boxShadow: isFirstOriginal ? "0 8px 24px rgba(245, 158, 11, 0.28)" : "0 6px 18px rgba(180, 83, 9, 0.08)",
+                    transition: "transform 0.2s"
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.transform = "translateY(-4px)")}
+                  onMouseLeave={e => (e.currentTarget.style.transform = "none")}
+                >
+                  {/* Top Badge for 1st / Original review */}
+                  {isFirstOriginal && (
+                    <div style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      alignSelf: "flex-start",
+                      background: "linear-gradient(90deg, #f59e0b, #d97706)",
+                      color: "white",
+                      fontSize: 10,
+                      fontWeight: 800,
+                      padding: "4px 10px",
+                      borderRadius: 8,
+                      letterSpacing: 0.5,
+                      marginBottom: 12,
+                      boxShadow: "0 2px 8px rgba(245, 158, 11, 0.25)"
+                    }}>
+                      ⭐ THIS PRODUCT REVIEW
+                    </div>
+                  )}
+
+                  {/* Header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
+                      <div style={{ 
+                        width: 36, height: 36, borderRadius: "50%", 
+                        background: r.color || "#0284c7", color: "white", 
+                        display: "flex", alignItems: "center", justifyContent: "center", 
+                        fontWeight: 800, fontSize: 16, flexShrink: 0
+                      }}>
+                        {r.name?.charAt(0) || "U"}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, color: "#0f172a", fontSize: 13, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 125 }}>
+                          {r.name}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                          <span style={{ fontSize: 11, color: "#64748b" }}>{r.city || "Pakistan"}</span>
+                          <span style={{ fontSize: 9, background: "#dbeafe", color: "#1e40af", fontWeight: 700, padding: "1px 5px", borderRadius: 8 }}>
+                            Verified
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stars & Time */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                    <div style={{ display: "flex", gap: 2 }}>
+                      {[...Array(5)].map((_, s) => (
+                        <Star key={s} size={13} fill={s < (r.rating || 5) ? "#f59e0b" : "none"} strokeWidth={s < (r.rating || 5) ? 0 : 2} color="#f59e0b" />
+                      ))}
+                    </div>
+                    <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>{r.time || "Recent"}</span>
+                  </div>
+
+                  {/* Review Text */}
+                  <p style={{
+                    color: "#334155",
+                    fontSize: 12,
+                    lineHeight: 1.45,
+                    margin: 0,
+                    marginBottom: 10,
+                    flex: 1,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis"
+                  }} title={r.text}>
+                    {r.text}
+                  </p>
+
+                  {/* Owner Reply if present */}
+                  {r.reply && (
+                    <div style={{ padding: "6px 8px", background: "#f8fafc", borderRadius: 6, borderLeft: "2.5px solid var(--red)", fontSize: 11, marginBottom: 10 }}>
+                      <span style={{ fontWeight: 700, color: "#0f172a", fontSize: 10 }}>Dastiyab Store: </span>
+                      <span style={{ color: "#64748b", fontStyle: "italic", fontSize: 10 }}>&ldquo;{r.reply}&rdquo;</span>
+                    </div>
+                  )}
+
+                  {/* Clickable Product Badge */}
+                  {r.productSlug ? (
+                    <a
+                      href={`/product/${r.productSlug}`}
+                      style={{
+                        marginTop: "auto",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        background: isFirstOriginal ? "#fffbeb" : "#f8fafc",
+                        padding: "6px 8px",
+                        borderRadius: 8,
+                        border: isFirstOriginal ? "1px solid #fde68a" : "1px solid #e2e8f0",
+                        textDecoration: "none",
+                        transition: "all 0.2s ease",
+                        cursor: "pointer"
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = "var(--red)";
+                        (e.currentTarget as HTMLElement).style.background = "#fff8f8";
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = isFirstOriginal ? "#fde68a" : "#e2e8f0";
+                        (e.currentTarget as HTMLElement).style.background = isFirstOriginal ? "#fffbeb" : "#f8fafc";
+                      }}
+                    >
+                      {r.productImage ? (
+                        <img
+                          src={r.productImage}
+                          alt={r.product || "Product"}
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 6,
+                            objectFit: "cover",
+                            border: "1px solid #e2e8f0",
+                            flexShrink: 0,
+                            background: "white"
+                          }}
+                        />
+                      ) : (
+                        <div style={{ width: 36, height: 36, borderRadius: 6, background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
+                          🛍️
+                        </div>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 9, fontWeight: 800, color: isFirstOriginal ? "#b45309" : "var(--red)", textTransform: "uppercase", letterSpacing: 0.3, display: "flex", alignItems: "center", gap: 3 }}>
+                          <span>{isFirstOriginal ? "⭐ THIS ITEM" : "PURCHASED"}</span>
+                          <span style={{ fontSize: 8, color: "#64748b" }}>• View</span>
+                        </div>
+                        <p style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: "#1e293b",
+                          margin: 0,
+                          lineHeight: 1.2,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis"
+                        }} title={r.product}>
+                          {r.product || product?.name}
+                        </p>
+                        {r.productPrice && (
+                          <div style={{ fontSize: 11, fontWeight: 800, color: "var(--red)" }}>
+                            Rs. {Number(r.productPrice).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ color: "#94a3b8", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                        <ChevronRight size={13} />
+                      </div>
+                    </a>
+                  ) : (
+                    <div style={{ marginTop: "auto", background: isFirstOriginal ? "#fef3c7" : "#f1f5f9", padding: "6px 8px", borderRadius: 8, border: isFirstOriginal ? "1px solid #fde68a" : "1px solid #e2e8f0" }}>
+                      <p style={{ fontSize: 10, fontWeight: 800, color: isFirstOriginal ? "#92400e" : "#475569", textTransform: "uppercase", letterSpacing: 0.3, margin: 0, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {isFirstOriginal ? "⭐ THIS PRODUCT PURCHASE" : `PURCHASED: ${r.product || "Verified Store Item"}`}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
+      )}
+
+      {/* ── TRUST & GUARANTEE BAR (EASY RETURNS, 100% SECURE, 24/7 SUPPORT) ── */}
+      <div 
+        id="easy-returns-trust-bar"
+        style={{
+          marginTop: 48,
+          marginBottom: 48,
+          background: "var(--gray-50)",
+          borderRadius: 20,
+          padding: "32px 24px",
+          border: "1px solid var(--gray-200)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.03)"
+        }}
+      >
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 20
+        }}>
+          {trustFeatures.map((f, i) => (
+            <div
+              key={i}
+              className="trust-badge"
+              style={{
+                flexDirection: "column",
+                textAlign: "center",
+                padding: "24px 20px",
+                gap: 12,
+                background: "white",
+                borderRadius: 16,
+                border: "1px solid var(--gray-200)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                transition: "all 0.25s ease"
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)";
+                e.currentTarget.style.borderColor = "var(--red)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = "none";
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
+                e.currentTarget.style.borderColor = "var(--gray-200)";
+              }}
+            >
+              <div style={{ color: "var(--red)" }}>{f.icon}</div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 16, color: "var(--gray-900)" }}>{f.title}</div>
+                <div style={{ fontSize: 13, color: "var(--gray-500)", marginTop: 4 }}>{f.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── RELATED PRODUCTS SECTION (DIRECTLY UNDER EASY RETURNS) ── */}
+      {related.length > 0 && (
+        <section 
+          id="related-products-section"
+          style={{ 
+            marginBottom: 64,
+            scrollMarginTop: 80
+          }}
+        >
+          {/* Header */}
+          <div style={{ 
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "flex-end", 
+            marginBottom: 28,
+            flexWrap: "wrap",
+            gap: 12
+          }}>
+            <div>
+              <div style={{ 
+                display: "inline-flex", 
+                alignItems: "center", 
+                gap: 6, 
+                background: "#fef2f2", 
+                color: "var(--red)", 
+                padding: "4px 12px", 
+                borderRadius: 20, 
+                fontSize: 12, 
+                fontWeight: 800, 
+                marginBottom: 8,
+                letterSpacing: 0.5,
+                border: "1px solid #fee2e2"
+              }}>
+                <Sparkles size={14} /> RELATED RECOMMENDATIONS
+              </div>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: "var(--gray-900)", margin: 0, letterSpacing: "-0.5px" }}>
+                Related <span style={{ color: "var(--red)" }}>Products</span>
+              </h2>
+              <p style={{ fontSize: 14, color: "var(--gray-500)", marginTop: 4, margin: 0 }}>
+                Customers interested in this item also viewed these popular choices
+              </p>
+            </div>
+            
+            <a 
+              href="/shop" 
+              style={{ 
+                fontSize: 13, 
+                fontWeight: 700, 
+                color: "var(--red)", 
+                display: "inline-flex", 
+                alignItems: "center", 
+                gap: 4,
+                textDecoration: "none"
+              }}
+            >
+              Explore All Products <ChevronRight size={16} />
+            </a>
+          </div>
+
+          {/* Grid */}
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", 
+            gap: 20 
+          }}>
+            {related.map(p => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Zoom Modal */}

@@ -28,19 +28,24 @@ export async function POST(request: Request) {
     let customer = await prisma.customer.findUnique({ where: { email: cleanEmail } });
     
     if (customer) {
-      if (customer.role !== 'vendor') {
-        customer = await prisma.customer.update({
-          where: { email: cleanEmail },
-          data: { role: 'vendor' }
-        });
-      }
+      customer = await prisma.customer.update({
+        where: { email: cleanEmail },
+        data: { 
+          role: 'vendor',
+          name: body.owner_name || customer.name,
+          phone: body.phone || customer.phone,
+          address: body.address || customer.address
+        }
+      });
     } else {
-      const hashedPassword = body.password ? body.password : "vendor123"; // Simplification for demo
+      const hashedPassword = body.password ? body.password : "vendor123";
       customer = await prisma.customer.create({
         data: {
           email: cleanEmail,
           password: hashedPassword,
           name: body.owner_name,
+          phone: body.phone || null,
+          address: body.address || null,
           role: 'vendor'
         }
       });

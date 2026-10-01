@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, store_id, status, delivery_paid, items } = body;
+    const { id, store_id, status, delivery_paid, rider_name, items } = body;
     if (!id || !store_id || !status) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
 
     const order = await prisma.order.findUnique({ where: { id } });
@@ -45,6 +45,7 @@ export async function PUT(request: Request) {
 
     const dataToUpdate: any = { status };
     if (delivery_paid !== undefined) dataToUpdate.delivery_paid = parseFloat(delivery_paid) || 0;
+    if (rider_name !== undefined) dataToUpdate.rider_name = rider_name;
     if (items !== undefined) dataToUpdate.items = JSON.stringify(items);
 
     const updatedOrder = await prisma.order.update({

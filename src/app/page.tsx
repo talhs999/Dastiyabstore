@@ -3,7 +3,8 @@ import HomeClient from '@/components/HomeClient';
 
 import { preload } from 'react-dom';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function HomePage() {
   let initialData = {};

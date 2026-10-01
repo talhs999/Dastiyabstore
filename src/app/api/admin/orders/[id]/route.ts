@@ -8,6 +8,7 @@ export async function PUT(request: Request, context: any) {
 
     const updateData: any = {};
     if (data.delivery_paid !== undefined) updateData.delivery_paid = parseFloat(data.delivery_paid);
+    if (data.rider_name !== undefined) updateData.rider_name = data.rider_name;
     if (data.items !== undefined) updateData.items = data.items;
 
     const updatedOrder = await prisma.order.update({

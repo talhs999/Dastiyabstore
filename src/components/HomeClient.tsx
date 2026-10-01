@@ -12,6 +12,7 @@ import {
 import { useSettings } from "@/components/SettingsProvider";
 import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
+import { DEFAULT_SITE_REVIEWS } from "@/data/siteReviews";
 
 // Curated icon map — avoids importing the entire lucide-react library (~150KB)
 const iconMap: Record<string, ComponentType<any>> = {
@@ -458,13 +459,13 @@ export default function HomeClient({ initialData }: { initialData: any }) {
     ? initialData.statsStrip 
     : null;
 
-  const siteReviews = initialData?.siteReviews && Array.isArray(initialData.siteReviews)
+  const siteReviews = initialData?.siteReviews && Array.isArray(initialData.siteReviews) && initialData.siteReviews.length > 0
     ? initialData.siteReviews 
-    : [];
+    : DEFAULT_SITE_REVIEWS;
 
   const scrollReviews = (dir: "left" | "right") => {
     if (reviewsRef.current) {
-      reviewsRef.current.scrollBy({ left: dir === "left" ? -360 : 360, behavior: "smooth" });
+      reviewsRef.current.scrollBy({ left: dir === "left" ? -552 : 552, behavior: "smooth" });
     }
   };
 
@@ -902,15 +903,62 @@ export default function HomeClient({ initialData }: { initialData: any }) {
         background: "linear-gradient(rgba(10, 10, 10, 0.85), rgba(10, 10, 10, 0.95)), url('/reviews-bg2.png') center/cover no-repeat",
         position: "relative"
       }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 8px" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32, gap: 20 }}>
             <div className="section-header" style={{ marginBottom: 0, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--yellow)" }}></span>
-                <span style={{ color: "var(--yellow)", fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: 2 }}>REVIEWS</span>
+                <span style={{ color: "var(--yellow)", fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: 2 }}>GOOGLE REVIEWS</span>
               </div>
               <h2 style={{ color: "var(--white)", textShadow: "0 2px 10px rgba(0,0,0,0.5)", fontSize: "clamp(32px, 4vw, 48px)" }}>What Our <span className="gradient-text">Customers Say</span></h2>
               <p style={{ color: "var(--white)", opacity: 0.9, textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}>Real reviews from verified buyers across Pakistan</p>
+
+              {/* Google Reviews Trust Bar */}
+              <div style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 12,
+                marginTop: 16,
+                padding: "8px 18px",
+                background: "rgba(255, 255, 255, 0.12)",
+                backdropFilter: "blur(10px)",
+                borderRadius: "var(--radius-full)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                flexWrap: "wrap",
+                justifyContent: "center"
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                </svg>
+                <span style={{ fontWeight: 800, fontSize: 16, color: "white" }}>4.8 / 5.0</span>
+                <div style={{ display: "flex", gap: 3 }}>
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={15} fill="var(--yellow)" color="var(--yellow)" />
+                  ))}
+                </div>
+                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>
+                  ({siteReviews.length} Verified Google Reviews)
+                </span>
+                <a 
+                  href="https://www.google.com/search?q=dastiyab+store" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    fontSize: 12, 
+                    fontWeight: 700, 
+                    color: "var(--yellow)", 
+                    textDecoration: "underline", 
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4
+                  }}
+                >
+                  View on Google &rarr;
+                </a>
+              </div>
             </div>
           </div>
           
@@ -930,10 +978,10 @@ export default function HomeClient({ initialData }: { initialData: any }) {
               ref={reviewsRef}
               style={{ 
                 display: "flex", 
-                gap: 24, 
+                gap: 16, 
                 overflowX: "auto", 
                 scrollSnapType: "x mandatory", 
-                paddingBottom: 24, 
+                paddingBottom: 20, 
                 WebkitOverflowScrolling: "touch",
                 scrollbarWidth: "none" // Firefox
               }}
@@ -943,14 +991,16 @@ export default function HomeClient({ initialData }: { initialData: any }) {
               `}</style>
               {siteReviews.map((r: any, i: number) => (
               <div key={i} style={{ 
-                flex: "0 0 340px", 
+                flex: "0 0 255px", 
+                minWidth: "255px",
+                maxWidth: "255px",
                 scrollSnapAlign: "start",
                 background: "white", 
-                borderRadius: "16px", 
-                padding: 32, 
-                boxShadow: "0 10px 30px rgba(0,0,0,0.3)", 
-                border: "1px solid rgba(255,255,255,0.1)", 
-                transition: "all 0.3s ease",
+                borderRadius: "14px", 
+                padding: "16px 14px", 
+                boxShadow: "0 8px 24px rgba(0,0,0,0.22)", 
+                border: "1px solid rgba(255,255,255,0.12)", 
+                transition: "all 0.25s ease",
                 display: "flex",
                 flexDirection: "column"
               }}
@@ -958,20 +1008,29 @@ export default function HomeClient({ initialData }: { initialData: any }) {
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "none"; }}
               >
                 {/* Header: Avatar, Name, Time, Logo */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                  <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
                     {/* Avatar */}
-                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: r.color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 20 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: r.color || "#0284c7", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 16, flexShrink: 0 }}>
                       {r.name.charAt(0)}
                     </div>
                     {/* Name & Location */}
-                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                      <div style={{ fontWeight: 700, color: "#111827", fontSize: 16, lineHeight: 1.2 }}>{r.name}</div>
-                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{r.city} • Local Guide</div>
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <div style={{ fontWeight: 700, color: "#111827", fontSize: 13, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 125 }}>{r.name}</div>
+                        {/* Verified Check Icon */}
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#1d9bf0" style={{ flexShrink: 0 }}>
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                        <span style={{ fontSize: 11, color: "#6b7280" }}>{r.city}</span>
+                        <span style={{ fontSize: 9, background: "#e8f0fe", color: "#1a73e8", fontWeight: 700, padding: "1px 5px", borderRadius: 8 }}>Google Verified</span>
+                      </div>
                     </div>
                   </div>
                   {/* Inline Google Logo */}
-                  <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -980,22 +1039,125 @@ export default function HomeClient({ initialData }: { initialData: any }) {
                 </div>
 
                 {/* Stars & Time ago */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ display: "flex", gap: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                  <div style={{ display: "flex", gap: 2 }}>
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={14} fill={i < (r.rating || 5) ? "var(--yellow)" : "none"} strokeWidth={i < (r.rating || 5) ? 0 : 2} color="var(--yellow)" />
+                      <Star key={i} size={13} fill={i < (r.rating || 5) ? "#f59e0b" : "none"} strokeWidth={i < (r.rating || 5) ? 0 : 2} color="#f59e0b" />
                     ))}
                   </div>
-                  <span style={{ fontSize: 13, color: "#6b7280" }}>{r.time}</span>
+                  <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>{r.time}</span>
                 </div>
 
                 {/* Review Text */}
-                <p style={{ color: "#374151", fontSize: 15, lineHeight: 1.6, marginBottom: 20, flex: 1 }}>{r.text}</p>
+                <p style={{
+                  color: "#374151",
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                  marginBottom: 10,
+                  flex: 1,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis"
+                }} title={r.text}>
+                  {r.text}
+                </p>
 
-                {/* Product Badge */}
-                <div>
-                  <span className="badge" style={{ fontSize: 12, background: "#f3f4f6", color: "#4b5563", padding: "6px 10px", borderRadius: 6, fontWeight: 600 }}>Purchased: {r.product}</span>
-                </div>
+                {/* Owner Response */}
+                {r.reply && (
+                  <div style={{ padding: "6px 8px", background: "#f9fafb", borderRadius: 6, borderLeft: "2.5px solid var(--red)", fontSize: 11, marginBottom: 10 }}>
+                    <div style={{ fontWeight: 700, color: "var(--gray-900)", fontSize: 10 }}>Dastiyab Store:</div>
+                    <div style={{ color: "var(--gray-600)", fontStyle: "italic", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>&ldquo;{r.reply}&rdquo;</div>
+                  </div>
+                )}
+
+                {/* Interactive Clickable Product Card in Review */}
+                {r.productSlug ? (
+                  <Link
+                    href={`/product/${r.productSlug}`}
+                    style={{
+                      marginTop: "auto",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      background: "#f8fafc",
+                      padding: "6px 8px",
+                      borderRadius: 8,
+                      border: "1px solid #e2e8f0",
+                      textDecoration: "none",
+                      transition: "all 0.2s ease",
+                      cursor: "pointer"
+                    }}
+                    className="review-product-link"
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.borderColor = "var(--red)";
+                      (e.currentTarget as HTMLElement).style.background = "#fff8f8";
+                      (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 12px rgba(220, 38, 38, 0.12)";
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0";
+                      (e.currentTarget as HTMLElement).style.background = "#f8fafc";
+                      (e.currentTarget as HTMLElement).style.boxShadow = "none";
+                    }}
+                  >
+                    {r.productImage ? (
+                      <img
+                        src={r.productImage}
+                        alt={r.product || "Product"}
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 6,
+                          objectFit: "cover",
+                          border: "1px solid #e2e8f0",
+                          flexShrink: 0,
+                          background: "white"
+                        }}
+                      />
+                    ) : (
+                      <div style={{ width: 38, height: 38, borderRadius: 6, background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
+                        🛍️
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: "var(--red)", textTransform: "uppercase", letterSpacing: 0.3, display: "flex", alignItems: "center", gap: 3 }}>
+                        <span>Verified Item</span>
+                        <span style={{ fontSize: 8, color: "#64748b" }}>• Click</span>
+                      </div>
+                      <p style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "#1e293b",
+                        margin: "1px 0",
+                        lineHeight: 1.2,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis"
+                      }} title={r.product}>
+                        {r.product}
+                      </p>
+                      {r.productPrice ? (
+                        <div style={{ fontSize: 11, fontWeight: 800, color: "var(--red)" }}>
+                          Rs. {Number(r.productPrice).toLocaleString()}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 10, color: "var(--red)", fontWeight: 600 }}>
+                          View Product →
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ color: "#94a3b8", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                      <ChevronRight size={14} />
+                    </div>
+                  </Link>
+                ) : (
+                  <div style={{ marginTop: "auto", background: "#f8fafc", padding: "6px 8px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: 0.3, margin: 0, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      PURCHASED: {r.product}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
             </div>

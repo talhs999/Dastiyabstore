@@ -5,9 +5,18 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const isBundle = searchParams.get('is_bundle');
+    const includeVendor = searchParams.get('include_vendor');
+
+    const whereClause: any = {
+      is_bundle: isBundle === 'true'
+    };
+
+    if (includeVendor !== 'true') {
+      whereClause.store_id = null;
+    }
 
     const products = await prisma.product.findMany({
-      where: isBundle === 'true' ? { is_bundle: true } : { is_bundle: false },
+      where: whereClause,
       orderBy: { created_at: 'desc' },
       include: {
         category: {
@@ -32,8 +41,21 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    // Normalize id if it contains spaces
-    id = id.replace(/\s/g, '-');
+    // Normalize and clean id
+    id = decodeURIComponent(id).trim().replace(/\s/g, '-');
+
+    const existing = await prisma.product.findUnique({
+      where: { id }
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    // Safely delete associated relations first
+    await prisma.productReview.deleteMany({ where: { product_id: id } }).catch(() => {});
+    await prisma.productQna.deleteMany({ where: { product_id: id } }).catch(() => {});
+    await prisma.productAnalyticsEvent.deleteMany({ where: { productId: id } }).catch(() => {});
 
     await prisma.product.delete({
       where: { id }
@@ -42,7 +64,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Failed to delete product' }, { status: 500 });
   }
 }
 

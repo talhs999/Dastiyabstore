@@ -36,8 +36,26 @@ export default function VendorProductsPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
-      await fetch(`/api/vendor/products?id=${id}`, { method: "DELETE" });
-      setProducts(products.filter(p => p.id !== id));
+      try {
+        let storeId = "";
+        const sessionStr = localStorage.getItem("customer_session");
+        if (sessionStr) {
+          try {
+            const user = JSON.parse(sessionStr);
+            storeId = user.store?.id || "";
+          } catch (e) {}
+        }
+
+        const res = await fetch(`/api/vendor/products?id=${encodeURIComponent(id)}${storeId ? `&store_id=${encodeURIComponent(storeId)}` : ''}`, { method: "DELETE" });
+        if (res.ok) {
+          setProducts(products.filter(p => p.id !== id));
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.error || "Failed to delete product");
+        }
+      } catch (err: any) {
+        alert("Network error: " + (err?.message || "Could not delete product"));
+      }
     }
   };
 
