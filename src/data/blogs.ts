@@ -259,5 +259,60 @@ export const blogs: BlogPost[] = [
       
       <p>Experience safe and reliable shopping at <a href="/" class="backlink">Dastiyab Store</a>.</p>
     `
+  },
+  {
+    id: "blog-11",
+    slug: "streetwear-fashion-trends-baggy-trousers-pakistan-2026",
+    title: "Streetwear Revolution: Why Wide-Leg Baggy Trousers are Dominating Pakistani Youth Fashion in 2026",
+    excerpt: "From Karachi to Lahore, Gen Z and youth fashion in Pakistan is shifting to relaxed, oversized baggy silhouettes. Discover top styling tips and premium heavyweight cotton trends.",
+    category: "Streetwear",
+    image: "https://res.cloudinary.com/rwmcd7gk/image/upload/v1789897272/drakewears_products/qkahx00lcikmztbjamrv.jpg",
+    date: "2026-09-29T10:00:00Z",
+    author: "Fashion Editorial Team",
+    metaTitle: "Streetwear & Baggy Trousers Trends in Pakistan 2026 | Dastiyab Store",
+    metaDescription: "Explore the 2026 streetwear wave in Pakistan. Find out how wide-leg baggy trousers from top independent creators like Drake Wears are redefining street aesthetics.",
+    content: `
+      <h2>The Shift Towards Comfortable, Rebellious Streetwear</h2>
+      <p>Over the last year, youth culture in Karachi, Lahore, and Islamabad has completely redefined contemporary casual fashion. Skinny jeans and rigid denim have made way for effortlessly cool, ultra-breathable <a href="/shop" class="backlink">wide-leg baggy silhouettes</a>.</p>
+      
+      <h3>1. Premium Heavyweight Cotton (240+ GSM)</h3>
+      <p>Authentic streetwear is all about drape and durability. Brands on Dastiyab Store like <strong>DRAKE WEARS</strong> utilize 100% combed heavyweight cotton that provides that unmistakable structured street hang without feeling stifling in Pakistan's warm weather.</p>
+
+      <h3>2. Statement Graphics & Dark Aesthetic Prints</h3>
+      <p>From the viral <a href="/shop" class="backlink">Ghost Flame Baggy Trousers</a> to the Cobalt Fire and Cyber Venom prints, edgy visual graphics combined with twin-needle stitching represent self-expression and individuality.</p>
+
+      <h3>3. How to Style Baggy Trousers</h3>
+      <p>Pair your wide-leg graphic trousers with a clean boxy drop-shoulder tee and chunky sneakers. Keep accessories minimal — a stainless steel chain or a smartwatch creates an effortlessly curated look.</p>
+
+      <p>Explore the latest streetwear drops on <a href="/shop" class="backlink">Dastiyab Store</a> with Cash on Delivery and easy size exchanges across Pakistan.</p>
+    `
+  },
+  {
+    id: "blog-12",
+    slug: "how-to-start-selling-online-as-vendor-in-pakistan",
+    title: "How to Launch and Scale Your Own Clothing or Gadget Brand in Pakistan with Dastiyab Store",
+    excerpt: "Thinking of starting your own e-commerce business in Pakistan? Learn how independent sellers and creators leverage Dastiyab Store's vendor platform to reach thousands of customers nationwide.",
+    category: "Seller Guides",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop",
+    date: "2026-09-30T15:30:00Z",
+    author: "E-commerce Growth Team",
+    metaTitle: "How to Sell Online in Pakistan: Vendor Guide 2026 | Dastiyab Store",
+    metaDescription: "Start selling online in Pakistan without spending lakhs on website development. Discover Dastiyab Store's vendor portal, store rent model, and nationwide delivery support.",
+    content: `
+      <h2>The Modern Way to Sell Online in Pakistan</h2>
+      <p>Building an independent website from scratch often requires tens of thousands of rupees in developer fees, payment gateway approvals, hosting, and constant maintenance. Dastiyab Store solves this for Pakistani entrepreneurs by providing a dedicated multi-vendor marketplace platform.</p>
+
+      <h3>1. Dedicated Vendor Dashboard</h3>
+      <p>When you register as a vendor on <a href="/vendor-login" class="backlink">Dastiyab Store Vendor Portal</a>, you get full control over your inventory: add products with custom size and color swatches, upload promotional videos, set sale prices, and manage customer orders.</p>
+
+      <h3>2. Affordable Store Rent & Zero High Commissions</h3>
+      <p>Unlike predatory marketplace algorithms that eat up 25-30% of your product margin, Dastiyab Store operates on a transparent, flat monthly store rent model. You keep your hard-earned profits while benefiting from our established customer base and verified trust badges.</p>
+
+      <h3>3. Cash on Delivery & Fast Logistics</h3>
+      <p>Pakistani customers overwhelmingly trust Cash on Delivery. By listing your products on Dastiyab Store, you instantly tap into our integrated delivery network, covering Karachi, Lahore, Rawalpindi, Islamabad, and 100+ cities nationwide.</p>
+
+      <h3>Ready to Expand Your Reach?</h3>
+      <p>Visit the <a href="/vendor-login" class="backlink">Dastiyab Store Vendor Hub</a> today, register your store in under 2 minutes, and start selling directly to active shoppers!</p>
+    `
   }
 ];

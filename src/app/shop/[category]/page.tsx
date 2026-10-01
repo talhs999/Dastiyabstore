@@ -1,8 +1,41 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import CategoryClient from "./CategoryClient";
 import { prisma } from "@/lib/prisma";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
+  const { category: categorySlug } = await params;
+  let category: any = null;
+  try {
+    category = await prisma.category.findUnique({
+      where: { slug: categorySlug },
+      select: { name: true, slug: true }
+    });
+  } catch (e) {}
+
+  const catName = category ? category.name : categorySlug.replace(/-/g, ' ');
+  const capitalized = catName.charAt(0).toUpperCase() + catName.slice(1);
+  const title = `${capitalized} — Buy Online in Pakistan | DastiyabStore`;
+  const description = `Shop high quality ${capitalized} on DastiyabStore. Cash on Delivery, easy returns, and fast delivery nationwide in Pakistan.`;
+  const url = `https://dastiyabstore.com/shop/${categorySlug}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "DastiyabStore",
+      type: "website",
+    }
+  };
+}
 
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
   // Await the params Promise for Next.js 15

@@ -583,6 +583,8 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                     onClick={() => { setShowZoom(true); setZoomLevel(1); }} 
                     style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", cursor: "zoom-in" }} 
                     fetchPriority={i === 0 ? "high" : "auto"}
+                    loading={i === 0 ? "eager" : "lazy"}
+                    decoding={i === 0 ? "sync" : "async"}
                     onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/800x800?text=Invalid+Image'; }} 
                   />
                 )}

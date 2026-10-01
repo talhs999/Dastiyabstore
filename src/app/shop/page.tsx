@@ -1,7 +1,31 @@
+import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import ShopClient from '@/components/ShopClient';
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: "Shop All Products — Tech Gadgets, Streetwear & Accessories in Pakistan",
+  description: "Browse our complete catalog of trending tech gadgets, neck fans, TWS earbuds, streetwear baggy trousers, and customized gifts. Cash on Delivery nationwide.",
+  alternates: {
+    canonical: "https://dastiyabstore.com/shop",
+  },
+  openGraph: {
+    title: "Shop All Products — DastiyabStore Pakistan",
+    description: "Browse our complete catalog of trending tech gadgets, neck fans, TWS earbuds, streetwear baggy trousers, and customized gifts.",
+    url: "https://dastiyabstore.com/shop",
+    siteName: "DastiyabStore",
+    type: "website",
+    images: [
+      {
+        url: "https://dastiyabstore.com/icon.png",
+        width: 800,
+        height: 600,
+        alt: "DastiyabStore Shop Catalog",
+      },
+    ],
+  },
+};
 
 export default async function ShopPage() {
   let products: any[] = [];
