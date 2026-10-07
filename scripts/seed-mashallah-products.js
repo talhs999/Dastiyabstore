@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const { PrismaClient } = require('@prisma/client');
@@ -8,7 +8,7 @@ const srcDir = 'C:\\Users\\IQRA TRADERS\\.gemini\\antigravity-ide\\brain\\2533f9
 const destDir = path.join(process.cwd(), 'public', 'images', 'mashallah-store');
 
 const STORE_ID = '5e4838be-7384-4d1b-8766-3124a7bd60b0'; // Mashallah Store
-const CLOTHING_CAT_ID = '955c999a-42b6-4fa3-82b5-fcbe02729e5c'; // Clothing
+const CLOTHING_CAT_ID = 'cbed74b2-f0d5-4874-94fe-63b638df5052'; // Night Suits
 
 const kidsNames = [
   "Kids Cute Animal Print 2-Piece Lounge Set",
@@ -277,7 +277,7 @@ async function main() {
     }
   }
 
-  console.log('✅ ALL MASHALLAH STORE PRODUCTS CREATED SUCCESSFULLY!');
+  console.log('âœ… ALL MASHALLAH STORE PRODUCTS CREATED SUCCESSFULLY!');
 }
 
 main()
