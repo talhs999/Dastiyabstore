@@ -21,7 +21,19 @@ export async function GET(request: Request, context: any) {
       } : { slug: slug },
       include: {
         category: true,
-        store: { select: { id: true, name: true, slug: true } }
+        store: { 
+          select: { 
+            id: true, 
+            name: true, 
+            slug: true,
+            owner: {
+              select: {
+                phone: true,
+                name: true
+              }
+            }
+          } 
+        }
       }
     });
 

@@ -490,6 +490,45 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     showToast("Link copied to clipboard!");
   };
 
+  const handleWhatsAppOrder = () => {
+    if (!product) return;
+    
+    // Resolve vendor / store phone number
+    let rawPhone = product.store?.owner?.phone;
+    if (!rawPhone || !rawPhone.trim()) {
+      // Fallback to Dastiyab Store phone
+      rawPhone = "+92 316 2975195";
+    }
+
+    // Clean phone number for wa.me format (e.g. "923162975195" or "923178420461")
+    let cleanPhone = rawPhone.replace(/[^0-9]/g, "");
+    if (cleanPhone.startsWith("0")) {
+      cleanPhone = "92" + cleanPhone.slice(1);
+    } else if (!cleanPhone.startsWith("92")) {
+      cleanPhone = "92" + cleanPhone;
+    }
+
+    const currentUrl = typeof window !== "undefined" ? window.location.href : `https://dastiyabstore.com/product/${product.slug || slug}`;
+    const storeLabel = product.store?.name || "Dastiyab Store";
+    const selectedColorText = selectedColor?.name ? `\n• Color: *${selectedColor.name}*` : "";
+    const selectedSizeText = selectedSize ? `\n• Size: *${selectedSize}*` : "";
+
+    const message = 
+`*Assalam-o-Alaikum!*
+Main yeh product order karna chahta/chahti hoon:
+
+• Product: *${product.name}*
+• Price: *Rs. ${product.price.toLocaleString()}*
+• Quantity: *${qty}*${selectedSizeText}${selectedColorText}
+• Store: *${storeLabel}*
+• Link: ${currentUrl}
+
+Kindly mujhe order confirmation aur delivery time details batadein. Shukriya!`;
+
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -902,6 +941,35 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   )}
                 </div>
               </div>
+
+              {/* WhatsApp Direct Order Button */}
+              <button 
+                type="button"
+                onClick={handleWhatsAppOrder}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  background: "#25D366",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "var(--radius)",
+                  padding: "14px 24px",
+                  fontSize: 16,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(37, 211, 102, 0.35)",
+                  transition: "all 0.2s ease",
+                  marginBottom: 24,
+                  letterSpacing: 0.3
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#20ba5a"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#25D366"; e.currentTarget.style.transform = "none"; }}
+              >
+                <FaWhatsapp size={22} /> Order on WhatsApp
+              </button>
             </>
           )}
 
@@ -1634,6 +1702,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               </button>
               <button onClick={handleBuyNow} className="btn-yellow" style={{ padding: "12px 24px", minWidth: 140, justifyContent: "center" }}>
                 <Zap size={18} /> Buy Now
+              </button>
+              <button onClick={handleWhatsAppOrder} style={{ display: "flex", alignItems: "center", gap: 8, background: "#25D366", color: "white", padding: "12px 20px", borderRadius: "var(--radius)", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14, boxShadow: "0 2px 8px rgba(37, 211, 102, 0.3)" }}>
+                <FaWhatsapp size={18} /> WhatsApp
               </button>
             </div>
           </div>
