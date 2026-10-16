@@ -1,7 +1,7 @@
 "use client";
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
-import { CheckCircle, Calendar, CreditCard, User, MapPin, ShoppingBag, Download, ArrowLeft } from "lucide-react";
+import { CheckCircle, Calendar, CreditCard, User, MapPin, ShoppingBag, Download, ArrowLeft, Clock } from "lucide-react";
 
 export default function OrderReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -52,8 +52,12 @@ export default function OrderReceiptPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  const formattedDate = new Date(order.created_at).toLocaleDateString("en-US", {
-    year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
+  const orderDateObj = new Date(order.created_at);
+  const formattedDate = orderDateObj.toLocaleDateString("en-US", {
+    year: "numeric", month: "long", day: "numeric"
+  });
+  const formattedTime = orderDateObj.toLocaleTimeString("en-US", {
+    hour: "2-digit", minute: "2-digit", hour12: true
   });
 
   return (
@@ -87,11 +91,14 @@ export default function OrderReceiptPage({ params }: { params: Promise<{ id: str
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, borderBottom: "1px dashed var(--gray-200)", paddingBottom: 24, marginBottom: 24 }}>
               <div>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: 0.5 }}>Order Number</span>
-                <div style={{ fontSize: 14, fontWeight: 800, color: "var(--gray-900)", marginTop: 2 }}>{order.id.split("-")[0].toUpperCase()}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "var(--gray-900)", marginTop: 2 }}>#{order.id.split("-")[0].toUpperCase()}</div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: 0.5 }}>Invoice Date</span>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--gray-800)", marginTop: 2 }}>{formattedDate}</div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: 0.5 }}>Order Placed</span>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-800)", marginTop: 2 }}>{formattedDate}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--gray-500)", marginTop: 2, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+                  <Clock size={12} color="var(--gray-400)" /> {formattedTime}
+                </div>
               </div>
             </div>
 

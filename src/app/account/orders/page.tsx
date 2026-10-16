@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronRight, Package, Clock, Heart, User, MapPin, LogOut, ShoppingBag, Loader2, Truck } from "lucide-react";
+import { ChevronRight, Package, Clock, Heart, User, MapPin, LogOut, ShoppingBag, Loader2, Truck, Calendar } from "lucide-react";
 
 const statusColors: Record<string, string> = { 
   Pending: "var(--yellow-dark)", 
@@ -147,9 +147,19 @@ export default function AccountOrdersPage() {
                       <div style={{ fontSize: 13, color: "var(--gray-500)", marginBottom: 6 }}>
                         {order.address}, {order.city}
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 13, color: "var(--gray-500)" }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Clock size={12} /> {new Date(order.created_at).toLocaleDateString("en-PK", { month: "long", day: "numeric", year: "numeric" })}</span>
-                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Package size={12} /> Subtotal: Rs. {(order.subtotal || order.total || 0).toLocaleString()}</span>
+                      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 12, fontSize: 13, color: "var(--gray-500)" }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <Calendar size={12} color="var(--gray-400)" /> 
+                          {new Date(order.created_at).toLocaleDateString("en-PK", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <Clock size={12} color="var(--gray-400)" /> 
+                          {new Date(order.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                        </span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <Package size={12} color="var(--gray-400)" /> 
+                          Subtotal: Rs. {(order.subtotal || order.total || 0).toLocaleString()}
+                        </span>
                       </div>
                     </div>
                     <div className="order-actions" style={{ minWidth: 160 }}>

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 import Link from "next/link";
 import QRCode from "react-qr-code";
-import { Search, Phone, Eye, Download, Trash2, Printer, X, CreditCard, Calendar, User, MapPin, Plus } from "lucide-react";
+import { Search, Phone, Eye, Download, Trash2, Printer, X, CreditCard, Calendar, User, MapPin, Plus, Clock } from "lucide-react";
 
 const statusOptions = ["Pending", "Processing", "Shipped", "Completed", "Cancelled"];
 const statusColors: Record<string, { bg: string; color: string }> = {
@@ -107,10 +107,11 @@ export default function AdminOrdersPage() {
 
   const exportCSV = () => {
     if (orders.length === 0) return;
-    const headers = ["Order ID", "Date", "Customer Name", "Customer Email", "Customer Phone", "Status", "Subtotal", "Shipping Fee", "Total Amount", "Address", "City"];
+    const headers = ["Order ID", "Date", "Time", "Customer Name", "Customer Email", "Customer Phone", "Status", "Subtotal", "Shipping Fee", "Total Amount", "Address", "City"];
     const rows = orders.map(o => [
       o.id,
-      new Date(o.created_at).toLocaleDateString(),
+      new Date(o.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+      new Date(o.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }),
       o.customer_name,
       o.customer_email || "",
       o.customer_phone || "",
@@ -186,8 +187,12 @@ export default function AdminOrdersPage() {
           }
         `}</style>
         {printingSlips.map((order, index) => {
-          const formattedDate = new Date(order.created_at).toLocaleDateString("en-US", {
+          const orderDateObj = new Date(order.created_at);
+          const formattedDate = orderDateObj.toLocaleDateString("en-US", {
             year: "numeric", month: "long", day: "numeric"
+          });
+          const formattedTime = orderDateObj.toLocaleTimeString("en-US", {
+            hour: "2-digit", minute: "2-digit", hour12: true
           });
           const qrUrl = typeof window !== "undefined" 
             ? `${window.location.origin}/order-receipt/${order.id}` 
@@ -230,9 +235,10 @@ export default function AdminOrdersPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid var(--gray-200)" }}>
                   <div>
                     <span style={{ fontSize: 10, fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Order Info</span>
-                    <div style={{ fontSize: 13, color: "var(--gray-700)", marginTop: 4, display: "flex", flexDirection: "column", gap: 3 }}>
-                      <div>Order ID: <strong>{order.id.split("-")[0].toUpperCase()}</strong></div>
-                      <div>Date: {formattedDate}</div>
+                    <div style={{ fontSize: 13, color: "var(--gray-700)", marginTop: 4, display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div>Order ID: <strong>#{order.id.split("-")[0].toUpperCase()}</strong></div>
+                      <div>Order Date: <strong>{formattedDate}</strong></div>
+                      <div>Order Time: <strong>{formattedTime}</strong></div>
                       <div>Payment Method: <strong>{order.payment_method || "COD"}</strong></div>
                       {order.rider_name && <div>Delivery Rider: <strong>🛵 {order.rider_name}</strong></div>}
                     </div>
@@ -470,7 +476,15 @@ export default function AdminOrdersPage() {
                     <td style={{ padding: "16px 24px", fontSize: 13, fontWeight: 700, color: "var(--gray-900)" }}>
                       {o.id.split("-")[0].toUpperCase()}
                     </td>
-                    <td style={{ padding: "16px 24px", fontSize: 13, color: "var(--gray-600)" }}>{new Date(o.created_at).toLocaleDateString()}</td>
+                    <td style={{ padding: "16px 24px" }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gray-900)" }}>
+                        {new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--gray-500)", marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}>
+                        <Clock size={12} color="var(--gray-400)" />
+                        {new Date(o.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                      </div>
+                    </td>
                     <td style={{ padding: "16px 24px" }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--gray-900)", display: "flex", alignItems: "center", gap: 8 }}>
                         {o.customer_name}
@@ -571,6 +585,28 @@ export default function AdminOrdersPage() {
             {/* Modal Body */}
             <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
               
+              {/* Order Date & Time Info */}
+              <div style={{ background: "var(--gray-50)", borderRadius: 12, padding: 18, border: "1px solid var(--gray-200)", marginBottom: 20 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 800, color: "var(--gray-800)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                  <Calendar size={15} color="var(--red)" /> Order Timing & Status
+                </h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <span style={{ fontSize: 11, color: "var(--gray-400)", textTransform: "uppercase", fontWeight: 700 }}>Order Date</span>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gray-900)", marginTop: 2 }}>
+                      {new Date(activeOrder.created_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: 11, color: "var(--gray-400)", textTransform: "uppercase", fontWeight: 700 }}>Order Time</span>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--gray-900)", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                      <Clock size={13} color="var(--red)" />
+                      {new Date(activeOrder.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Customer Details */}
               <div style={{ background: "var(--gray-50)", borderRadius: 12, padding: 18, border: "1px solid var(--gray-200)", marginBottom: 24 }}>
                 <h4 style={{ fontSize: 13, fontWeight: 800, color: "var(--gray-800)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
