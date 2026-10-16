@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useSettings } from "@/components/SettingsProvider";
 import ProductCard from "@/components/ProductCard";
+import HomeAdPopup from "@/components/HomeAdPopup";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
 import { DEFAULT_SITE_REVIEWS } from "@/data/siteReviews";
 
@@ -1273,6 +1274,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
           }
         }
       `}</style>
+      <HomeAdPopup />
     </div>
   );
 }
