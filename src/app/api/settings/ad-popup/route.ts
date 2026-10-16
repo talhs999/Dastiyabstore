@@ -1,18 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-const DEFAULT_POPUP_CONFIG = {
-  enabled: true,
-  badge: "🔥 LIMITED TIME OFFER",
-  title: "Flat 10% OFF on Your Order!",
-  subtitle: "Explore our brand new 2-Piece Night Suits & Loungewear collection starting from just Rs. 1,450. Cash on delivery nationwide!",
-  couponCode: "WELCOME10",
-  discountText: "Extra 10% OFF at Checkout",
-  buttonText: "Shop Night Suits Collection →",
-  buttonLink: "/shop/night-suits",
-  image: "/images/mashallah-store/women-suit-01.webp",
-  secondaryImage: "/images/mashallah-store/kids-suit-01.webp"
-};
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -20,6 +9,7 @@ export async function GET() {
       where: { key: 'home_ad_popup' }
     });
 
+    let config: any = {};
     if (setting && setting.value) {
       let data = setting.value;
       if (typeof data === 'string') {
@@ -27,14 +17,104 @@ export async function GET() {
           data = JSON.parse(data);
         } catch (e) {}
       }
-      const parsedData = (typeof data === 'object' && data !== null && !Array.isArray(data)) ? (data as Record<string, any>) : {};
-      return NextResponse.json({ ...DEFAULT_POPUP_CONFIG, ...parsedData });
+      if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+        config = data;
+      }
     }
 
-    return NextResponse.json(DEFAULT_POPUP_CONFIG);
+    if (config.enabled === false) {
+      return NextResponse.json({ enabled: false, products: [] });
+    }
+
+    // Fetch products belonging STRICTLY to Dastiyab Store (store_id: null, in_stock: true)
+    const count = await prisma.product.count({
+      where: { store_id: null, in_stock: true }
+    });
+
+    let products: any[] = [];
+    if (count > 0) {
+      // Fetch up to 15 products with a random skip to achieve maximum diversity
+      const takeCount = Math.min(count, 15);
+      const maxSkip = Math.max(0, count - takeCount);
+      const randomSkip = Math.floor(Math.random() * (maxSkip + 1));
+
+      const rawProducts = await prisma.product.findMany({
+        where: { store_id: null, in_stock: true },
+        skip: randomSkip,
+        take: takeCount,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          price: true,
+          original_price: true,
+          image: true,
+          images: true,
+          badge: true,
+          category: {
+            select: { name: true }
+          }
+        }
+      });
+
+      // Map and extract clean image previews
+      products = rawProducts.map(p => {
+        let secImg: string | null = null;
+        if (Array.isArray(p.images) && p.images.length > 0) {
+          secImg = String(p.images[0]);
+        } else if (typeof p.images === 'string') {
+          try {
+            const parsed = JSON.parse(p.images);
+            if (Array.isArray(parsed) && parsed.length > 0) secImg = String(parsed[0]);
+          } catch (e) {}
+        }
+
+        let calculatedBadge = p.badge;
+        if (!calculatedBadge && p.original_price && p.original_price > p.price) {
+          const discountPc = Math.round(((p.original_price - p.price) / p.original_price) * 100);
+          calculatedBadge = `${discountPc}% OFF`;
+        }
+
+        return {
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          price: p.price,
+          original_price: p.original_price,
+          image: p.image,
+          secondaryImage: secImg && secImg !== p.image ? secImg : null,
+          badge: calculatedBadge || "EXCLUSIVE",
+          categoryName: p.category?.name || "Official Dastiyab Store"
+        };
+      });
+
+      // Randomize the order (Fisher-Yates)
+      for (let i = products.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [products[i], products[j]] = [products[j], products[i]];
+      }
+    }
+
+    return NextResponse.json({
+      enabled: config.enabled ?? true,
+      badge: config.badge || "🔥 DASTIYAB EXCLUSIVE DEAL",
+      couponCode: config.couponCode || "WELCOME10",
+      discountText: config.discountText || "Flat 10% Extra Discount at Checkout",
+      products: products
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      }
+    });
   } catch (error: any) {
     console.error('API Error in ad-popup GET:', error);
-    return NextResponse.json(DEFAULT_POPUP_CONFIG);
+    return NextResponse.json({
+      enabled: true,
+      badge: "🔥 DASTIYAB EXCLUSIVE DEAL",
+      couponCode: "WELCOME10",
+      discountText: "Flat 10% Extra Discount at Checkout",
+      products: []
+    });
   }
 }
 

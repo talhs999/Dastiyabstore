@@ -1,73 +1,143 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { X, Copy, Check, Sparkles, Tag, ArrowRight, Gift } from "lucide-react";
+import { X, Copy, Check, Sparkles, ArrowRight, Gift, ShoppingBag, ShieldCheck } from "lucide-react";
 
-interface AdPopupConfig {
-  enabled: boolean;
-  badge: string;
-  title: string;
-  subtitle: string;
-  couponCode: string;
-  discountText: string;
-  buttonText: string;
-  buttonLink: string;
-  image?: string;
-  secondaryImage?: string;
+interface DastiyabProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  original_price: number | null;
+  image: string;
+  secondaryImage?: string | null;
+  badge?: string;
+  categoryName?: string;
 }
 
-const DEFAULT_CONFIG: AdPopupConfig = {
-  enabled: true,
-  badge: "🔥 LIMITED TIME OFFER",
-  title: "Flat 10% OFF on Your Order!",
-  subtitle: "Explore our brand new 2-Piece Night Suits & Loungewear collection starting from just Rs. 1,450. Cash on delivery nationwide!",
-  couponCode: "WELCOME10",
-  discountText: "Extra 10% OFF at Checkout",
-  buttonText: "Shop Night Suits Now",
-  buttonLink: "/shop/night-suits",
-  image: "/images/mashallah-store/women-suit-01.webp",
-  secondaryImage: "/images/mashallah-store/kids-suit-01.webp"
-};
+interface PopupApiResponse {
+  enabled: boolean;
+  badge?: string;
+  couponCode?: string;
+  discountText?: string;
+  products: DastiyabProduct[];
+}
+
+// Curated fallbacks strictly from Dastiyab Store's own verified in-stock catalog
+const FALLBACK_DASTIYAB_PRODUCTS: DastiyabProduct[] = [
+  {
+    id: "19756287-99e8-4c68-8504-d91d9308b126",
+    name: "Panda LED Night Light — Soft Silicone, 3 Brightness Levels, Tap/Squeeze Control",
+    slug: "panda-led-night-light-silicone",
+    price: 1299,
+    original_price: 1499,
+    image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1784753546/dastiyabstore/dkzttylp7r5ebphii2ui.webp",
+    secondaryImage: "https://res.cloudinary.com/zpbci6tf/image/upload/v1784753549/dastiyabstore/yfozfcttvgsegzsy3fmj.webp",
+    badge: "13% OFF",
+    categoryName: "Night Lights"
+  },
+  {
+    id: "0228a7cb-d660-48db-be06-c4a615ae605d",
+    name: "Stress Relief Gift Set — Wireless Earbuds, Fidget Toy & Keychain Combo",
+    slug: "stress-relief-gift-set-with-keychain-earbuds",
+    price: 1899,
+    original_price: 2299,
+    image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783766729/dastiyabstore/ooilsox6528vdha0e0bb.webp",
+    secondaryImage: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783766738/dastiyabstore/bpv63okgof9zkcjb8ybu.webp",
+    badge: "17% OFF",
+    categoryName: "Gift Sets"
+  },
+  {
+    id: "3c0765f0-3ab3-4cd6-a353-40b1a7bea407",
+    name: "Capybara TWS-K22 Wireless Earbuds — Cute Character Design, Fast Pairing",
+    slug: "capybara-tws-k22-wireless-earbuds",
+    price: 1499,
+    original_price: 1999,
+    image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783768832/dastiyabstore/r78xwsc4te0qpxmi0kas.webp",
+    secondaryImage: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783768835/dastiyabstore/jojjgqafgfzsa41ci9fd.webp",
+    badge: "25% OFF",
+    categoryName: "Wireless Earbuds"
+  },
+  {
+    id: "2a5d601e-eb0d-470f-ab06-9d100b2d7576",
+    name: "P9 Wireless Headphones — Bluetooth 5.0, Foldable Over-Ear Design",
+    slug: "p9-wireless-headphones-bluetooth",
+    price: 1199,
+    original_price: 1399,
+    image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1784753310/dastiyabstore/ted3irxtlwzqkn2zjkhd.webp",
+    secondaryImage: "https://res.cloudinary.com/zpbci6tf/image/upload/v1784753316/dastiyabstore/dzgkrhxnoozn8t9in7xo.webp",
+    badge: "14% OFF",
+    categoryName: "Headphones"
+  },
+  {
+    id: "26580216-5eee-4afc-af44-7d97685258a4",
+    name: "U39 True Wireless Bluetooth Earbuds — Bluetooth 5.3, HD Stereo Sound",
+    slug: "u39-true-wireless-bluetooth-earbuds-black-yellow",
+    price: 1049,
+    original_price: 1399,
+    image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783374191/dastiyabstore/vygzeefbsr0pnmcyxjjw.webp",
+    secondaryImage: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783374248/dastiyabstore/kpctw7u1qmpes8bkgwgc.webp",
+    badge: "25% OFF",
+    categoryName: "Earbuds"
+  }
+];
 
 export default function HomeAdPopup() {
-  const [config, setConfig] = useState<AdPopupConfig>(DEFAULT_CONFIG);
-  const [isOpen, setIsOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [hasDismissed, setHasDismissed] = useState(false);
+  const [productsPool, setProductsPool] = useState<DastiyabProduct[]>(FALLBACK_DASTIYAB_PRODUCTS);
+  const [selectedProduct, setSelectedProduct] = useState<DastiyabProduct>(FALLBACK_DASTIYAB_PRODUCTS[0]);
+  const [couponCode, setCouponCode] = useState<string>("WELCOME10");
+  const [badgeText, setBadgeText] = useState<string>("🔥 DASTIYAB EXCLUSIVE DEAL");
+  const [enabled, setEnabled] = useState<boolean>(true);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
+  const [hasDismissed, setHasDismissed] = useState<boolean>(false);
+
+  // Pick a random product from a list
+  const pickRandom = (items: DastiyabProduct[]): DastiyabProduct => {
+    if (!items || items.length === 0) return FALLBACK_DASTIYAB_PRODUCTS[0];
+    const randomIndex = Math.floor(Math.random() * items.length);
+    return items[randomIndex];
+  };
 
   useEffect(() => {
-    // 1. Check if user already dismissed it during this session
+    // 1. Initial random fallback selection
+    const initialFallback = pickRandom(FALLBACK_DASTIYAB_PRODUCTS);
+    setSelectedProduct(initialFallback);
+
+    // 2. Check if user already dismissed during this session
     const dismissed = sessionStorage.getItem("dastiyab_home_ad_dismissed");
     if (dismissed === "true") {
       setHasDismissed(true);
       return;
     }
 
-    // 2. Fetch remote config if available
-    fetch("/api/settings/ad-popup")
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && typeof data.enabled === "boolean") {
-          setConfig(data);
-          if (data.enabled) {
-            // Show popup with gentle delay after hero section renders
-            const timer = setTimeout(() => {
-              setIsOpen(true);
-            }, 1400);
+    // 3. Fetch live randomized Dastiyab Store products
+    fetch("/api/settings/ad-popup", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: PopupApiResponse | null) => {
+        if (data) {
+          if (typeof data.enabled === "boolean") setEnabled(data.enabled);
+          if (data.badge) setBadgeText(data.badge);
+          if (data.couponCode) setCouponCode(data.couponCode);
+
+          if (Array.isArray(data.products) && data.products.length > 0) {
+            setProductsPool(data.products);
+            const chosen = pickRandom(data.products);
+            setSelectedProduct(chosen);
+          }
+
+          if (data.enabled !== false) {
+            const timer = setTimeout(() => setIsOpen(true), 1300);
             return () => clearTimeout(timer);
           }
         } else {
-          const timer = setTimeout(() => {
-            setIsOpen(true);
-          }, 1400);
+          const timer = setTimeout(() => setIsOpen(true), 1300);
           return () => clearTimeout(timer);
         }
       })
       .catch(() => {
-        const timer = setTimeout(() => {
-          setIsOpen(true);
-        }, 1400);
+        const timer = setTimeout(() => setIsOpen(true), 1300);
         return () => clearTimeout(timer);
       });
   }, []);
@@ -89,52 +159,71 @@ export default function HomeAdPopup() {
     sessionStorage.setItem("dastiyab_home_ad_dismissed", "true");
   };
 
+  const handleReopen = () => {
+    // When reopened, pick another random product from Dastiyab Store's collection!
+    const newPick = pickRandom(productsPool);
+    setSelectedProduct(newPick);
+    setIsOpen(true);
+  };
+
   const handleCopyCode = () => {
-    if (!config.couponCode) return;
-    navigator.clipboard.writeText(config.couponCode);
+    if (!couponCode) return;
+    navigator.clipboard.writeText(couponCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
 
+  // Calculate discount percentage if original_price exists
+  const discountPercent = useMemo(() => {
+    if (selectedProduct.original_price && selectedProduct.original_price > selectedProduct.price) {
+      return Math.round(
+        ((selectedProduct.original_price - selectedProduct.price) / selectedProduct.original_price) * 100
+      );
+    }
+    return null;
+  }, [selectedProduct]);
+
+  if (!enabled) return null;
+
   return (
     <>
-      {/* 1. Floating Offer Pill (Re-open trigger after dismissal) */}
-      {hasDismissed && !isOpen && config.enabled && (
+      {/* 1. Floating Offer Pill (Re-open trigger after dismissal, positioned right above the Chatbot bubble at bottom-left) */}
+      {hasDismissed && !isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
-          className="no-print"
+          onClick={handleReopen}
+          className="no-print dastiyab-offer-pill"
           style={{
             position: "fixed",
-            bottom: 24,
+            bottom: 94,
             left: 24,
-            zIndex: 9998,
+            zIndex: 9990,
             display: "flex",
             alignItems: "center",
             gap: 8,
-            background: "linear-gradient(135deg, #111827 0%, #1f2937 100%)",
+            background: "linear-gradient(135deg, #09090b 0%, #1c1917 100%)",
             color: "white",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
+            border: "1px solid rgba(255, 255, 255, 0.25)",
             borderRadius: 9999,
-            padding: "10px 18px",
-            fontSize: 13,
+            padding: "9px 16px",
+            fontSize: 12,
             fontWeight: 800,
             cursor: "pointer",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
             transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
             animation: "pulseGlow 2.5s infinite"
           }}
-          onMouseEnter={e => {
+          onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-3px) scale(1.03)";
-            e.currentTarget.style.borderColor = "var(--yellow)";
+            e.currentTarget.style.borderColor = "#fbbf24";
           }}
-          onMouseLeave={e => {
+          onMouseLeave={(e) => {
             e.currentTarget.style.transform = "none";
-            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.25)";
           }}
-          aria-label="View Special Offer"
+          aria-label="View Dastiyab Special Offer"
         >
-          <Gift size={16} color="var(--yellow)" />
-          <span>Special Offer: <strong>{config.couponCode}</strong></span>
+          <Gift size={15} color="#fbbf24" />
+          <span>Dastiyab Deal: <strong style={{ color: "#fbbf24" }}>{couponCode}</strong></span>
         </button>
       )}
 
@@ -150,7 +239,7 @@ export default function HomeAdPopup() {
             alignItems: "center",
             justifyContent: "center",
             padding: "16px",
-            background: "rgba(0, 0, 0, 0.65)",
+            background: "rgba(0, 0, 0, 0.7)",
             backdropFilter: "blur(6px)",
             WebkitBackdropFilter: "blur(6px)",
             animation: "adFadeIn 0.25s ease-out forwards"
@@ -163,15 +252,15 @@ export default function HomeAdPopup() {
             style={{
               position: "relative",
               width: "100%",
-              maxWidth: 440,
+              maxWidth: 420,
               background: "#ffffff",
-              borderRadius: 22,
+              borderRadius: 24,
               overflow: "hidden",
-              boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.08)",
+              boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.08)",
               animation: "adScaleUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards",
               display: "flex",
               flexDirection: "column",
-              maxHeight: "92vh"
+              maxHeight: "90vh"
             }}
           >
             {/* Top Close Button */}
@@ -182,11 +271,11 @@ export default function HomeAdPopup() {
                 position: "absolute",
                 top: 12,
                 right: 12,
-                zIndex: 20,
+                zIndex: 30,
                 width: 34,
                 height: 34,
                 borderRadius: "50%",
-                background: "rgba(0, 0, 0, 0.6)",
+                background: "rgba(0, 0, 0, 0.65)",
                 backdropFilter: "blur(4px)",
                 color: "white",
                 border: "1px solid rgba(255, 255, 255, 0.3)",
@@ -197,30 +286,30 @@ export default function HomeAdPopup() {
                 transition: "all 0.2s ease"
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--red)";
+                e.currentTarget.style.background = "#dc2626";
                 e.currentTarget.style.transform = "rotate(90deg) scale(1.08)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(0, 0, 0, 0.6)";
+                e.currentTarget.style.background = "rgba(0, 0, 0, 0.65)";
                 e.currentTarget.style.transform = "none";
               }}
             >
               <X size={17} strokeWidth={2.5} />
             </button>
 
-            {/* Visual Header / Banner */}
+            {/* Visual Banner Header */}
             <div
               style={{
                 position: "relative",
-                height: 190,
-                background: "linear-gradient(135deg, #18181b 0%, #27272a 50%, #09090b 100%)",
+                height: 180,
+                background: "linear-gradient(135deg, #09090b 0%, #18181b 50%, #27272a 100%)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 overflow: "hidden"
               }}
             >
-              {/* Product Visual Preview (Side by Side or Feature Display) */}
+              {/* Product Visual Display */}
               <div
                 style={{
                   position: "absolute",
@@ -229,137 +318,248 @@ export default function HomeAdPopup() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 12,
-                  padding: "16px 20px"
+                  padding: "14px 18px"
                 }}
               >
-                {config.image && (
-                  <div
-                    style={{
-                      width: 125,
-                      height: 160,
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      border: "2px solid rgba(255, 255, 255, 0.18)",
-                      boxShadow: "0 10px 20px rgba(0,0,0,0.4)",
-                      transform: "rotate(-3deg)",
-                      transition: "transform 0.3s ease"
-                    }}
-                  >
-                    <img
-                      src={config.image}
-                      alt="Women Suit"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  </div>
-                )}
+                {/* Main Product Image Card */}
+                <div
+                  style={{
+                    position: "relative",
+                    width: 125,
+                    height: 150,
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    border: "2px solid rgba(255, 255, 255, 0.2)",
+                    boxShadow: "0 12px 24px rgba(0,0,0,0.45)",
+                    transform: selectedProduct.secondaryImage ? "rotate(-3deg)" : "none",
+                    background: "#f4f4f5",
+                    flexShrink: 0
+                  }}
+                >
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                  {/* Discount ribbon on image */}
+                  {(discountPercent || selectedProduct.badge) && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 6,
+                        left: 6,
+                        background: "#dc2626",
+                        color: "#ffffff",
+                        fontSize: 10,
+                        fontWeight: 900,
+                        padding: "3px 6px",
+                        borderRadius: 6,
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.3)"
+                      }}
+                    >
+                      {discountPercent ? `${discountPercent}% OFF` : selectedProduct.badge}
+                    </div>
+                  )}
+                </div>
 
-                {config.secondaryImage && (
+                {/* Secondary Angle Preview (if available) */}
+                {selectedProduct.secondaryImage && (
                   <div
                     style={{
-                      width: 125,
-                      height: 160,
-                      borderRadius: 12,
+                      width: 110,
+                      height: 140,
+                      borderRadius: 14,
                       overflow: "hidden",
-                      border: "2px solid rgba(255, 255, 255, 0.18)",
-                      boxShadow: "0 10px 20px rgba(0,0,0,0.4)",
+                      border: "2px solid rgba(255, 255, 255, 0.2)",
+                      boxShadow: "0 12px 24px rgba(0,0,0,0.45)",
                       transform: "rotate(4deg)",
-                      transition: "transform 0.3s ease"
+                      background: "#f4f4f5",
+                      flexShrink: 0
                     }}
                   >
                     <img
-                      src={config.secondaryImage}
-                      alt="Kids Suit"
+                      src={selectedProduct.secondaryImage}
+                      alt={`${selectedProduct.name} preview`}
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   </div>
                 )}
               </div>
 
-              {/* Gradient overlay for text contrast */}
+              {/* Gradient overlay for contrast */}
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
-                  background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.4) 100%)",
+                  background: "linear-gradient(to top, rgba(9,9,11,0.85) 0%, rgba(9,9,11,0.2) 60%, rgba(9,9,11,0.4) 100%)",
                   pointerEvents: "none"
                 }}
               />
 
-              {/* Badge Tag in Header */}
+              {/* Dastiyab Store Official Badge */}
               <div
                 style={{
                   position: "absolute",
-                  bottom: 14,
-                  left: 18,
+                  bottom: 12,
+                  left: 14,
                   zIndex: 10,
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
-                  background: "var(--red)",
+                  gap: 5,
+                  background: "#dc2626",
                   color: "#ffffff",
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: 900,
-                  letterSpacing: "0.6px",
-                  padding: "4px 10px",
+                  letterSpacing: "0.5px",
+                  padding: "4px 8px",
                   borderRadius: 9999,
                   boxShadow: "0 4px 10px rgba(220, 38, 38, 0.4)",
                   textTransform: "uppercase"
                 }}
               >
-                <Sparkles size={12} color="var(--yellow)" />
-                {config.badge}
+                <Sparkles size={11} color="#fbbf24" />
+                {badgeText}
+              </div>
+
+              {/* Verification Tag */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 12,
+                  right: 14,
+                  zIndex: 10,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  background: "rgba(255, 255, 255, 0.15)",
+                  backdropFilter: "blur(4px)",
+                  color: "#ffffff",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: "3px 7px",
+                  borderRadius: 6
+                }}
+              >
+                <ShieldCheck size={11} color="#34d399" />
+                Dastiyab Verified
               </div>
             </div>
 
-            {/* Content Area */}
-            <div style={{ padding: "20px 22px 22px", textAlign: "center", overflowY: "auto" }}>
-              {/* Title */}
+            {/* Content Body */}
+            <div style={{ padding: "16px 18px 18px", textAlign: "center", overflowY: "auto" }}>
+              {/* Category */}
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  color: "#dc2626",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.8px",
+                  marginBottom: 4
+                }}
+              >
+                {selectedProduct.categoryName || "Dastiyab Official Store"}
+              </div>
+
+              {/* Product Title */}
               <h3
                 style={{
-                  fontSize: 20,
-                  fontWeight: 900,
-                  color: "var(--gray-900)",
-                  lineHeight: 1.25,
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: "#111827",
+                  lineHeight: 1.3,
                   marginBottom: 8,
-                  letterSpacing: "-0.3px"
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden"
                 }}
+                title={selectedProduct.name}
               >
-                {config.title}
+                {selectedProduct.name}
               </h3>
 
-              {/* Subtitle */}
-              <p
+              {/* Price & Savings Display */}
+              <div
                 style={{
-                  fontSize: 13,
-                  color: "var(--gray-600)",
-                  lineHeight: 1.5,
-                  marginBottom: 16
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  marginBottom: 12,
+                  flexWrap: "wrap"
                 }}
               >
-                {config.subtitle}
-              </p>
+                <span style={{ fontSize: 20, fontWeight: 900, color: "#111827" }}>
+                  Rs. {selectedProduct.price.toLocaleString()}
+                </span>
+                {selectedProduct.original_price && selectedProduct.original_price > selectedProduct.price && (
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#9ca3af",
+                      textDecoration: "line-through"
+                    }}
+                  >
+                    Rs. {selectedProduct.original_price.toLocaleString()}
+                  </span>
+                )}
+                {discountPercent && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: "#059669",
+                      background: "#d1fae5",
+                      padding: "2px 7px",
+                      borderRadius: 9999
+                    }}
+                  >
+                    Save Rs. {(selectedProduct.original_price! - selectedProduct.price).toLocaleString()}
+                  </span>
+                )}
+              </div>
 
               {/* Coupon Box */}
-              {config.couponCode && (
+              {couponCode && (
                 <div
                   style={{
                     background: "#f8fafc",
                     border: "2px dashed #cbd5e1",
-                    borderRadius: 14,
-                    padding: "10px 14px",
-                    marginBottom: 18,
+                    borderRadius: 12,
+                    padding: "8px 12px",
+                    marginBottom: 14,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    gap: 12
+                    gap: 8
                   }}
                 >
                   <div style={{ textAlign: "left", flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                      Voucher Code
+                    <div
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 700,
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5
+                      }}
+                    >
+                      Exclusive Voucher
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: "var(--red)", letterSpacing: 1.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {config.couponCode}
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 900,
+                        color: "#dc2626",
+                        letterSpacing: 1.2,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {couponCode}
                     </div>
                   </div>
 
@@ -369,13 +569,13 @@ export default function HomeAdPopup() {
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: 6,
-                      background: copied ? "#10b981" : "var(--gray-900)",
+                      gap: 5,
+                      background: copied ? "#10b981" : "#111827",
                       color: "#ffffff",
                       border: "none",
                       borderRadius: 8,
-                      padding: "8px 14px",
-                      fontSize: 12,
+                      padding: "7px 12px",
+                      fontSize: 11,
                       fontWeight: 700,
                       cursor: "pointer",
                       transition: "all 0.2s ease",
@@ -384,11 +584,11 @@ export default function HomeAdPopup() {
                   >
                     {copied ? (
                       <>
-                        <Check size={14} /> Copied!
+                        <Check size={13} /> Copied!
                       </>
                     ) : (
                       <>
-                        <Copy size={14} /> Copy
+                        <Copy size={13} /> Copy
                       </>
                     )}
                   </button>
@@ -397,7 +597,7 @@ export default function HomeAdPopup() {
 
               {/* Primary Call to Action Button */}
               <Link
-                href={config.buttonLink || "/shop"}
+                href={`/product/${selectedProduct.slug}`}
                 onClick={handleClose}
                 style={{
                   display: "flex",
@@ -405,98 +605,100 @@ export default function HomeAdPopup() {
                   justifyContent: "center",
                   gap: 8,
                   width: "100%",
-                  padding: "13px 20px",
-                  background: "var(--red)",
+                  padding: "11px 18px",
+                  background: "#dc2626",
                   color: "#ffffff",
                   borderRadius: 12,
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: 800,
                   textDecoration: "none",
-                  boxShadow: "0 6px 18px rgba(220, 38, 38, 0.35)",
+                  boxShadow: "0 6px 16px rgba(220, 38, 38, 0.35)",
                   transition: "all 0.2s ease",
-                  marginBottom: 10
+                  marginBottom: 6
                 }}
-                onMouseEnter={e => {
+                onMouseEnter={(e) => {
                   e.currentTarget.style.background = "#b91c1c";
                   e.currentTarget.style.transform = "translateY(-1px)";
                 }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "var(--red)";
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "#dc2626";
                   e.currentTarget.style.transform = "none";
                 }}
               >
-                <span>{config.buttonText}</span>
-                <ArrowRight size={17} />
+                <ShoppingBag size={16} />
+                <span>View Product & Buy Now</span>
+                <ArrowRight size={16} />
               </Link>
 
-              {/* Dismiss / Secondary Link */}
-              <button
-                type="button"
-                onClick={handleClose}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "var(--gray-400)",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  padding: "4px 8px",
-                  transition: "color 0.2s"
-                }}
-                onMouseEnter={e => e.currentTarget.style.color = "var(--gray-700)"}
-                onMouseLeave={e => e.currentTarget.style.color = "var(--gray-400)"}
-              >
-                No thanks, continue browsing
-              </button>
-
-              {/* Trust Tagline */}
+              {/* Dismiss Link */}
               <div
                 style={{
-                  borderTop: "1px solid var(--gray-100)",
-                  marginTop: 14,
-                  paddingTop: 10,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 12,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "var(--gray-500)"
+                  marginTop: 4
                 }}
               >
-                <span>🚚 Cash on Delivery</span>
-                <span>•</span>
-                <span>🔄 5-Day Returns</span>
-                <span>•</span>
-                <span>⭐ 100% Quality</span>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#9ca3af",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    padding: "4px 8px",
+                    transition: "color 0.2s"
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#4b5563")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#9ca3af")}
+                >
+                  No thanks, continue browsing
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Global CSS for Animations */}
-      <style>{`
+      {/* Global Embedded Styles for Keyframe Animations & Responsive Layout */}
+      <style jsx global>{`
         @keyframes adFadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
         @keyframes adScaleUp {
-          from { 
-            opacity: 0; 
-            transform: scale(0.88) translateY(12px); 
+          from {
+            opacity: 0;
+            transform: scale(0.92) translateY(12px);
           }
-          to { 
-            opacity: 1; 
-            transform: scale(1) translateY(0); 
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
           }
         }
         @keyframes pulseGlow {
-          0%, 100% {
-            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+          0%,
+          100% {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(220, 38, 38, 0.4);
           }
           50% {
-            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.45);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 0 6px rgba(220, 38, 38, 0);
+          }
+        }
+        @media (max-width: 640px) {
+          .dastiyab-offer-pill {
+            bottom: 94px !important;
+            left: 16px !important;
+            padding: 8px 14px !important;
+            font-size: 11px !important;
           }
         }
       `}</style>
