@@ -146,8 +146,8 @@ export default function AddProductPage() {
 
   // Colors handlers
   const handleToggleColor = (color: {name: string, hex: string}) => {
-    if (colors.some(c => c.name === color.name)) {
-      setColors(colors.filter(c => c.name !== color.name));
+    if (colors.some(c => c.name.toLowerCase() === color.name.toLowerCase())) {
+      setColors(colors.filter(c => c.name.toLowerCase() !== color.name.toLowerCase()));
     } else {
       setColors([...colors, color]);
     }
@@ -388,11 +388,74 @@ export default function AddProductPage() {
 
         {/* Colors Section */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label className="label" style={{ marginBottom: 0 }}>Available Colors</label>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <label className="label" style={{ marginBottom: 0 }}>Available Colors</label>
+            {colors.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setColors([])}
+                style={{
+                  fontSize: 12,
+                  color: "var(--red, #ef4444)",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: 600
+                }}
+              >
+                Clear All Colors ({colors.length})
+              </button>
+            )}
+          </div>
           <p style={{ fontSize: 13, color: "var(--gray-500)", marginTop: -8 }}>Select the colors available for this product. Leave empty if there are no color options.</p>
+
+          {/* Selected Colors Chips with instant remove (X) */}
+          {colors.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "10px 14px", background: "#f8fafc", border: "1px dashed var(--gray-300)", borderRadius: "var(--radius-md)" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--gray-600)", marginRight: 4 }}>Active Colors:</span>
+              {colors.map((c, idx) => (
+                <span
+                  key={`${c.name}-${idx}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "4px 10px",
+                    borderRadius: "var(--radius-full)",
+                    background: "white",
+                    border: "1px solid var(--blue, #3b82f6)",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "var(--gray-800)"
+                  }}
+                >
+                  <span style={{ width: 12, height: 12, borderRadius: "50%", background: c.hex, border: "1px solid #cbd5e1" }}></span>
+                  {c.name}
+                  <button
+                    type="button"
+                    onClick={() => setColors(colors.filter(item => item.name.toLowerCase() !== c.name.toLowerCase()))}
+                    title={`Remove ${c.name}`}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--red, #ef4444)",
+                      cursor: "pointer",
+                      padding: 0,
+                      marginLeft: 2,
+                      fontSize: 14,
+                      lineHeight: 1,
+                      fontWeight: "bold"
+                    }}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, padding: "16px", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "var(--radius-lg)" }}>
             {PREDEFINED_COLORS.map(color => {
-              const isSelected = colors.some(c => c.name === color.name);
+              const isSelected = colors.some(c => c.name.toLowerCase() === color.name.toLowerCase());
               return (
                 <button
                   type="button"

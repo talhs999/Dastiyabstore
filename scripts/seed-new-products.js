@@ -70,7 +70,7 @@ async function main() {
     console.log('Created Category: Bluetooth Speakers');
   }
 
-  // 2. Define Products
+  // 2. Define Products (Using only admin PREDEFINED_COLORS options)
   const productsToSeed = [
     {
       name: 'BIGERBOWIE Novelty iPhone 11-Color Eyeshadow Palette with Beaded Wristlet Strap',
@@ -93,10 +93,10 @@ async function main() {
       free_delivery_karachi: true,
       free_delivery_nationwide: false,
       colors: [
-        { name: 'Lilac Purple', hex: '#a881af' },
-        { name: 'Sky Blue', hex: '#7ba4d5' },
-        { name: 'Blossom Pink', hex: '#e899b2' },
-        { name: 'Mint Green', hex: '#8db596' }
+        { name: 'Purple', hex: '#a855f7' },
+        { name: 'Blue', hex: '#3b82f6' },
+        { name: 'Pink', hex: '#ec4899' },
+        { name: 'Green', hex: '#22c55e' }
       ],
       specs: [
         { label: 'Brand & Model', value: 'BIGERBOWIE (Model 2198D)' },
@@ -130,7 +130,7 @@ async function main() {
 </ul>
 
 <h3>🎨 Available Case Colors:</h3>
-<p>Choose from 4 gorgeous pastel shades: <strong>Lilac Purple</strong>, <strong>Sky Blue</strong>, <strong>Blossom Pink</strong>, and <strong>Mint Green</strong>.</p>
+<p>Choose from 4 gorgeous shades: <strong>Purple</strong>, <strong>Blue</strong>, <strong>Pink</strong>, and <strong>Green</strong>.</p>
 
 <h3>🎁 The Ultimate Gift Idea:</h3>
 <p>Whether for birthdays, bridal giveaways, Eid gifts, or treating yourself, this palette is guaranteed to bring smiles and compliments every time you pull it out of your bag!</p>`
@@ -156,9 +156,9 @@ async function main() {
       free_delivery_karachi: true,
       free_delivery_nationwide: false,
       colors: [
-        { name: 'Metallic Cyan Blue', hex: '#0097a7' },
-        { name: 'Matte Black', hex: '#212121' },
-        { name: 'Brushed Silver', hex: '#b0bec5' }
+        { name: 'Blue', hex: '#3b82f6' },
+        { name: 'Black', hex: '#000000' },
+        { name: 'Silver', hex: '#C0C0C0' }
       ],
       specs: [
         { label: 'Model', value: 'JB! M3-T (Best Sound Series by HARMAN)' },
@@ -215,11 +215,7 @@ async function main() {
       is_best_seller: true,
       free_delivery_karachi: true,
       free_delivery_nationwide: false,
-      colors: [
-        { name: 'Sky Blue', hex: '#1e88e5' },
-        { name: 'Rose Pink', hex: '#ec407a' },
-        { name: 'Cosmic Purple', hex: '#8e24aa' }
-      ],
+      colors: [],
       specs: [
         { label: 'Product Type', value: 'Dual-Function 360° Rotating Star Master Night Light' },
         { label: 'LED Modes', value: '4 High-Power LEDs (Warm White, Blue, Red, Green)' },
