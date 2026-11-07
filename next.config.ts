@@ -5,7 +5,16 @@ process.env.UV_THREADPOOL_SIZE = "4";
 
 const nextConfig: NextConfig = {
   compress: true,
-  experimental: {},
+  experimental: {
+    // Hostinger build containers have a low thread/process limit and the
+    // build panics in "Collecting page data" with os error 11 when Next.js
+    // spawns its default worker pool (CPUs - 1). Cap it to 2 workers so the
+    // build fits the container. Verified in Next.js 16.4.5 source:
+    // getNumberOfWorkers() uses config.experimental.cpus when set.
+    cpus: 2,
+    staticGenerationMaxConcurrency: 2,
+    staticGenerationMinPagesPerWorker: 25,
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200],
