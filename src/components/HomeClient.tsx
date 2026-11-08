@@ -14,6 +14,7 @@ import ProductCard from "@/components/ProductCard";
 import HomeAdPopup from "@/components/HomeAdPopup";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
 import { DEFAULT_SITE_REVIEWS } from "@/data/siteReviews";
+import { DEFAULT_HERO_SLIDES, DEFAULT_PROMO_BANNER } from "@/data/defaultBanners";
 
 // Curated icon map — avoids importing the entire lucide-react library (~150KB)
 const iconMap: Record<string, ComponentType<any>> = {
@@ -146,29 +147,7 @@ function InstagramCarousel({ posts }: { posts: any[] }) {
 }
 
 /* ─── DATA ─── */
-const heroSlides = [
-  {
-    badge: "Summer Special", title: "Stay Cool with\nNeck Fan",
-    subtitle: "Wearable 360° bladeless neck fan — perfect for Pakistani summers",
-    cta: "Shop Now", href: "/shop/neck-fan",
-    bg: "linear-gradient(135deg, #fff5f5 0%, #fff0e0 100%)", accent: "var(--red)",
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80",
-  },
-  {
-    badge: "Best Seller", title: "Premium TWS\nEarbuds",
-    subtitle: "30-hour battery | ANC | Crystal clear sound — true wireless freedom",
-    cta: "Explore", href: "/shop/airpods",
-    bg: "linear-gradient(135deg, #fff9e6 0%, #fff0f0 100%)", accent: "var(--yellow-dark)",
-    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=700&q=80",
-  },
-  {
-    badge: "Work From Home", title: "Ergonomic\nLaptop Stand",
-    subtitle: "Improve posture & productivity with our adjustable aluminum laptop stand",
-    cta: "Order Now", href: "/shop/laptop-stand",
-    bg: "linear-gradient(135deg, #f0fff4 0%, #fff5f5 100%)", accent: "var(--red)",
-    image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=700&q=80",
-  },
-];
+const heroSlides = DEFAULT_HERO_SLIDES;
 
 const stats = [
   { target: 10000, suffix: "+", label: "Happy Customers", icon: <Heart size={20} /> },
@@ -422,8 +401,27 @@ export default function HomeClient({ initialData }: { initialData: any }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const reviewsRef = useRef<HTMLDivElement>(null);
 
-  // Use the fetched data directly as initial values instead of states
-  const banners = initialData?.bannerSlides && initialData.bannerSlides.length > 0 ? initialData.bannerSlides : heroSlides;
+  // Use live data with rock-solid official Dastiyab Store fallbacks
+  const [banners, setBanners] = useState<any[]>(
+    initialData?.bannerSlides && Array.isArray(initialData.bannerSlides) && initialData.bannerSlides.length > 0
+      ? initialData.bannerSlides
+      : DEFAULT_HERO_SLIDES
+  );
+
+  // Client-side rehydration safeguard in case SSR encountered a transient DB timeout or bot spike
+  useEffect(() => {
+    if (!initialData?.bannerSlides || !Array.isArray(initialData.bannerSlides) || initialData.bannerSlides.length === 0) {
+      fetch("/api/settings/banner")
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            setBanners(data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [initialData?.bannerSlides]);
+
   const featured = initialData?.featured && initialData.featured.length > 0 ? initialData.featured : getFeaturedProducts();
   const bestSellers = initialData?.bestSellers && initialData.bestSellers.length > 0 ? initialData.bestSellers : getBestSellers();
   
@@ -434,23 +432,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
 
   const instagramPosts = initialData?.instagram || [];
   
-  const promoBanner = initialData?.promoBanner || {
-    enabled: true,
-    badge1: "Limited Time",
-    badge2: "Up to 50% Off",
-    title: "Summer Sale —",
-    titleHighlight: "Neck Fans",
-    titleEnd: "Up to 50% Off",
-    subtitle: "Beat the heat with our best-selling wearable neck fans. Limited stock available!",
-    buttonText: "Shop Neck Fans",
-    buttonLink: "/shop/neck-fan",
-    buttonBg: "var(--yellow)",
-    buttonTextCol: "var(--black)",
-    bgStyle: "linear-gradient(135deg, var(--red) 0%, #c62333 40%, #9b1526 100%)",
-    bullet1: "Free Delivery Included",
-    bullet2: "Cash on Delivery",
-    bullet3: "7-Day Easy Returns"
-  };
+  const promoBanner = initialData?.promoBanner || DEFAULT_PROMO_BANNER;
 
   const bentoGrid = initialData?.bentoGrid && Array.isArray(initialData.bentoGrid) && initialData.bentoGrid.length === 5 
     ? initialData.bentoGrid 
@@ -500,8 +482,8 @@ export default function HomeClient({ initialData }: { initialData: any }) {
               <span style={{ fontSize: 13, color: "var(--gray-500)" }}>Jo Chahiye, Wahi Dastiyab</span>
             </div>
             <h1 style={{ fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 900, lineHeight: 1.1, color: "var(--gray-900)", marginBottom: 16, whiteSpace: "pre-line" }}>
-              {slide.title.split("\\n").map((line: string, i: number) =>
-                i === 0 ? <span key={i}>{line}<br /></span> : <span key={i} style={{ color: slide.accent }}>{line}</span>
+              {(slide.title || "").split(/\r?\n|\\n/).map((line: string, i: number) =>
+                i === 0 ? <span key={i}>{line}<br /></span> : <span key={i} style={{ color: slide.accent || "var(--red)" }}>{line}</span>
               )}
             </h1>
             <p style={{ fontSize: 16, color: "var(--gray-600)", marginBottom: 32, lineHeight: 1.7, maxWidth: 440 }}>
@@ -548,7 +530,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
         </div>
 
         {/* Slide indicators */}
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 24px 32px", display: "flex", justifyContent: "flex-start", alignItems: "center", gap: 8 }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "20px 24px 28px", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
           {banners.map((_: any, i: number) => (
             <button key={i} aria-label={`Go to slide ${i + 1}`} onClick={() => setActiveSlide(i)} style={{
               width: i === activeSlide ? 28 : 8, height: 8, borderRadius: 4,

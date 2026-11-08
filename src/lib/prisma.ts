@@ -13,20 +13,36 @@ if (!process.env.DATABASE_URL) {
   }
 }
 
+// Ensure database URL has connection pool limits to prevent Hostinger MySQL exhaustion during traffic spikes
+function getSafeDatabaseUrl(): string | undefined {
+  const url = process.env.DATABASE_URL;
+  if (!url) return undefined;
+  
+  // If connection_limit is not specified in query params, safely attach connection tuning
+  if (!url.includes('connection_limit=')) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}connection_limit=7&pool_timeout=15&connect_timeout=10`;
+  }
+  return url;
+}
+
+const safeDbUrl = getSafeDatabaseUrl();
+
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient(
-    process.env.DATABASE_URL
+    safeDbUrl
       ? {
           datasources: {
             db: {
-              url: process.env.DATABASE_URL,
+              url: safeDbUrl,
             },
           },
         }
       : undefined
   );
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// Always store on globalThis so all requests reuse the single connection pool
+globalForPrisma.prisma = prisma;

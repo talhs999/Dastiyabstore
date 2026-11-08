@@ -194,7 +194,7 @@ export default function HomeAdPopup() {
           className="no-print dastiyab-offer-pill"
           style={{
             position: "fixed",
-            bottom: 94,
+            bottom: 98,
             left: 24,
             zIndex: 9990,
             display: "flex",
@@ -695,7 +695,7 @@ export default function HomeAdPopup() {
         }
         @media (max-width: 640px) {
           .dastiyab-offer-pill {
-            bottom: 94px !important;
+            bottom: 96px !important;
             left: 16px !important;
             padding: 8px 14px !important;
             font-size: 11px !important;

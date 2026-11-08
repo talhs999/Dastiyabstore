@@ -6,10 +6,10 @@ const BLOCK_LABELS = ["Main Block (Large Left)", "Wide Top Right", "Small Top Ri
 const BLOCK_TYPES = ["main", "wide", "small", "small", "wide"];
 
 const DEFAULTS = [
-  { id: "block1", badge: "Season's Hot Product", title: "Stay Cool with", titleHighlight: "Neck Fan", subtitle: "Wearable 360° bladeless neck fan — perfect for Pakistani summers.", buttonText: "Shop Now", buttonLink: "/shop/neck-fan", bg: "linear-gradient(135deg, #fff5f5 0%, #fff0e0 100%)", accentColor: "var(--red)", image: "", type: "main" },
-  { id: "block2", title: "Mobile\nAccessories", subtitle: "Chargers, Cables & More", buttonText: "Explore", buttonLink: "/shop/mobile-accessories", bg: "#e0f2fe", accentColor: "#0ea5e9", image: "", type: "wide" },
-  { id: "block3", title: "Home", subtitle: "Smart gadgets", buttonText: "Learn More", buttonLink: "/shop/home-gadgets", bg: "#fff0f0", accentColor: "var(--red)", image: "", type: "small" },
-  { id: "block4", title: "Computer", subtitle: "Stands, Hubs & More", buttonText: "Explore", buttonLink: "/shop/laptop-stand", bg: "#f0fdf4", accentColor: "#16a34a", image: "", type: "small" },
+  { id: "block1", badge: "🔥 Trending Product", title: "Cozy & Stylish", titleHighlight: "Night Suits", subtitle: "Premium soft fabric, trendy prints for women & kids starting from Rs. 1,450.", buttonText: "Shop Now", buttonLink: "/shop/night-suits", bg: "linear-gradient(135deg, #fff5f5 0%, #fff0e0 100%)", accentColor: "var(--red)", image: "/images/mashallah-store/women-suit-01.webp", type: "main" },
+  { id: "block2", title: "Wireless\nEarbuds", subtitle: "Deep Bass & ANC Audio", buttonText: "Explore", buttonLink: "/shop/tws-wireless-earbuds", bg: "#e0f2fe", accentColor: "#0ea5e9", image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783374081/dastiyabstore/pjvunzav56ikyo9irgwy.webp", type: "wide" },
+  { id: "block3", title: "Gift", subtitle: "Special Hampers", buttonText: "View Gifts", buttonLink: "/shop/gift-box", bg: "#fff0f0", accentColor: "var(--red)", image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783362758/dastiyabstore/emmpbbnxjfinlzuhw3wb.webp", type: "small" },
+  { id: "block4", title: "Night Lights", subtitle: "Cute LED Lamps", buttonText: "Explore", buttonLink: "/product/panda-led-night-light-silicone", bg: "#f0fdf4", accentColor: "#16a34a", image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1784753546/dastiyabstore/dkzttylp7r5ebphii2ui.webp", type: "small" },
   { id: "block5", title: "Explore All\nCategories", subtitle: "Find everything you need in one place.", buttonText: "Browse Catalog", buttonLink: "/shop", bg: "linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%)", accentColor: "#8b5cf6", image: "", type: "wide" },
 ];
 

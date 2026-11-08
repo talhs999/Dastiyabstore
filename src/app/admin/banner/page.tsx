@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { Save, Plus, Trash2, ArrowUp, ArrowDown, LayoutList } from "lucide-react";
+import { DEFAULT_HERO_SLIDES } from "@/data/defaultBanners";
 
 const defaultSlide = {
   badge: "",
@@ -28,19 +29,10 @@ export default function HomeBannerAdmin() {
         const res = await fetch("/api/settings/banner");
         if (res.ok) {
           const data = await res.json();
-          if (data && Array.isArray(data)) {
+          if (data && Array.isArray(data) && data.length > 0) {
             setSlides(data);
           } else {
-            // Fallback to defaults from page.tsx if nothing in DB
-            setSlides([
-              {
-                badge: "Summer Special", title: "Stay Cool with\\nNeck Fan",
-                subtitle: "Wearable 360° bladeless neck fan — perfect for Pakistani summers",
-                cta: "Shop Now", href: "/shop/neck-fan",
-                bg: "linear-gradient(135deg, #fff5f5 0%, #fff0e0 100%)", accent: "var(--red)",
-                image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80",
-              }
-            ]);
+            setSlides(DEFAULT_HERO_SLIDES);
           }
         }
       } catch (e) {

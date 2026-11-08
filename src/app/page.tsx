@@ -1,26 +1,16 @@
 import { prisma } from '@/lib/prisma';
 import HomeClient from '@/components/HomeClient';
+import { DEFAULT_HERO_SLIDES, DEFAULT_PROMO_BANNER } from '@/data/defaultBanners';
 
 import { preload } from 'react-dom';
 
 export const revalidate = 3600;
 
 export default async function HomePage() {
-  let initialData = {};
+  let initialData: any = {};
 
   try {
-    const [
-      featured,
-      bestSellers,
-      categories,
-      instagram,
-      bannerSetting,
-      promoSetting,
-      bentoSetting,
-      statsSetting,
-      siteReviewsSetting,
-      bundles
-    ] = await Promise.all([
+    const results = await Promise.allSettled([
       prisma.product.findMany({ 
         where: { is_featured: true },
         include: { store: { select: { id: true, name: true, slug: true } } }
@@ -44,16 +34,48 @@ export default async function HomePage() {
       prisma.product.findMany({ where: { is_bundle: true } })
     ]);
     
-    const bannerSlides = bannerSetting ? bannerSetting.value : null;
-    const promoBanner = promoSetting ? (typeof promoSetting.value === 'string' ? JSON.parse(promoSetting.value as string) : promoSetting.value) : null;
-    const bentoGrid = bentoSetting ? bentoSetting.value : null;
-    const statsStrip = statsSetting ? statsSetting.value : null;
-    const siteReviews = siteReviewsSetting ? siteReviewsSetting.value : null;
+    const featured = results[0].status === 'fulfilled' ? results[0].value : [];
+    const bestSellers = results[1].status === 'fulfilled' ? results[1].value : [];
+    const categories = results[2].status === 'fulfilled' ? results[2].value : [];
+    const instagram = results[3].status === 'fulfilled' ? results[3].value : [];
+    const bannerSetting = results[4].status === 'fulfilled' ? results[4].value : null;
+    const promoSetting = results[5].status === 'fulfilled' ? results[5].value : null;
+    const bentoSetting = results[6].status === 'fulfilled' ? results[6].value : null;
+    const statsSetting = results[7].status === 'fulfilled' ? results[7].value : null;
+    const siteReviewsSetting = results[8].status === 'fulfilled' ? results[8].value : null;
+    const bundles = results[9].status === 'fulfilled' ? results[9].value : [];
+
+    // Safely parse JSON values if stored as string
+    const parseValue = (val: any) => {
+      if (!val) return null;
+      if (typeof val === 'string') {
+        try {
+          return JSON.parse(val);
+        } catch {
+          return val;
+        }
+      }
+      return val;
+    };
+
+    let bannerSlides = bannerSetting ? parseValue(bannerSetting.value) : null;
+    if (!bannerSlides || !Array.isArray(bannerSlides) || bannerSlides.length === 0) {
+      bannerSlides = DEFAULT_HERO_SLIDES;
+    }
+
+    let promoBanner = promoSetting ? parseValue(promoSetting.value) : null;
+    if (!promoBanner) {
+      promoBanner = DEFAULT_PROMO_BANNER;
+    }
+
+    const bentoGrid = bentoSetting ? parseValue(bentoSetting.value) : null;
+    const statsStrip = statsSetting ? parseValue(statsSetting.value) : null;
+    const siteReviews = siteReviewsSetting ? parseValue(siteReviewsSetting.value) : null;
 
     // Preload the first hero image for LCP optimization
-    const firstBannerImage = (bannerSlides && Array.isArray(bannerSlides) && bannerSlides.length > 0)
-      ? (bannerSlides as any)[0].image
-      : "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80";
+    const firstBannerImage = (Array.isArray(bannerSlides) && bannerSlides.length > 0 && bannerSlides[0]?.image)
+      ? bannerSlides[0].image
+      : DEFAULT_HERO_SLIDES[0].image;
     
     if (firstBannerImage) {
       preload(firstBannerImage, { as: 'image', fetchPriority: 'high' });
@@ -83,6 +105,10 @@ export default async function HomePage() {
     };
   } catch (error) {
     console.error('Error fetching homepage data on server:', error);
+    initialData = {
+      bannerSlides: DEFAULT_HERO_SLIDES,
+      promoBanner: DEFAULT_PROMO_BANNER
+    };
   }
 
   const organizationSchema = {
