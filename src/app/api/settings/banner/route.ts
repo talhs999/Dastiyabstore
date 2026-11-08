@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
@@ -35,6 +36,8 @@ export async function POST(request: Request) {
       }
     });
 
+    revalidatePath('/', 'page');
+    revalidatePath('/', 'layout');
     return NextResponse.json({ success: true, setting });
   } catch (error) {
     console.error('API Error:', error);
