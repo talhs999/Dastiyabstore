@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ToastProvider } from "@/components/ui/Toast";
 import VisitorTracker from "@/components/VisitorTracker";
+import AbandonedVisitorNotifier from "@/components/AbandonedVisitorNotifier";
 import { SettingsProvider } from "@/components/SettingsProvider";
 import { LazyFooter, LazyWhatsAppButton, LazyChatbot } from "@/components/LazyComponents";
 import { unstable_cache } from "next/cache";
@@ -263,6 +264,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <SettingsProvider initialSettings={initialSettings}>
           <ToastProvider>
             <VisitorTracker enabled={initialSettings.liveTrackingEnabled} />
+            <AbandonedVisitorNotifier />
             <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <div className="no-print"><Navbar /></div>
             <main style={{ flex: 1 }}>

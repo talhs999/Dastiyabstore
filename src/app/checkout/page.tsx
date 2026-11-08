@@ -506,6 +506,15 @@ export default function CheckoutPage() {
       setOrderId(savedOrder.id);
       setPlaced(true);
       clearCart();
+
+      // Mark order placed to immediately stop all abandoned visitor retargeting notifications
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("dastiyab_order_placed", "true");
+          localStorage.setItem("dastiyab_order_placed_time", Date.now().toString());
+          window.dispatchEvent(new Event("dastiyab_order_success"));
+        } catch (_) {}
+      }
     } catch (err) {
       console.error("Order submission failed:", err);
       alert("There was an error submitting your order. Please try again.");

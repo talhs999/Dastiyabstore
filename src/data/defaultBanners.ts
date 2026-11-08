@@ -79,3 +79,12 @@ export const DEFAULT_PROMO_BANNER = {
   bullet2: "Cash on Delivery Available",
   bullet3: "5-Day Easy Returns"
 };
+
+export const DEFAULT_BENTO_GRID = [
+  { id: "block1", badge: "🔥 Trending Product", title: "Cozy & Stylish", titleHighlight: "Night Suits", subtitle: "Premium soft fabric, trendy prints for women & kids starting from Rs. 1,450.", buttonText: "Shop Now", buttonLink: "/shop/night-suits", bg: "linear-gradient(135deg, #fff5f5 0%, #fff0e0 100%)", accentColor: "var(--red)", image: "/images/mashallah-store/women-suit-01.webp", type: "main" },
+  { id: "block2", title: "Wireless\nEarbuds", subtitle: "Deep Bass & ANC Audio", buttonText: "Explore", buttonLink: "/shop/tws-wireless-earbuds", bg: "#e0f2fe", accentColor: "#0ea5e9", image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783374081/dastiyabstore/pjvunzav56ikyo9irgwy.webp", type: "wide" },
+  { id: "block3", title: "Gift", subtitle: "Special Hampers", buttonText: "View Gifts", buttonLink: "/shop/gift-box", bg: "#fff0f0", accentColor: "var(--red)", image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1783362758/dastiyabstore/emmpbbnxjfinlzuhw3wb.webp", type: "small" },
+  { id: "block4", title: "Night Lights", subtitle: "Cute LED Lamps", buttonText: "Explore", buttonLink: "/product/panda-led-night-light-silicone", bg: "#f0fdf4", accentColor: "#16a34a", image: "https://res.cloudinary.com/zpbci6tf/image/upload/v1784753546/dastiyabstore/dkzttylp7r5ebphii2ui.webp", type: "small" },
+  { id: "block5", title: "Explore All\nCategories", subtitle: "Find everything you need in one place.", buttonText: "Browse Catalog", buttonLink: "/shop", bg: "linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%)", accentColor: "#8b5cf6", image: "", type: "wide" },
+];
+

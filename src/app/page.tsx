@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import HomeClient from '@/components/HomeClient';
-import { DEFAULT_HERO_SLIDES, DEFAULT_PROMO_BANNER } from '@/data/defaultBanners';
+import { DEFAULT_HERO_SLIDES, DEFAULT_PROMO_BANNER, DEFAULT_BENTO_GRID } from '@/data/defaultBanners';
 
 import { preload } from 'react-dom';
 
@@ -68,7 +68,7 @@ export default async function HomePage() {
       promoBanner = DEFAULT_PROMO_BANNER;
     }
 
-    const bentoGrid = bentoSetting ? parseValue(bentoSetting.value) : null;
+    const bentoGrid = (bentoSetting && parseValue(bentoSetting.value)) || DEFAULT_BENTO_GRID;
     const statsStrip = statsSetting ? parseValue(statsSetting.value) : null;
     const siteReviews = siteReviewsSetting ? parseValue(siteReviewsSetting.value) : null;
 

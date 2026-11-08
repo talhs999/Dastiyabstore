@@ -14,7 +14,7 @@ import ProductCard from "@/components/ProductCard";
 import HomeAdPopup from "@/components/HomeAdPopup";
 import { getFeaturedProducts, getBestSellers } from "@/data/products";
 import { DEFAULT_SITE_REVIEWS } from "@/data/siteReviews";
-import { DEFAULT_HERO_SLIDES, DEFAULT_PROMO_BANNER } from "@/data/defaultBanners";
+import { DEFAULT_HERO_SLIDES, DEFAULT_PROMO_BANNER, DEFAULT_BENTO_GRID } from "@/data/defaultBanners";
 
 // Curated icon map — avoids importing the entire lucide-react library (~150KB)
 const iconMap: Record<string, ComponentType<any>> = {
@@ -436,7 +436,7 @@ export default function HomeClient({ initialData }: { initialData: any }) {
 
   const bentoGrid = initialData?.bentoGrid && Array.isArray(initialData.bentoGrid) && initialData.bentoGrid.length === 5 
     ? initialData.bentoGrid 
-    : null;
+    : DEFAULT_BENTO_GRID;
 
   const dynamicStats = initialData?.statsStrip && Array.isArray(initialData.statsStrip) && initialData.statsStrip.length === 4 
     ? initialData.statsStrip 
@@ -791,19 +791,19 @@ export default function HomeClient({ initialData }: { initialData: any }) {
           <div className="bento-grid">
             
             {/* Block 1: Main (Season's Hot Product) */}
-            {(() => { const b = bentoGrid ? bentoGrid[0] : null; return (
+            {(() => { const b = bentoGrid ? bentoGrid[0] : DEFAULT_BENTO_GRID[0]; return (
             <div className="bento-card bento-main" style={{ background: b?.bg || "linear-gradient(135deg, #fff5f5 0%, #fff0e0 100%)", padding: "40px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div style={{ position: "relative", zIndex: 2 }}>
                 <span className="badge badge-yellow" style={{ fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
-                  <Zap size={12} fill="var(--black)" /> {b?.badge || "Season's Hot Product"}
+                  <Zap size={12} fill="var(--black)" /> {b?.badge || "🔥 Trending Product"}
                 </span>
                 <h2 style={{ fontSize: "clamp(32px, 4vw, 48px)", fontWeight: 900, lineHeight: 1.1, color: "var(--gray-900)", marginBottom: 16 }}>
-                  {b?.title || "Stay Cool with"}<br /><span style={{ color: b?.accentColor || "var(--red)" }}>{b?.titleHighlight || "Neck Fan"}</span>
+                  {b?.title || "Cozy & Stylish"}<br /><span style={{ color: b?.accentColor || "var(--red)" }}>{b?.titleHighlight || "Night Suits"}</span>
                 </h2>
                 <p style={{ fontSize: 15, color: "var(--gray-600)", marginBottom: 32, lineHeight: 1.6, maxWidth: 320 }}>
-                  {b?.subtitle || "Wearable 360° bladeless neck fan — perfect for Pakistani summers."}
+                  {b?.subtitle || "Premium soft fabric, trendy prints for women & kids starting from Rs. 1,450."}
                 </p>
-                <Link href={b?.buttonLink || "/shop/neck-fan"} className="btn-red" style={{ fontSize: 15, padding: "12px 28px", textDecoration: "none", display: "inline-flex" }}>
+                <Link href={b?.buttonLink || "/shop/night-suits"} className="btn-red" style={{ fontSize: 15, padding: "12px 28px", textDecoration: "none", display: "inline-flex" }}>
                   {b?.buttonText || "Shop Now"} <ArrowRight size={16} style={{ marginLeft: 8 }} />
                 </Link>
               </div>
