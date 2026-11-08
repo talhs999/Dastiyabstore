@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node -e \"const fs=require('fs'); if(fs.existsSync('.env.production') && !fs.existsSync('.env')){fs.copyFileSync('.env.production', '.env');}\" && UV_THREADPOOL_SIZE=4 NODE_OPTIONS=--max-old-space-size=4096 prisma generate && UV_THREADPOOL_SIZE=4 NODE_OPTIONS=--max-old-space-size=4096 next build --webpack",
-    "build:prod": "node -e \"const fs=require('fs'); if(fs.existsSync('.env.production')){fs.copyFileSync('.env.production', '.env');}\" && UV_THREADPOOL_SIZE=4 NODE_OPTIONS=--max-old-space-size=4096 prisma generate && UV_THREADPOOL_SIZE=4 NODE_OPTIONS=--max-old-space-size=4096 next build --webpack",
+    "build": "node scripts/build.js",
+    "build:prod": "node scripts/build.js",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "node -e \"const fs=require('fs'); if(fs.existsSync('.env.production') && !fs.existsSync('.env')){fs.copyFileSync('.env.production', '.env');}\" && prisma generate"
