@@ -17,3 +17,4 @@ execSync('npx prisma generate', { stdio: 'inherit', env: process.env });
 // 4. Build Next.js with webpack
 console.log('Building Next.js application...');
 execSync('npx next build --webpack', { stdio: 'inherit', env: process.env });
+

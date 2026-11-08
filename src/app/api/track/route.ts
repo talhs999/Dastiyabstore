@@ -31,6 +31,17 @@ export async function POST(request: Request) {
           created_at: new Date()
         }
       });
+
+      // Keep database clean & tiny: purge stale visitor sessions older than 24h (~5% of requests)
+      if (Math.random() < 0.05) {
+        prisma.activeVisitor.deleteMany({
+          where: {
+            last_active: {
+              lt: new Date(Date.now() - 24 * 60 * 60 * 1000)
+            }
+          }
+        }).catch(() => {});
+      }
     }
 
     return NextResponse.json({ success: true });
